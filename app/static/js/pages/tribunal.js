@@ -105,19 +105,32 @@ export default {
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
             const formData = new FormData(form);
+
+            const clientId = (formData.get('client_id') || '').trim();
+            if (!clientId) {
+                this.renderError('Client ID is required.');
+                return;
+            }
+            const wages = parseFloat(formData.get('wages') || 0);
+            const scheduleC = parseFloat(formData.get('schedule_c') || 0);
+            const itemized = parseFloat(formData.get('itemized') || 0);
+            if (wages < 0 || scheduleC < 0 || itemized < 0) {
+                this.renderError('Wages, Schedule C, and Itemized must be non-negative.');
+                return;
+            }
+
             const data = {
-                client_id: formData.get('client_id'),
-                tax_year: parseInt(formData.get('tax_year')),
+                client_id: clientId,
+                tax_year: parseInt(formData.get('tax_year'), 10),
                 return_data: {
                     filing_status: formData.get('filing_status'),
-                    wages_reported: parseFloat(formData.get('wages') || 0),
-                    schedule_c_income: parseFloat(formData.get('schedule_c') || 0),
-                    total_itemized: parseFloat(formData.get('itemized') || 0),
+                    wages_reported: wages,
+                    schedule_c_income: scheduleC,
+                    total_itemized: itemized,
                     works_from_home: formData.get('home_office') === 'on',
-                    deduction_type: parseFloat(formData.get('itemized') || 0) > 14600 ? 'itemized' : 'standard', // simple logic
-                    agi: parseFloat(formData.get('wages') || 0) + parseFloat(formData.get('schedule_c') || 0)
+                    deduction_type: itemized > 14600 ? 'itemized' : 'standard',
+                    agi: wages + scheduleC
                 }
             };
 

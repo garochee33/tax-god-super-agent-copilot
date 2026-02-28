@@ -301,6 +301,8 @@ a {
     margin-bottom: var(--spacing-md);
 }
 
+.required { color: var(--color-danger); }
+
 .input-label {
     display: block;
     margin-bottom: var(--spacing-xs);
@@ -450,6 +452,29 @@ a {
 }
 
 /* -- Pantheon Specifics -- */
+/* Dashboard loading skeleton */
+.pantheon-skeleton.loading {
+    color: transparent !important;
+    position: relative;
+}
+.pantheon-skeleton.loading::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 1em;
+    margin-top: -0.5em;
+    background: linear-gradient(90deg, #eee 25%, #f5f5f5 50%, #eee 75%);
+    background-size: 200% 100%;
+    animation: pantheon-shimmer 1s ease-in-out infinite;
+    border-radius: 4px;
+}
+@keyframes pantheon-shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
 .stat-value {
     font-size: 32px;
     font-weight: 700;

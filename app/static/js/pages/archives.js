@@ -42,6 +42,10 @@ export default {
             e.preventDefault();
             const query = input.value.trim();
             if (!query) return;
+            if (query.length > 500) {
+                resultsContainer.innerHTML = '<div class="error" style="grid-column: span 2; text-align: center;">Query too long (max 500 characters).</div>';
+                return;
+            }
 
             resultsContainer.innerHTML = '<div class="spinner" style="grid-column: span 2; margin: 0 auto;"></div>';
 
@@ -58,7 +62,9 @@ export default {
                 }
             } catch (err) {
                 console.error(err);
-                resultsContainer.innerHTML = '<div class="error" style="grid-column: span 2; text-align: center;">The archives are closed (Error).</div>';
+                const msg = err && err.message ? err.message : 'The archives are closed (Error).';
+                resultsContainer.innerHTML = `<div class="error" style="grid-column: span 2; text-align: center;">${msg} <button class="btn btn-sm btn-outline" style="margin-top: 8px;">Retry</button></div>`;
+                resultsContainer.querySelector('button')?.addEventListener('click', () => { input.focus(); });
             }
         });
     },

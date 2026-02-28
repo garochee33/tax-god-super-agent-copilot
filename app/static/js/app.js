@@ -125,36 +125,58 @@ export const session = {
     },
 };
 
+function normalizeErrorDetail(payload, response) {
+    const d = payload?.detail ?? payload?.message ?? response.statusText ?? "Request failed";
+    if (Array.isArray(d)) return d.map((x) => (x && x.msg) || String(x)).join("; ");
+    return String(d);
+}
+
 export const api = {
-    async request(method, endpoint, data = null) {
-        const response = await fetch(buildApiUrl(endpoint), {
-            method,
-            headers: { "Content-Type": "application/json" },
-            body: data ? JSON.stringify(data) : undefined,
-        });
+    async request(method, endpoint, data = null, options = {}) {
+        const { retries = 0 } = options;
+        const url = buildApiUrl(endpoint);
+        let lastErr;
+        for (let attempt = 0; attempt <= retries; attempt++) {
+            try {
+                const response = await fetch(url, {
+                    method,
+                    headers: { "Content-Type": "application/json" },
+                    body: data ? JSON.stringify(data) : undefined,
+                });
 
-        const text = await response.text();
-        let payload = null;
-        try {
-            payload = text ? JSON.parse(text) : {};
-        } catch (_err) {
-            payload = { raw: text };
+                const text = await response.text();
+                let payload = null;
+                try {
+                    payload = text ? JSON.parse(text) : {};
+                } catch (_) {
+                    payload = { raw: text };
+                }
+
+                if (!response.ok) {
+                    const detail = normalizeErrorDetail(payload, response);
+                    const err = new Error(detail);
+                    err.status = response.status;
+                    err.payload = payload;
+                    if (response.status === 401 || response.status === 403) {
+                        err.unauthorized = true;
+                    }
+                    throw err;
+                }
+                return payload;
+            } catch (e) {
+                lastErr = e;
+                if (e.unauthorized || attempt >= retries) throw e;
+            }
         }
-
-        if (!response.ok) {
-            const detail = payload?.detail || payload?.message || response.statusText || "Request failed";
-            throw new Error(detail);
-        }
-
-        return payload;
+        throw lastErr;
     },
 
-    async get(endpoint) {
-        return this.request("GET", endpoint);
+    async get(endpoint, options) {
+        return this.request("GET", endpoint, null, options);
     },
 
-    async post(endpoint, data) {
-        return this.request("POST", endpoint, data);
+    async post(endpoint, data, options) {
+        return this.request("POST", endpoint, data, options);
     },
 };
 

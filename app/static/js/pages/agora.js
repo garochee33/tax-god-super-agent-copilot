@@ -1,6 +1,6 @@
 /* 
   AGORA.JS
-  Client Management Interface
+  Client Management Interface — Coming soon; placeholder demo data
 */
 
 export default {
@@ -10,10 +10,12 @@ export default {
                 <div class="card">
                     <div class="card-header">
                         <span class="card-title">Citizens of the Agora (Clients)</span>
-                        <button class="btn btn-primary btn-sm">
-                            <svg viewBox="0 0 24 24" style="width: 16px; height: 16px; fill: currentColor; margin-right: 4px;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
-                            Add Citizen
-                        </button>
+                        <span class="badge badge-warning">Coming soon</span>
+                    </div>
+                    <div class="agora-coming-soon" style="padding: var(--spacing-lg); text-align: center; color: #666; border: 2px dashed var(--color-gold); border-radius: var(--border-radius-md); margin-bottom: var(--spacing-lg);">
+                        <div style="font-size: 48px; margin-bottom: 12px;">🏛️</div>
+                        <p style="font-weight: 600; margin-bottom: 8px;">Client CRM & management</p>
+                        <p style="font-size: 14px;">Full client list, add citizen, and entity management will be wired to the backend in a future release.</p>
                     </div>
 
                     <div style="overflow-x: auto;">
@@ -38,9 +40,7 @@ export default {
                                     <td style="padding: 15px;">Individual (1040)</td>
                                     <td style="padding: 15px;"><span class="badge badge-success">Filed</span></td>
                                     <td style="padding: 15px; color: #666;">2 days ago</td>
-                                    <td style="padding: 15px;">
-                                        <button class="btn btn-sm btn-outline">View</button>
-                                    </td>
+                                    <td style="padding: 15px;"><button class="btn btn-sm btn-outline" disabled title="Coming soon">View</button></td>
                                 </tr>
                                 <tr style="border-bottom: 1px solid #eee;">
                                     <td style="padding: 15px; font-weight: 600;">
@@ -52,9 +52,7 @@ export default {
                                     <td style="padding: 15px;">C-Corp (1120)</td>
                                     <td style="padding: 15px;"><span class="badge badge-warning">Audit Risk</span></td>
                                     <td style="padding: 15px; color: #666;">5 hours ago</td>
-                                    <td style="padding: 15px;">
-                                        <button class="btn btn-sm btn-outline">View</button>
-                                    </td>
+                                    <td style="padding: 15px;"><button class="btn btn-sm btn-outline" disabled title="Coming soon">View</button></td>
                                 </tr>
                                 <tr style="border-bottom: 1px solid #eee;">
                                     <td style="padding: 15px; font-weight: 600;">
@@ -66,19 +64,18 @@ export default {
                                     <td style="padding: 15px;">Sole Prop (Sch C)</td>
                                     <td style="padding: 15px;"><span class="badge badge-gold">In Review</span></td>
                                     <td style="padding: 15px; color: #666;">Just now</td>
-                                    <td style="padding: 15px;">
-                                        <button class="btn btn-sm btn-outline">View</button>
-                                    </td>
+                                    <td style="padding: 15px;"><button class="btn btn-sm btn-outline" disabled title="Coming soon">View</button></td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
+                    <div style="padding: 15px; font-size: 12px; color: #999;">Demo data. Connect clients API when available.</div>
                 </div>
             </div>
         `;
     },
 
     async init() {
-        // Mock data, no logic needed yet
+        // Placeholder until clients API is available
     }
 };

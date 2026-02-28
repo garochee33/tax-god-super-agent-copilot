@@ -1,9 +1,20 @@
 /* 
   ORACLE.JS
-  AI Chat Interface
+  AI Chat Interface — production: client_id, conversation_id, resume, error UX
 */
 
-import { api } from '../app.js';
+import { api, session } from '../app.js';
+
+// Persist conversation_id for resume (session storage per tab)
+const CONV_KEY = 'taxgod_oracle_conversation_id';
+
+function getConversationId() {
+    return sessionStorage.getItem(CONV_KEY) || null;
+}
+function setConversationId(id) {
+    if (id) sessionStorage.setItem(CONV_KEY, id);
+    else sessionStorage.removeItem(CONV_KEY);
+}
 
 export default {
     render() {
@@ -82,29 +93,32 @@ export default {
             history.scrollTop = history.scrollHeight;
 
             try {
-                // Call API
+                const clientId = session.getClientId();
+                const conversationId = getConversationId();
                 const res = await api.post('/api/v1/chat/query', {
-                    query: query,
+                    query,
+                    client_id: clientId,
+                    conversation_id: conversationId || undefined,
                     require_citations: document.getElementById('req-citations').checked
                 });
 
-                // Remove Loading
-                document.getElementById(loadingId).remove();
+                document.getElementById(loadingId)?.remove();
 
                 if (res) {
-                    // Add AI Response
                     this.appendMessage('ai', res.content, res.confidence);
-                    
-                    // Update Citations
-                    this.updateCitations(res.citations);
+                    this.updateCitations(res.citations || []);
+                    if (res.conversation_id) {
+                        setConversationId(res.conversation_id);
+                    }
+                    this.updateModelBadge(res.model_used);
                 } else {
                     this.appendMessage('system', 'The Oracle is silent. (API Error)');
                 }
-
             } catch (err) {
                 console.error(err);
-                document.getElementById(loadingId).remove();
-                this.appendMessage('system', 'A divine error occurred.');
+                document.getElementById(loadingId)?.remove();
+                const msg = err && err.message ? err.message : 'A divine error occurred.';
+                this.appendMessage('system', msg);
             }
             
             history.scrollTop = history.scrollHeight;
@@ -158,6 +172,11 @@ export default {
         `;
         history.appendChild(div);
         return id;
+    },
+
+    updateModelBadge(modelUsed) {
+        const badge = document.getElementById('model-badge');
+        if (badge && modelUsed) badge.textContent = `Model: ${modelUsed}`;
     },
 
     updateCitations(citations) {

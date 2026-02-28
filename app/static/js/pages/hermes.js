@@ -39,6 +39,7 @@ export default {
                         <span class="card-title">Foreign Relations (Integrations)</span>
                         <div class="subtitle">Connect with the realms of Google and Intuit.</div>
                     </div>
+                    <div id="hermes-message" class="hermes-message" role="alert" style="display: none; margin-top: var(--spacing-md); padding: var(--spacing-md); border-radius: var(--border-radius-md);"></div>
                 </div>
 
                 <div id="integrations-grid" class="grid grid-2">
@@ -70,12 +71,40 @@ export default {
             grid.querySelectorAll("[data-connect-provider]").forEach((button) => {
                 button.addEventListener("click", async (event) => {
                     const provider = event.currentTarget.dataset.connectProvider;
-                    await this.connectIntegration(provider);
+                    const integration = res.integrations.find((i) => i.id === provider);
+                    if (integration?.status === "connected") {
+                        await this.disconnectIntegration(provider);
+                    } else {
+                        await this.connectIntegration(provider);
+                    }
                 });
             });
         } catch (error) {
             console.error(error);
             grid.innerHTML = `<div class="card" style="grid-column: span 2; text-align: center;">Connection failed: ${error.message}</div>`;
+        }
+    },
+
+    showMessage(text, type = "info") {
+        const el = document.getElementById("hermes-message");
+        if (!el) return;
+        el.textContent = text;
+        el.style.display = "block";
+        el.style.background = type === "error" ? "rgba(192,57,43,0.1)" : type === "success" ? "rgba(39,174,96,0.1)" : "rgba(212,165,116,0.15)";
+        el.style.color = type === "error" ? "var(--color-danger)" : type === "success" ? "var(--color-success)" : "inherit";
+        setTimeout(() => { el.style.display = "none"; }, 5000);
+    },
+
+    async disconnectIntegration(providerId) {
+        try {
+            await api.post("/api/v1/integrations/disconnect", {
+                provider: providerId,
+                user_id: session.getClientId(),
+            });
+            this.showMessage(`${providerId} disconnected.`, "success");
+            await this.loadIntegrations();
+        } catch (error) {
+            this.showMessage(`Failed to disconnect ${providerId}: ${error.message}`, "error");
         }
     },
 
@@ -86,7 +115,7 @@ export default {
         const isConnected = integration.status === "connected";
         const isConfigured = integration.configured !== false;
         const buttonClass = isConnected ? "btn-outline" : "btn-primary";
-        const buttonText = !isConfigured ? "Configure .env" : (isConnected ? "Manage" : "Connect");
+        const connectText = !isConfigured ? "Configure .env" : (isConnected ? "Disconnect" : "Connect");
         const icon = PROVIDER_ICONS[integration.id] || "🔌";
 
         card.innerHTML = `
@@ -96,7 +125,9 @@ export default {
                 <div class="int-desc">${integration.description || "Integration connector"}</div>
                 ${isConfigured ? "" : '<div class="int-desc" style="color:#b05a00;">OAuth credentials missing</div>'}
                 <div class="int-status">${statusBadge(integration.status)}</div>
-                <button class="btn ${buttonClass} btn-sm" data-connect-provider="${integration.id}" ${!isConfigured ? "disabled" : ""}>${buttonText}</button>
+                <div class="int-actions" style="display: flex; gap: 8px; margin-top: 8px;">
+                    <button class="btn ${isConnected ? "btn-outline" : "btn-primary"} btn-sm" data-connect-provider="${integration.id}" ${!isConfigured ? "disabled" : ""}>${connectText}</button>
+                </div>
             </div>
         `;
 
@@ -112,12 +143,13 @@ export default {
 
             if (res?.auth_url) {
                 window.open(res.auth_url, "_blank", "noopener,noreferrer");
+                this.showMessage("Open the popup to complete authorization.", "info");
                 return;
             }
 
-            alert(`Integration ${providerId} did not return an auth URL.`);
+            this.showMessage(`Integration ${providerId} did not return an auth URL.`, "error");
         } catch (error) {
-            alert(`Failed to initiate ${providerId} connection: ${error.message}`);
+            this.showMessage(`Failed to initiate ${providerId}: ${error.message}`, "error");
         }
     },
 };
