@@ -1,0 +1,14 @@
+{
+  "name": "tax-god-copilot",
+  "version": "3.0.0",
+  "description": "Tax God v3.0 - Multi-agent tax, legal & financial AI co-pilot",
+  "private": true,
+  "scripts": {
+    "start": "uvicorn app.main:app --reload --port 8000",
+    "docker:up": "docker-compose up -d --build",
+    "docker:down": "docker-compose down"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
