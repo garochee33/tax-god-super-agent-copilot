@@ -1,0 +1,29 @@
+# Requirements for Tax God v3.0 Core Algorithms
+
+# Core dependencies
+numpy>=1.26.0
+pandas>=2.0.0
+
+# Optional - for full functionality
+# Uncomment and install as needed:
+
+# Vector database
+# pinecone-client>=2.2.0
+# weaviate-client>=3.24.0
+
+# Knowledge graph
+# neo4j>=5.14.0
+
+# Text embeddings
+# sentence-transformers>=2.2.0
+# openai>=1.3.0
+
+# Redis (for caching)
+# redis>=5.0.0
+
+# Database
+# psycopg2-binary>=2.9.0
+# sqlalchemy>=2.0.0
+
+# Utilities
+# python-dateutil>=2.8.0

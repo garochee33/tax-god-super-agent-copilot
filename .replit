@@ -1,0 +1,43 @@
+# Replit Configuration for Tax God v3.0
+# Trinity Agent #56 - Tax, Financial & Legal Advisor
+
+# Replit Environment
+language = "python3"
+run = "python3 -m uvicorn app.main:app --host 0.0.0.0 --port 8000"
+
+# Environment Variables (set these in Replit Secrets)
+# OPENAI_API_KEY - OpenAI API key for GPT models
+# ANTHROPIC_API_KEY - Anthropic API key for Claude models
+# SECRET_KEY - FastAPI secret key (generate randomly)
+# ENVIRONMENT - Set to "production" for Replit deployment
+# REDIS_URL - Redis connection (Replit provides Redis)
+# DATABASE_URL - PostgreSQL connection (Replit provides PostgreSQL)
+
+# Replit Agent Configuration
+[agent]
+name = "Tax God Agent"
+description = "Trinity Agent #56 - Tax, Financial & Legal Advisor powered by DTDA, IMRA, SHVA algorithms"
+capabilities = ["tax_analysis", "financial_advice", "legal_counsel", "agent_spawning"]
+model = "gpt-4o"
+tools = ["code_interpreter", "web_search", "file_system"]
+
+# Trinity Consortium Integration
+[trinity]
+agent_id = "tax-god"
+authority_level = 4
+specializations = ["tax_preparation", "tax_planning", "financial_analysis", "legal_counsel", "audit_defense"]
+cost_per_task = 0.15
+
+# Development Settings
+[dev]
+auto_reload = true
+debug = true
+log_level = "INFO"
+
+# Production Settings
+[prod]
+auto_reload = false
+debug = false
+log_level = "WARNING"
+cache_enabled = true
+monitoring_enabled = true

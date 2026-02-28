@@ -1,0 +1,53 @@
+# Virtual env and Python caches (Docker builds its own deps)
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.mypy_cache/
+.pytest_cache/
+*.egg-info/
+.eggs/
+
+# Git and IDE
+.git/
+.gitignore
+.cursor/
+.idea/
+*.swp
+.DS_Store
+
+# Env (use .env at runtime via env_file; don’t bake into image)
+.env
+.env.*
+!.env.example
+
+# Docs and specs (not needed in runtime image)
+specs/
+*.md
+!requirements.txt
+
+# Local data and logs
+logs/
+cache/
+data/
+temp/
+uploads/
+exports/
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Tests and dev
+tests/
+test_*.py
+html_versions/
+specs/**/*.html
+integrations/
+scripts/
+monitoring/
+assets/

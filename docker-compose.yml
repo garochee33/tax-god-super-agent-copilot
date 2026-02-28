@@ -1,0 +1,157 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: taxgod-api
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://taxgod:taxgod123@postgres:5432/taxgod
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: amqp://guest:guest@rabbitmq:5672//
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      GOOGLE_REDIRECT_URI: http://localhost:8000/api/v1/integrations/callback
+      QUICKBOOKS_REDIRECT_URI: http://localhost:8000/api/v1/integrations/callback
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/readiness"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  celery-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: taxgod-celery-worker
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://taxgod:taxgod123@postgres:5432/taxgod
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: amqp://guest:guest@rabbitmq:5672//
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      GOOGLE_REDIRECT_URI: http://localhost:8000/api/v1/integrations/callback
+      QUICKBOOKS_REDIRECT_URI: http://localhost:8000/api/v1/integrations/callback
+    command: celery -A app.tasks.celery_app:celery_app worker --loglevel=info
+    depends_on:
+      - postgres
+      - redis
+      - rabbitmq
+
+  celery-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: taxgod-celery-beat
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://taxgod:taxgod123@postgres:5432/taxgod
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: amqp://guest:guest@rabbitmq:5672//
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      GOOGLE_REDIRECT_URI: http://localhost:8000/api/v1/integrations/callback
+      QUICKBOOKS_REDIRECT_URI: http://localhost:8000/api/v1/integrations/callback
+    command: celery -A app.tasks.celery_app:celery_app beat --loglevel=info
+    depends_on:
+      - celery-worker
+
+  flower:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: taxgod-flower
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://taxgod:taxgod123@postgres:5432/taxgod
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: amqp://guest:guest@rabbitmq:5672//
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+    command: celery -A app.tasks.celery_app:celery_app flower --port=5555
+    ports:
+      - "5555:5555"
+    depends_on:
+      - celery-worker
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: taxgod-postgres
+    environment:
+      POSTGRES_DB: taxgod
+      POSTGRES_USER: taxgod
+      POSTGRES_PASSWORD: taxgod123
+    ports:
+      - "5433:5432"
+    volumes:
+      - taxgod_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U taxgod -d taxgod"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: taxgod-redis
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "6379:6379"
+    volumes:
+      - taxgod_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: taxgod-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 6
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: taxgod-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    depends_on:
+      - api
+
+  grafana:
+    image: grafana/grafana:11.1.5
+    container_name: taxgod-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+    ports:
+      - "3000:3000"
+    volumes:
+      - taxgod_grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+
+volumes:
+  taxgod_pg_data:
+  taxgod_redis_data:
+  taxgod_grafana_data:
+

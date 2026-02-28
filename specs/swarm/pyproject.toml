@@ -1,0 +1,28 @@
+[project]
+name = "agent_swarm"
+version = "0.1.0"
+description = "Supervisor-orchestrated multi-agent code assistant swarm"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Agent Swarm" }]
+
+dependencies = [
+  "pydantic>=2.7",
+  "tomli>=2.0; python_version < '3.11'",
+  "rich>=13.7",
+  "requests>=2.31",
+]
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project.scripts]
+agent-swarm = "swarm.cli:main"
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]

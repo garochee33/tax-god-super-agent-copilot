@@ -1,0 +1,165 @@
+/*
+  APP.JS
+  Main Application Entry Point & Router
+*/
+
+const routes = {
+    pantheon: { title: "The Pantheon", module: "/static/js/pages/pantheon.js" },
+    oracle: { title: "The Oracle", module: "/static/js/pages/oracle.js" },
+    tribunal: { title: "Gabriel's Tribunal", module: "/static/js/pages/tribunal.js" },
+    archives: { title: "The Archives", module: "/static/js/pages/archives.js" },
+    scrolls: { title: "Sacred Scrolls", module: "/static/js/pages/scrolls.js" },
+    agora: { title: "The Agora", module: "/static/js/pages/agora.js" },
+    hermes: { title: "Temple of Hermes", module: "/static/js/pages/hermes.js" },
+};
+
+const STORAGE_KEYS = {
+    clientId: "taxgod_client_id",
+    apiBase: "taxgod_api_base",
+};
+
+function ensureClientId() {
+    const existing = localStorage.getItem(STORAGE_KEYS.clientId);
+    if (existing) return existing;
+    const generated = `web-${Math.random().toString(36).slice(2, 10)}`;
+    localStorage.setItem(STORAGE_KEYS.clientId, generated);
+    return generated;
+}
+
+function getApiBase() {
+    return (localStorage.getItem(STORAGE_KEYS.apiBase) || "").trim();
+}
+
+function buildApiUrl(endpoint) {
+    if (/^https?:\/\//i.test(endpoint)) return endpoint;
+    const base = getApiBase();
+    if (!base) return endpoint;
+    return `${base.replace(/\/$/, "")}${endpoint.startsWith("/") ? "" : "/"}${endpoint}`;
+}
+
+class App {
+    constructor() {
+        this.appContainer = document.getElementById("app");
+        this.pageTitle = document.getElementById("page-title");
+        this.navItems = document.querySelectorAll(".nav-item");
+        this.currentPage = "pantheon";
+        this.clientId = ensureClientId();
+
+        this.init();
+    }
+
+    init() {
+        this.navItems.forEach((item) => {
+            item.addEventListener("click", (e) => {
+                const page = e.currentTarget.dataset.page;
+                this.navigate(page);
+            });
+        });
+
+        // Hash navigation is the source of truth for SPA routes.
+        window.addEventListener("hashchange", () => {
+            this.loadPage(this.getPageFromHash());
+        });
+
+        this.loadPage(this.getPageFromHash());
+    }
+
+    getPageFromHash() {
+        const page = window.location.hash.substring(1) || "pantheon";
+        return routes[page] ? page : "pantheon";
+    }
+
+    navigate(page) {
+        const target = routes[page] ? page : "pantheon";
+        if (target === this.currentPage) return;
+        window.location.hash = target;
+    }
+
+    async loadPage(pageId) {
+        const route = routes[pageId] || routes.pantheon;
+        this.currentPage = pageId;
+
+        this.updateActiveNav(pageId);
+        this.pageTitle.textContent = route.title;
+        this.appContainer.innerHTML = '<div class="spinner"></div>';
+
+        try {
+            const module = await import(route.module);
+            if (!module.default || typeof module.default.render !== "function") {
+                throw new Error("Invalid page module");
+            }
+
+            this.appContainer.innerHTML = module.default.render();
+
+            if (typeof module.default.init === "function") {
+                await module.default.init();
+            }
+        } catch (error) {
+            console.error("Page load error:", error);
+            this.appContainer.innerHTML = `
+                <div class="card">
+                    <div class="card-title">Failed to Load Page</div>
+                    <p style="margin-top: 8px; color: #666;">${error.message}</p>
+                </div>
+            `;
+        }
+    }
+
+    updateActiveNav(activePageId) {
+        this.navItems.forEach((item) => {
+            item.classList.toggle("active", item.dataset.page === activePageId);
+        });
+    }
+}
+
+export const session = {
+    getClientId() {
+        return ensureClientId();
+    },
+    setClientId(clientId) {
+        localStorage.setItem(STORAGE_KEYS.clientId, clientId);
+    },
+    getApiBase,
+    setApiBase(apiBase) {
+        localStorage.setItem(STORAGE_KEYS.apiBase, apiBase);
+    },
+};
+
+export const api = {
+    async request(method, endpoint, data = null) {
+        const response = await fetch(buildApiUrl(endpoint), {
+            method,
+            headers: { "Content-Type": "application/json" },
+            body: data ? JSON.stringify(data) : undefined,
+        });
+
+        const text = await response.text();
+        let payload = null;
+        try {
+            payload = text ? JSON.parse(text) : {};
+        } catch (_err) {
+            payload = { raw: text };
+        }
+
+        if (!response.ok) {
+            const detail = payload?.detail || payload?.message || response.statusText || "Request failed";
+            throw new Error(detail);
+        }
+
+        return payload;
+    },
+
+    async get(endpoint) {
+        return this.request("GET", endpoint);
+    },
+
+    async post(endpoint, data) {
+        return this.request("POST", endpoint, data);
+    },
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+    window.taxGodApp = new App();
+    // Backward compatibility for any page module still referencing window.app.
+    window.app = window.taxGodApp;
+});
