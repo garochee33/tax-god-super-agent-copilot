@@ -139,3 +139,53 @@ class QuickBooksService(BaseIntegration):
             )
         response.raise_for_status()
         return response.json()
+
+    async def get_balance_sheet(
+        self, access_token: str, realm_id: str, as_of_date: str
+    ) -> dict[str, Any]:
+        """Balance Sheet report as of a given date (YYYY-MM-DD)."""
+        url = f"https://quickbooks.api.intuit.com/v3/company/{realm_id}/reports/BalanceSheet"
+        async with httpx.AsyncClient(timeout=20) as client:
+            response = await client.get(
+                url,
+                params={
+                    "as_of_date": as_of_date,
+                    "minorversion": 75,
+                },
+                headers={
+                    "Authorization": f"Bearer {access_token}",
+                    "Accept": "application/json",
+                },
+            )
+        response.raise_for_status()
+        return response.json()
+
+    async def get_vendors(
+        self, access_token: str, realm_id: str, max_results: int = 100
+    ) -> list[dict[str, Any]]:
+        """List vendors for 1099 relevance (includes DisplayName, TaxIdentifier if present)."""
+        url = f"https://quickbooks.api.intuit.com/v3/company/{realm_id}/query"
+        query = f"SELECT * FROM Vendor MAXRESULTS {min(max_results, 1000)}"
+        async with httpx.AsyncClient(timeout=20) as client:
+            response = await client.get(
+                url,
+                params={"query": query, "minorversion": 75},
+                headers={
+                    "Authorization": f"Bearer {access_token}",
+                    "Accept": "application/json",
+                },
+            )
+        response.raise_for_status()
+        data = response.json()
+        query_response = data.get("QueryResponse", {})
+        raw = query_response.get("Vendor", [])
+        vendors = raw if isinstance(raw, list) else ([raw] if raw else [])
+        return [
+            {
+                "Id": v.get("Id"),
+                "DisplayName": v.get("DisplayName"),
+                "CompanyName": v.get("CompanyName"),
+                "TaxIdentifier": v.get("TaxIdentifier"),
+            }
+            for v in vendors
+        ]

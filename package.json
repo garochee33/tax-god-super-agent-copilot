@@ -6,7 +6,10 @@
   "scripts": {
     "start": "uvicorn app.main:app --reload --port 8000",
     "docker:up": "docker-compose up -d --build",
-    "docker:down": "docker-compose down"
+    "docker:down": "docker-compose down",
+    "cleanup:ports:aggressive": "sh -c 'for p in 8000 8001 5000 5050 5001 3000 8080 5173; do pid=$(lsof -ti:$p 2>/dev/null); [ -n \"$pid\" ] && kill -9 $pid && echo Killed port $p; done; pkill -9 -f uvicorn 2>/dev/null; pkill -9 -f vite 2>/dev/null; echo Done.'",
+    "dev:mac": "uvicorn app.main:app --reload --host 127.0.0.1 --port 5050",
+    "dev:safe": "uvicorn app.main:app --reload --host 127.0.0.1 --port 5050 --workers 1"
   },
   "engines": {
     "node": ">=18"

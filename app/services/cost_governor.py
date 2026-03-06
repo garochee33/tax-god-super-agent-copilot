@@ -25,6 +25,7 @@ from typing import Any, Optional
 import redis.asyncio as aioredis
 
 from app.core.config import ModelTier, get_settings
+from app.services.swarm_cost_planner import create_swarm_cost_plan
 
 logger = logging.getLogger(__name__)
 settings = get_settings()
@@ -47,6 +48,26 @@ class RoutingPath(str, Enum):
     CACHE = "cache"
     SINGLE_AGENT = "single_agent"
     OPENCLAW_SWARM = "openclaw_swarm"
+
+
+class CostGateCode(str, Enum):
+    """Trinity-style gate codes (TRINITY_GEMS)."""
+    ALLOW = "ALLOW"
+    BUDGET_EXCEEDED_PER_TASK = "BUDGET_EXCEEDED_PER_TASK"
+    BUDGET_EXCEEDED_SESSION = "BUDGET_EXCEEDED_SESSION"
+    BUDGET_EXCEEDED_DAILY = "BUDGET_EXCEEDED_DAILY"
+    KILL_SWITCH_TRIGGERED = "KILL_SWITCH_TRIGGERED"
+    APPROVAL_REQUIRED = "APPROVAL_REQUIRED"
+    CAPTURE_OVER_BUDGET = "CAPTURE_OVER_BUDGET"
+
+
+@dataclass
+class CostGateResult:
+    """Cost gate evaluation result (Trinity GEM)."""
+    allowed: bool
+    code: CostGateCode
+    reason: str
+    details: dict[str, Any]
 
 
 @dataclass
@@ -80,6 +101,8 @@ class CostEstimate:
     estimated_swarm_agents: int = 0
     budget_mode: str = "normal"
     downgrade_reason: Optional[str] = None
+    gate_code: str = "ALLOW"
+    swarm_plan: Optional[dict[str, Any]] = None
 
 
 @dataclass
@@ -412,18 +435,46 @@ class BudgetTracker:
 # Cost Governor (Main Class)
 # ---------------------------------------------------------------------------
 
+def _rejection_to_gate_code(reason: str | None) -> str:
+    """Map rejection_reason to Trinity-style gate code."""
+    if not reason:
+        return CostGateCode.ALLOW.value
+    r = reason.lower()
+    if "daily" in r or "system limit" in r:
+        return CostGateCode.BUDGET_EXCEEDED_DAILY.value
+    if "client monthly" in r or "client limit" in r:
+        return CostGateCode.BUDGET_EXCEEDED_SESSION.value
+    if "soft limit" in r or "per-query" in r:
+        return CostGateCode.BUDGET_EXCEEDED_PER_TASK.value
+    if "emergency" in r or "reserve" in r:
+        return CostGateCode.BUDGET_EXCEEDED_DAILY.value
+    return CostGateCode.ALLOW.value
+
+
 class CostGovernor:
     """
     Central cost governance service. Every LLM call must pass through:
       1. estimate()   - pre-flight cost + model selection
       2. approve()    - budget check
       3. record()     - post-flight actual cost tracking
+    Trinity GEM: gate codes, kill switch, swarm cost plan.
     """
 
     def __init__(self, redis_client: aioredis.Redis | None = None):
         self.cache = CacheManager(redis_client)
         self.budget = BudgetTracker(redis_client)
         self._usage_log: list[UsageRecord] = []
+        self._kill_switch_engaged: bool = False
+
+    def engage_kill_switch(self) -> None:
+        """Emergency stop: blocks all dispatches (Trinity GEM)."""
+        self._kill_switch_engaged = True
+        logger.warning("Cost governor kill switch engaged")
+
+    def disengage_kill_switch(self) -> None:
+        """Resume normal operation."""
+        self._kill_switch_engaged = False
+        logger.info("Cost governor kill switch disengaged")
 
     @staticmethod
     def _is_high_priority_task(task_type: str, query: str = "") -> bool:
@@ -500,6 +551,21 @@ class CostGovernor:
         context = context or {}
         high_priority = self._is_high_priority_task(task_type, query)
 
+        # Kill switch (Trinity GEM): block all dispatches
+        if self._kill_switch_engaged:
+            return CostEstimate(
+                model_name="",
+                model_tier=ModelTier.BUDGET,
+                estimated_input_tokens=0,
+                estimated_output_tokens=0,
+                estimated_cost_usd=0.0,
+                estimated_latency_sec=0.0,
+                approved=False,
+                rejection_reason="Kill switch engaged — all dispatches halted",
+                gate_code=CostGateCode.KILL_SWITCH_TRIGGERED.value,
+                budget_mode=await self.budget.get_budget_mode(),
+            )
+
         # Step 1: Check cache
         cached, cache_tier = await self.cache.get(query, client_id)
         if cached is not None:
@@ -518,6 +584,7 @@ class CostGovernor:
                 approved=True,
                 routing_path=RoutingPath.CACHE.value,
                 budget_mode=await self.budget.get_budget_mode(),
+                gate_code=CostGateCode.ALLOW.value,
             )
 
         # Step 2: Analyze complexity
@@ -536,10 +603,30 @@ class CostGovernor:
             parallelizable_score >= settings.SWARM_PARALLEL_THRESHOLD
             and batch_size >= settings.SWARM_MIN_BATCH_SIZE
         ):
-            swarm_cost = self._estimate_swarm_cost(batch_size)
+            # Trinity GEM: SwarmCostPlanner for non-linear swarm cost
+            plan = create_swarm_cost_plan(
+                worker_count=max(1, batch_size),
+                delegation_depth=1,
+                expected_tool_calls=2,
+                historical_variance=0.2,
+                model_tier="standard",
+            )
+            swarm_cost = plan.total_estimate
             approved, reason = await self.budget.check_budget(
                 client_id=client_id, estimated_cost=swarm_cost, high_priority=high_priority
             )
+            swarm_plan_dict = {
+                "planner_cost": plan.planner_cost,
+                "worker_count": plan.worker_count,
+                "worker_cost_estimate": plan.worker_cost_estimate,
+                "swarm_multiplier": plan.swarm_multiplier,
+                "synthesis_cost": plan.synthesis_cost,
+                "tool_execution_cost": plan.tool_execution_cost,
+                "retry_reserve": plan.retry_reserve,
+                "total_estimate": plan.total_estimate,
+                "quality_tier": plan.quality_tier,
+            }
+            gate = _rejection_to_gate_code(reason) if not approved else CostGateCode.ALLOW.value
             return CostEstimate(
                 model_name="openclaw_swarm",
                 model_tier=ModelTier.BUDGET,
@@ -553,6 +640,8 @@ class CostGovernor:
                 routing_path=RoutingPath.OPENCLAW_SWARM.value,
                 estimated_swarm_agents=min(max(batch_size, 1), 500),
                 budget_mode=budget_mode,
+                gate_code=gate,
+                swarm_plan=swarm_plan_dict,
             )
 
         # Step 5: Select model
@@ -597,6 +686,9 @@ class CostGovernor:
                 f"Complex-task soft limit (${settings.COST_SOFT_LIMIT_PER_COMPLEX_TASK:.2f}) exceeded"
             )
 
+        gate_code = (
+            _rejection_to_gate_code(reason) if not approved else CostGateCode.ALLOW.value
+        )
         return CostEstimate(
             model_name=model.name,
             model_tier=model.tier,
@@ -610,6 +702,7 @@ class CostGovernor:
             routing_path=RoutingPath.SINGLE_AGENT.value,
             budget_mode=budget_mode,
             downgrade_reason=downgrade_reason,
+            gate_code=gate_code,
         )
 
     # -- Post-flight Recording ------------------------------------------------

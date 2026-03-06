@@ -611,6 +611,8 @@ class AIOrchestrator:
                 "budget_mode": estimate.budget_mode,
                 "estimated_swarm_agents": estimate.estimated_swarm_agents,
                 "downgrade_reason": estimate.downgrade_reason,
+                "gate_code": getattr(estimate, "gate_code", "ALLOW"),
+                "swarm_plan": getattr(estimate, "swarm_plan", None),
             },
         )
 

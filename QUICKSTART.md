@@ -13,6 +13,8 @@ Set at least:
 - `SECRET_KEY`
 - `INTEGRATION_ENCRYPTION_KEY` (recommended for production)
 
+For QuickBooks (Hermes): `QUICKBOOKS_CLIENT_ID`, `QUICKBOOKS_CLIENT_SECRET`, `QUICKBOOKS_REDIRECT_URI`. Use Sandbox for testing; production keys for deploy. See `specs/BACKEND_INTEGRATIONS_AND_ALGORITHMS.md` for rate limits and endpoints.
+
 ## 2. Run Locally (no Docker)
 
 **Option A – `tax-god` command (from anywhere):**
@@ -71,4 +73,10 @@ Check Celery scheduler tasks are active:
 - `regulatory_scan_heartbeat` (60 min)
 
 Latest checkpoints are visible under `/health/detailed` -> `checks.ops_checkpoints`.
+
+## 5. Run better (memory & ports)
+
+- **Single dev server on fixed port:** `npm run dev:mac` → http://127.0.0.1:5050
+- **Kill stray dev processes:** `npm run cleanup:ports:aggressive` or `./scripts/cleanup-dev-ports.sh`
+- **If Cursor uses a lot of RAM:** see `docs/RUN_BETTER.md` and ensure `.cursorignore` exists, then restart Cursor.
 

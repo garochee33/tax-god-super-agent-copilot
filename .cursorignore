@@ -1,0 +1,15 @@
+# Reduce Cursor indexing and RAM use — restart Cursor after editing
+node_modules/
+dist/
+archive/
+attached_assets/
+*.log
+package-lock.json
+__pycache__/
+.venv/
+venv/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+*.egg-info/
+.git/

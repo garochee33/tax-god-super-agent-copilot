@@ -16,7 +16,8 @@ from app.core.config import get_settings
 @lru_cache
 def get_fernet() -> Fernet:
     settings = get_settings()
-    raw_key = settings.INTEGRATION_ENCRYPTION_KEY.strip()
+    # Prefer INTEGRATION_ENCRYPTION_KEY; allow VAULT_MASTER_KEY (Trinity) as fallback
+    raw_key = (settings.INTEGRATION_ENCRYPTION_KEY or settings.VAULT_MASTER_KEY or "").strip()
 
     if raw_key:
         key = raw_key.encode()

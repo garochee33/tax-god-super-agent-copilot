@@ -49,6 +49,52 @@ class ROIProjectRequest(BaseModel):
         return self
 
 
+class KillSwitchBody(BaseModel):
+    engage: bool = Field(True, description="True = engage (block all), False = disengage")
+
+
+@router.get("/governance/circuit-breaker")
+async def circuit_breaker_status(request: Request):
+    """Trinity GEM: Circuit breaker status for external APIs (e.g. QuickBooks)."""
+    cb = getattr(request.app.state, "circuit_breaker", None)
+    if not cb:
+        return {"config": {}, "agents": {}, "tripped_agents": [], "healthy_agents": []}
+    return cb.get_status()
+
+
+@router.post("/governance/circuit-breaker/reset")
+async def circuit_breaker_reset(
+    request: Request,
+    agent_id: str | None = None,
+):
+    """Trinity GEM: Reset circuit(s). If agent_id omitted, reset all."""
+    cb = getattr(request.app.state, "circuit_breaker", None)
+    if not cb:
+        raise HTTPException(status_code=503, detail="Circuit breaker not available")
+    if agent_id:
+        ok = cb.reset_agent(agent_id)
+        if not ok:
+            raise HTTPException(status_code=404, detail=f"Agent {agent_id!r} not found")
+        return {"reset": agent_id}
+    cb.reset_all()
+    return {"reset": "all"}
+
+
+@router.post("/governance/kill-switch")
+async def cost_governor_kill_switch(
+    request: Request,
+    body: KillSwitchBody | None = None,
+):
+    """Trinity GEM: Engage or disengage the cost governor kill switch (emergency stop)."""
+    governor = request.app.state.cost_governor
+    engage = body.engage if body is not None else True
+    if engage:
+        governor.engage_kill_switch()
+        return {"status": "engaged", "message": "Kill switch engaged — all dispatches halted"}
+    governor.disengage_kill_switch()
+    return {"status": "disengaged", "message": "Kill switch disengaged"}
+
+
 @router.get("/usage")
 async def get_usage_analytics(client_id: Optional[str] = None, request: Request = None):
     """Get usage analytics and cost breakdown."""
@@ -119,6 +165,8 @@ async def estimate_query_cost(
         "approved": estimate.approved,
         "rejection_reason": estimate.rejection_reason,
         "downgrade_reason": estimate.downgrade_reason,
+        "gate_code": getattr(estimate, "gate_code", "ALLOW"),
+        "swarm_plan": getattr(estimate, "swarm_plan", None),
     }
 
 

@@ -106,6 +106,8 @@ class Settings(BaseSettings):
     QUICKBOOKS_CLIENT_SECRET: str = ""
     QUICKBOOKS_REDIRECT_URI: str = "http://localhost:8000/api/v1/integrations/callback"
     INTEGRATION_ENCRYPTION_KEY: str = ""
+    # Same key as Trinity: VAULT_MASTER_KEY (AES-256 vault encryption). Used for credential encryption when set.
+    VAULT_MASTER_KEY: str = ""
 
     # -- Outreach / Lead Sources ----------------------------------------------
     SENDGRID_API_KEY: str = ""
@@ -129,6 +131,7 @@ class Settings(BaseSettings):
         "OPENAI_API_KEY",
         "ANTHROPIC_API_KEY",
         "INTEGRATION_ENCRYPTION_KEY",
+        "VAULT_MASTER_KEY",
         "SENDGRID_API_KEY",
         "APOLLO_API_KEY",
         mode="before",

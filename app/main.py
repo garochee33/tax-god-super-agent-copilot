@@ -26,6 +26,7 @@ from app.services.ai_service import AIOrchestrator
 from app.services.advanced_orchestrator import AdvancedTaxOrchestrator
 from app.services.agent_gabriel import AgentGabriel
 from app.services.citation_engine import CitationEngine
+from app.services.circuit_breaker import CircuitBreaker, CircuitBreakerConfig
 from app.services.cost_governor import CostGovernor
 from app.services.parallel_processor import ParallelProcessor
 from app.services.tax_writer import TaxWriter
@@ -93,9 +94,19 @@ async def lifespan(app: FastAPI):
         redirect_uri=settings.QUICKBOOKS_REDIRECT_URI
     ))
 
+    # Circuit breaker for external APIs (Trinity GEM)
+    circuit_breaker = CircuitBreaker(CircuitBreakerConfig(
+        error_threshold_percent=50.0,
+        window_sec=300.0,
+        pause_duration_sec=300.0,
+        min_calls_before_trip=4,
+        half_open_max_probes=2,
+    ))
+
     # Attach services to app state for dependency injection
     app.state.redis = redis_client
     app.state.cost_governor = cost_governor
+    app.state.circuit_breaker = circuit_breaker
     app.state.citation_engine = citation_engine
     app.state.ai_orchestrator = ai_orchestrator
     app.state.advanced_orchestrator = advanced_orchestrator
