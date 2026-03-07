@@ -9,6 +9,8 @@ from typing import Any, Optional
 from fastapi import APIRouter, Request
 from pydantic import BaseModel, Field
 
+from app.api.deps import CurrentUser, PreparerOrAdmin
+
 router = APIRouter()
 
 
@@ -38,8 +40,8 @@ class AuditResponseRequest(BaseModel):
 
 
 @router.post("/run")
-async def run_audit(body: AuditRequest, request: Request):
-    """Run Agent Gabriel audit on a tax return."""
+async def run_audit(body: AuditRequest, request: Request, current_user: PreparerOrAdmin):
+    """Run Agent Gabriel audit on a tax return. Requires preparer or admin role."""
     gabriel = request.app.state.agent_gabriel
 
     report = await gabriel.audit_individual_return(
@@ -63,8 +65,8 @@ async def run_audit(body: AuditRequest, request: Request):
 
 
 @router.post("/memo")
-async def generate_memo(body: MemoRequest, request: Request):
-    """Generate a tax research memorandum."""
+async def generate_memo(body: MemoRequest, request: Request, current_user: PreparerOrAdmin):
+    """Generate a tax research memorandum. Requires preparer or admin role."""
     writer = request.app.state.tax_writer
 
     doc = await writer.generate_tax_memo(
@@ -87,8 +89,8 @@ async def generate_memo(body: MemoRequest, request: Request):
 
 
 @router.post("/irs-response")
-async def generate_irs_response(body: AuditResponseRequest, request: Request):
-    """Generate an IRS audit response letter."""
+async def generate_irs_response(body: AuditResponseRequest, request: Request, current_user: PreparerOrAdmin):
+    """Generate an IRS audit response letter. Requires preparer or admin role."""
     writer = request.app.state.tax_writer
 
     doc = await writer.generate_audit_response(

@@ -9,6 +9,8 @@ from typing import Any, Optional
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
+from app.api.deps import CurrentUser
+
 router = APIRouter()
 
 
@@ -44,17 +46,19 @@ class CitationSearchRequest(BaseModel):
 # -- Endpoints ---------------------------------------------------------------
 
 @router.post("/query", response_model=ChatResponse)
-async def ai_query(body: ChatQuery, request: Request):
+async def ai_query(body: ChatQuery, request: Request, current_user: CurrentUser):
     """
     Submit a tax/legal/financial question to Tax God.
     Routes to the appropriate specialist agent automatically.
+    Requires authentication.
     """
     orchestrator = request.app.state.ai_orchestrator
     citation_engine = request.app.state.citation_engine
 
+    client_id = body.client_id or current_user.id
     msg = await orchestrator.query(
         query=body.query,
-        client_id=body.client_id,
+        client_id=client_id,
         conversation_id=body.conversation_id,
         task_type=body.task_type,
         context=body.context,
@@ -81,7 +85,7 @@ async def ai_query(body: ChatQuery, request: Request):
 
 
 @router.post("/citations/search")
-async def search_citations(body: CitationSearchRequest, request: Request):
+async def search_citations(body: CitationSearchRequest, request: Request, current_user: CurrentUser):
     """Search the tax law knowledge base for relevant citations."""
     engine = request.app.state.citation_engine
     result = engine.search(body.query, max_results=body.max_results)
@@ -104,7 +108,7 @@ async def search_citations(body: CitationSearchRequest, request: Request):
 
 
 @router.get("/conversations/{conversation_id}")
-async def get_conversation(conversation_id: str, request: Request):
+async def get_conversation(conversation_id: str, request: Request, current_user: CurrentUser):
     """Retrieve conversation history."""
     orchestrator = request.app.state.ai_orchestrator
     history = await orchestrator.get_conversation_history(conversation_id)

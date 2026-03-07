@@ -16,10 +16,12 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
+from app.api.deps import CurrentUser
 from app.services.circuit_breaker import QB_AGENT_ID
 from app.services.integrations.roadmap_catalog import get_roadmap_catalog
 
 logger = logging.getLogger(__name__)
+router = APIRouter()
 DATE_YYYY_MM_DD = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
@@ -66,9 +68,11 @@ def _integration_catalog(
 @router.get("/list")
 async def list_integrations(
     request: Request,
-    user_id: str = Query(default="current_user", description="Client/user identifier"),
+    current_user: CurrentUser,
+    user_id: str = Query(default=None, description="Client/user identifier (defaults to current user)"),
 ):
-    """List integrations and connection status for a user."""
+    """List integrations and connection status for a user. Requires authentication."""
+    user_id = user_id or current_user.id
     manager = request.app.state.integration_manager
     configured_map = {
         provider: bool(manager.get_provider(provider).is_configured)
@@ -91,8 +95,8 @@ async def get_integrations_roadmap():
 
 
 @router.post("/connect")
-async def connect_integration(body: ConnectRequest, request: Request):
-    """Get OAuth URL for provider connection."""
+async def connect_integration(body: ConnectRequest, request: Request, current_user: CurrentUser):
+    """Get OAuth URL for provider connection. Requires authentication."""
     manager = request.app.state.integration_manager
     provider = manager.get_provider(body.provider)
     if not provider:
@@ -162,14 +166,17 @@ async def oauth_callback_get(
 
 
 @router.post("/disconnect")
-async def disconnect_integration(body: DisconnectRequest, request: Request):
+async def disconnect_integration(body: DisconnectRequest, request: Request, current_user: CurrentUser):
+    """Disconnect an integration. Requires authentication."""
     manager = request.app.state.integration_manager
     removed = await manager.remove_credentials(body.user_id, body.provider)
     return {"provider": body.provider, "user_id": body.user_id, "disconnected": removed}
 
 
 @router.get("/status/{provider}")
-async def integration_status(provider: str, request: Request, user_id: str = Query(default="current_user")):
+async def integration_status(provider: str, request: Request, current_user: CurrentUser, user_id: str = Query(default=None)):
+    """Get integration status. Requires authentication."""
+    user_id = user_id or current_user.id
     manager = request.app.state.integration_manager
     if not manager.get_provider(provider):
         raise HTTPException(status_code=404, detail="Provider not found")
@@ -179,10 +186,13 @@ async def integration_status(provider: str, request: Request, user_id: str = Que
 @router.get("/google/emails")
 async def list_google_emails(
     request: Request,
-    user_id: str = Query(default="current_user"),
+    current_user: CurrentUser,
+    user_id: str = Query(default=None),
     query: str = Query(default=""),
     max_results: int = Query(default=10, ge=1, le=50),
 ):
+    """List Google emails. Requires authentication."""
+    user_id = user_id or current_user.id
     manager = request.app.state.integration_manager
     provider = manager.get_provider("google")
     if not provider:
@@ -199,7 +209,7 @@ async def list_google_emails(
         raise HTTPException(status_code=400, detail=f"Google request failed: {exc}") from exc
 
 
-def _quickbooks_creds_and_token(request: Request, user_id: str):
+async def _quickbooks_creds_and_token(request: Request, user_id: str):
     """Resolve QuickBooks provider, credentials, access token, and realm_id. Raises HTTPException on failure."""
     manager = request.app.state.integration_manager
     provider = manager.get_provider("quickbooks")
@@ -263,10 +273,12 @@ def _quickbooks_circuit_check(request: Request) -> None:
 @router.get("/quickbooks/company")
 async def quickbooks_company(
     request: Request,
-    user_id: str = Query(default="current_user"),
+    current_user: CurrentUser,
+    user_id: str = Query(default=None),
 ):
-    """Get connected QuickBooks company info (name, legal name, etc.)."""
-    _manager, provider, access_token, realm_id = _quickbooks_creds_and_token(request, user_id)
+    """Get connected QuickBooks company info. Requires authentication."""
+    user_id = user_id or current_user.id
+    _manager, provider, access_token, realm_id = await _quickbooks_creds_and_token(request, user_id)
     _quickbooks_circuit_check(request)
     cb = getattr(request.app.state, "circuit_breaker", None)
     try:
@@ -283,11 +295,13 @@ async def quickbooks_company(
 @router.get("/quickbooks/profit-loss")
 async def quickbooks_profit_loss(
     request: Request,
-    user_id: str = Query(default="current_user"),
+    current_user: CurrentUser,
+    user_id: str = Query(default=None),
     year: int = Query(default=2024, ge=2000, le=2100),
 ):
-    """Profit & Loss report for the given calendar year."""
-    _manager, provider, access_token, realm_id = _quickbooks_creds_and_token(request, user_id)
+    """Profit & Loss report for the given calendar year. Requires authentication."""
+    user_id = user_id or current_user.id
+    _manager, provider, access_token, realm_id = await _quickbooks_creds_and_token(request, user_id)
     _quickbooks_circuit_check(request)
     cb = getattr(request.app.state, "circuit_breaker", None)
     try:
@@ -304,11 +318,13 @@ async def quickbooks_profit_loss(
 @router.get("/quickbooks/balance-sheet")
 async def quickbooks_balance_sheet(
     request: Request,
-    user_id: str = Query(default="current_user"),
+    current_user: CurrentUser,
+    user_id: str = Query(default=None),
     as_of: str = Query(default=None, description="Date YYYY-MM-DD; default is end of prior month"),
 ):
-    """Balance Sheet report as of a given date."""
-    _manager, provider, access_token, realm_id = _quickbooks_creds_and_token(request, user_id)
+    """Balance Sheet report as of a given date. Requires authentication."""
+    user_id = user_id or current_user.id
+    _manager, provider, access_token, realm_id = await _quickbooks_creds_and_token(request, user_id)
     _quickbooks_circuit_check(request)
     cb = getattr(request.app.state, "circuit_breaker", None)
     if not as_of:
@@ -335,11 +351,13 @@ async def quickbooks_balance_sheet(
 @router.get("/quickbooks/vendors")
 async def quickbooks_vendors(
     request: Request,
-    user_id: str = Query(default="current_user"),
+    current_user: CurrentUser,
+    user_id: str = Query(default=None),
     max_results: int = Query(default=100, ge=1, le=1000),
 ):
-    """List vendors (for 1099 prep); includes DisplayName and TaxIdentifier when present."""
-    _manager, provider, access_token, realm_id = _quickbooks_creds_and_token(request, user_id)
+    """List vendors (for 1099 prep). Requires authentication."""
+    user_id = user_id or current_user.id
+    _manager, provider, access_token, realm_id = await _quickbooks_creds_and_token(request, user_id)
     _quickbooks_circuit_check(request)
     cb = getattr(request.app.state, "circuit_breaker", None)
     try:

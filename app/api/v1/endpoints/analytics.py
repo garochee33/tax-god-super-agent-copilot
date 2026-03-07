@@ -9,6 +9,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field, model_validator
 
+from app.api.deps import AdminUser, CurrentUser
 from app.core.config import get_settings
 from app.services.roi_engine import compute_roi, project_incremental_revenue
 
@@ -54,8 +55,8 @@ class KillSwitchBody(BaseModel):
 
 
 @router.get("/governance/circuit-breaker")
-async def circuit_breaker_status(request: Request):
-    """Trinity GEM: Circuit breaker status for external APIs (e.g. QuickBooks)."""
+async def circuit_breaker_status(request: Request, current_user: AdminUser):
+    """Trinity GEM: Circuit breaker status for external APIs. Requires admin."""
     cb = getattr(request.app.state, "circuit_breaker", None)
     if not cb:
         return {"config": {}, "agents": {}, "tripped_agents": [], "healthy_agents": []}
@@ -65,9 +66,10 @@ async def circuit_breaker_status(request: Request):
 @router.post("/governance/circuit-breaker/reset")
 async def circuit_breaker_reset(
     request: Request,
+    current_user: AdminUser,
     agent_id: str | None = None,
 ):
-    """Trinity GEM: Reset circuit(s). If agent_id omitted, reset all."""
+    """Trinity GEM: Reset circuit(s). Requires admin. If agent_id omitted, reset all."""
     cb = getattr(request.app.state, "circuit_breaker", None)
     if not cb:
         raise HTTPException(status_code=503, detail="Circuit breaker not available")
@@ -83,9 +85,10 @@ async def circuit_breaker_reset(
 @router.post("/governance/kill-switch")
 async def cost_governor_kill_switch(
     request: Request,
+    current_user: AdminUser,
     body: KillSwitchBody | None = None,
 ):
-    """Trinity GEM: Engage or disengage the cost governor kill switch (emergency stop)."""
+    """Trinity GEM: Engage or disengage the cost governor kill switch. Requires admin."""
     governor = request.app.state.cost_governor
     engage = body.engage if body is not None else True
     if engage:
@@ -96,15 +99,15 @@ async def cost_governor_kill_switch(
 
 
 @router.get("/usage")
-async def get_usage_analytics(client_id: Optional[str] = None, request: Request = None):
-    """Get usage analytics and cost breakdown."""
+async def get_usage_analytics(request: Request, current_user: CurrentUser, client_id: Optional[str] = None):
+    """Get usage analytics and cost breakdown. Requires authentication."""
     governor = request.app.state.cost_governor
     return await governor.get_analytics(client_id)
 
 
 @router.get("/budget/{client_id}")
-async def get_client_budget(client_id: str, request: Request):
-    """Get remaining budget for a specific client."""
+async def get_client_budget(client_id: str, request: Request, current_user: CurrentUser):
+    """Get remaining budget for a specific client. Requires authentication."""
     governor = request.app.state.cost_governor
     settings = get_settings()
 
@@ -125,12 +128,13 @@ async def get_client_budget(client_id: str, request: Request):
 @router.post("/estimate")
 async def estimate_query_cost(
     request: Request,
+    current_user: CurrentUser,
     body: EstimateRequest | None = None,
     query: str = "",
     client_id: str = "",
     task_type: str = "",
 ):
-    """Pre-flight cost estimate for a query (without executing it)."""
+    """Pre-flight cost estimate for a query (without executing it). Requires authentication."""
     governor = request.app.state.cost_governor
     if body is None:
         if not query.strip():
@@ -171,8 +175,8 @@ async def estimate_query_cost(
 
 
 @router.post("/roi/calculate")
-async def calculate_roi(body: ROICalculateRequest):
-    """Compute ROI using incremental revenue or gross profit baseline."""
+async def calculate_roi(body: ROICalculateRequest, current_user: CurrentUser):
+    """Compute ROI using incremental revenue or gross profit baseline. Requires authentication."""
     try:
         result = compute_roi(
             investment_cost=body.investment_cost,
@@ -191,9 +195,10 @@ async def calculate_roi(body: ROICalculateRequest):
 
 
 @router.post("/roi/project")
-async def project_roi(body: ROIProjectRequest):
+async def project_roi(body: ROIProjectRequest, current_user: CurrentUser):
     """
     Project incremental revenue from funnel assumptions, then calculate ROI.
+    Requires authentication.
     """
     try:
         incremental_revenue = project_incremental_revenue(

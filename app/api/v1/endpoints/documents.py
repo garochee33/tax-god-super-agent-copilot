@@ -12,6 +12,7 @@ from typing import Any, Optional
 from fastapi import APIRouter, File, HTTPException, Request, UploadFile
 from pydantic import BaseModel, Field
 
+from app.api.deps import CurrentUser
 from app.services.document_intelligence import (
     extract_entities_tax_doc,
     extract_text_from_pdf,
@@ -59,6 +60,7 @@ class IngestPdfBody(BaseModel):
 @router.post("/ingest", response_model=IngestPdfResponse)
 async def ingest_pdf(
     request: Request,
+    current_user: CurrentUser,
     file: UploadFile | None = File(None),
     body: IngestPdfBody | None = None,
 ):
@@ -105,8 +107,8 @@ async def ingest_pdf(
 
 
 @router.post("/batch-process")
-async def batch_process_documents(body: BatchDocumentRequest, request: Request):
-    """Process a batch of uploaded documents (W-2s, 1099s, receipts) in parallel."""
+async def batch_process_documents(body: BatchDocumentRequest, request: Request, current_user: CurrentUser):
+    """Process a batch of uploaded documents (W-2s, 1099s, receipts) in parallel. Requires authentication."""
     processor = request.app.state.parallel_processor
 
     job = await processor.batch_process_documents(
@@ -118,8 +120,8 @@ async def batch_process_documents(body: BatchDocumentRequest, request: Request):
 
 
 @router.post("/multi-state-research")
-async def multi_state_research(body: MultiStateRequest, request: Request):
-    """Research tax implications across all 50 states in parallel."""
+async def multi_state_research(body: MultiStateRequest, request: Request, current_user: CurrentUser):
+    """Research tax implications across all 50 states in parallel. Requires authentication."""
     processor = request.app.state.parallel_processor
 
     job = await processor.multi_state_research(
@@ -132,8 +134,8 @@ async def multi_state_research(body: MultiStateRequest, request: Request):
 
 
 @router.post("/scenario-analysis")
-async def scenario_analysis(body: ScenarioRequest, request: Request):
-    """Run multiple what-if tax scenarios in parallel."""
+async def scenario_analysis(body: ScenarioRequest, request: Request, current_user: CurrentUser):
+    """Run multiple what-if tax scenarios in parallel. Requires authentication."""
     processor = request.app.state.parallel_processor
 
     job = await processor.run_scenario_analysis(
@@ -147,8 +149,8 @@ async def scenario_analysis(body: ScenarioRequest, request: Request):
 
 
 @router.get("/jobs/{job_id}")
-async def get_job_status(job_id: str, request: Request):
-    """Check the status of a parallel processing job."""
+async def get_job_status(job_id: str, request: Request, current_user: CurrentUser):
+    """Check the status of a parallel processing job. Requires authentication."""
     processor = request.app.state.parallel_processor
     result = processor.get_job_results(job_id)
     if not result:
