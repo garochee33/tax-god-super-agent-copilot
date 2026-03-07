@@ -557,10 +557,21 @@ class AIOrchestrator:
                 max_tokens=4096,
             )
         except Exception as exc:
-            logger.error("LLM call failed: %s", exc)
+            logger.exception("LLM call failed: %s", exc)
+            err_str = str(exc).lower()
+            if not settings.OPENAI_API_KEY or not settings.ANTHROPIC_API_KEY:
+                hint = " Set OPENAI_API_KEY and/or ANTHROPIC_API_KEY in your .env (see QUICKSTART.md)."
+            elif "api_key" in err_str or "authentication" in err_str or "invalid" in err_str or "401" in err_str:
+                hint = " Check that OPENAI_API_KEY and ANTHROPIC_API_KEY in .env are valid."
+            else:
+                hint = " Check the server logs (terminal) for the full error."
+            content = (
+                f"I encountered an error processing your request.{hint} "
+                "Please try again or contact support if it persists."
+            )
             msg = AgentMessage(
                 role="assistant",
-                content="I encountered an error processing your request. Please try again.",
+                content=content,
                 agent=agent_role,
                 confidence=0.0,
                 metadata={"error": str(exc), "conversation_id": state.conversation_id},

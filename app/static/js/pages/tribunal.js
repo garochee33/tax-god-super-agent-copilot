@@ -3,7 +3,7 @@
   Audit Interface (Gabriel's Tribunal)
 */
 
-import { api } from '../app.js';
+import { api, session } from '../app.js';
 import { escapeHtml, safeMarkdown } from '../utils.js';
 
 export default {
@@ -81,12 +81,14 @@ export default {
                     <div class="card-header">
                         <span class="card-title">The Decree (Audit Report)</span>
                         <span class="badge badge-gold" id="score-badge">Score: --</span>
+                        <button type="button" id="god-mode-deep-analysis" class="btn btn-outline btn-sm" style="display: none;" title="Run DTDA→IMRA→SHVA on this audit">AI Deep Analysis (God Mode)</button>
                     </div>
                     
                     <div id="results-content" style="text-align: center; padding: 40px; color: #666;">
                         <div style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;">⚖️</div>
                         <p>Submit a plea to receive judgment.</p>
                     </div>
+                    <div id="god-mode-analysis-block" style="display: none; margin-top: var(--spacing-lg); padding-top: var(--spacing-md); border-top: 1px solid var(--color-gold); text-align: left;"></div>
                 </div>
 
             </div>
@@ -207,5 +209,38 @@ export default {
                 ${flagsHtml}
             </div>
         `;
+        this.lastReport = report;
+        const godModeBtn = document.getElementById('god-mode-deep-analysis');
+        const godModeBlock = document.getElementById('god-mode-analysis-block');
+        if (godModeBtn) godModeBtn.style.display = 'inline-flex';
+        if (godModeBlock) godModeBlock.style.display = 'none';
+        godModeBtn?.replaceWith(godModeBtn.cloneNode(true));
+        document.getElementById('god-mode-deep-analysis')?.addEventListener('click', () => this.runGodModeDeepAnalysis());
+    },
+
+    async runGodModeDeepAnalysis() {
+        const report = this.lastReport;
+        const block = document.getElementById('god-mode-analysis-block');
+        if (!report || !block) return;
+        const query = `Review this tax audit and give prioritized recommendations. Summary: ${report.summary}. Key flags: ${(report.all_flags || []).map(f => f.title + ': ' + f.recommendation).join('; ')}.`;
+        block.style.display = 'block';
+        block.innerHTML = '<div class="spinner"></div><p style="margin-top: 8px;">God Mode v3.0 (DTDA→IMRA→SHVA) analyzing...</p>';
+        try {
+            const res = await api.post('/api/v1/advanced/query', {
+                query,
+                client_id: session.getClientId(),
+                context: { source: 'tribunal_audit' },
+                require_citations: true
+            });
+            const content = res?.response?.content ?? res?.content ?? 'No response.';
+            const confidence = res?.final_confidence ?? res?.response?.confidence ?? 0;
+            block.innerHTML = `
+                <div class="card-title" style="font-size: 14px; margin-bottom: 8px;">God Mode v3.0 — AI Deep Analysis</div>
+                <div class="message-bubble" style="background: rgba(26,26,46,0.06); padding: var(--spacing-md); border-radius: var(--border-radius-md); white-space: pre-wrap;">${safeMarkdown(content)}</div>
+                <div style="font-size: 11px; color: #666; margin-top: 8px;">Confidence: ${Math.round((confidence || 0) * 100)}%</div>
+            `;
+        } catch (err) {
+            block.innerHTML = `<div style="color: var(--color-danger);">${escapeHtml(err.message || 'God Mode analysis failed.')}</div>`;
+        }
     }
 };

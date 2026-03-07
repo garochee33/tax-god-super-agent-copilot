@@ -17,7 +17,13 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏛️</text></svg>">
 </head>
 <body>
-    <div class="app-container">
+    <!-- Public gate: home, login, register (shown when not authenticated) -->
+    <div id="gate" class="gate-container">
+        <div id="gate-content" class="gate-content"></div>
+    </div>
+
+    <!-- App shell: sidebar + dashboard (shown when authenticated) -->
+    <div id="app-shell" class="app-container" style="display: none;">
         <!-- Sidebar (Ionic Column) -->
         <aside class="sidebar">
             <div class="sidebar-header">
@@ -63,9 +69,9 @@
             <header class="topbar">
                 <h2 class="page-title" id="page-title">The Pantheon</h2>
                 
-                <div class="user-profile">
-                    <div class="avatar">Z</div>
-                    <span class="username">Zeus (Admin)</span>
+                <div class="user-profile" id="user-profile" title="Click to logout">
+                    <div class="avatar" id="user-avatar">?</div>
+                    <span class="username" id="user-name">Loading…</span>
                 </div>
             </header>
 

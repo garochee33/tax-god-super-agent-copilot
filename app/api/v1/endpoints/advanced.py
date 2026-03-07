@@ -6,7 +6,7 @@ Provides access to the complete DTDA → IMRA → SHVA pipeline
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
@@ -105,13 +105,15 @@ class AdvancedTaxResponseModel(BaseModel):
 # Dependency injection functions
 async def get_advanced_orchestrator(request: Request) -> AdvancedTaxOrchestrator:
     """Get the advanced tax orchestrator from app state."""
-    orchestrator = getattr(request.app.state, 'advanced_orchestrator', None)
+    orchestrator: AdvancedTaxOrchestrator | None = getattr(
+        request.app.state, "advanced_orchestrator", None
+    )
     if not orchestrator:
         raise HTTPException(
             status_code=503,
             detail="Advanced tax orchestrator service is not available"
         )
-    return orchestrator
+    return cast(AdvancedTaxOrchestrator, orchestrator)
 
 
 # API Endpoints
@@ -205,13 +207,13 @@ async def decompose_tax_task(
 
         return DecompositionResponse(
             execution_plan=decomposition.execution_plan.value,
-            task_type=decomposition.task_type,
+            task_type=decomposition.task_type.value if hasattr(decomposition.task_type, "value") else str(decomposition.task_type),
             complexity=decomposition.complexity,
             subtasks=[
                 {
                     "task": subtask.task,
                     "priority": subtask.priority,
-                    "description": subtask.description,
+                    "description": getattr(subtask, "description", subtask.task),
                     "agent_type": subtask.agent_type,
                     "estimated_cost": subtask.estimated_cost,
                     "estimated_time": subtask.estimated_time,
@@ -266,7 +268,7 @@ async def retrieve_tax_memory(
 
         return [
             MemoryResultResponse(
-                tier=result.tier,
+                tier=result.tier.value if result.tier and hasattr(result.tier, "value") else (str(result.tier) if result.tier else "unknown"),
                 content=result.content,
                 final_score=result.final_score,
                 metadata=result.metadata
@@ -331,7 +333,10 @@ async def validate_tax_response(
                     }
                     for err in (validation_result.errors or [])
                 ],
-                healing_log=validation_result.healing_log,
+                healing_log=[
+                    str(h) if not isinstance(h, str) else h
+                    for h in (validation_result.healing_log or [])
+                ],
                 requires_human_review=validation_result.requires_human_review
             )
         else:
@@ -349,6 +354,18 @@ async def validate_tax_response(
             status_code=500,
             detail="Failed to validate response",
         )
+
+
+@router.get(
+    "/status",
+    summary="God Mode v3.0 Availability",
+    description="Check if the advanced pipeline (God Mode v3.0) is available. No admin required.",
+    tags=["Health & Monitoring"]
+)
+async def advanced_status(request: Request, current_user: CurrentUser) -> Dict[str, Any]:
+    """Return whether advanced orchestrator is available (for UI)."""
+    available = getattr(request.app.state, "advanced_orchestrator", None) is not None
+    return {"available": available, "label": "God Mode v3.0"}
 
 
 @router.get(

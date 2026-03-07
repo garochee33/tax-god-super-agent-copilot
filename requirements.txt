@@ -1,10 +1,11 @@
 # Tax God v3.0 - Python Dependencies (pinned for reproducible builds)
 
-# -- Web Framework --
+# -- Web Framework (Jinja2Templates needs jinja2) --
 fastapi==0.115.6
 uvicorn[standard]==0.32.1
 pydantic==2.10.4
 pydantic-settings==2.7.1
+jinja2>=3.1.0
 
 # -- LLM Providers --
 openai==1.61.0
@@ -18,7 +19,8 @@ alembic==1.14.1
 # -- Cache --
 redis==5.2.1
 
-# -- Auth --
+# -- Auth (EmailStr needs email-validator via pydantic[email]) --
+email-validator>=2.0.0
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 bcrypt==4.2.1
@@ -43,7 +45,7 @@ langgraph==0.2.60
 pypdf==5.1.0
 
 # -- Performance / Reliability --
-orjson==3.10.13
+# orjson omitted; uncomment orjson==3.10.13 if you have Rust or use Python with orjson wheels
 tenacity==9.0.0
 prometheus-client==0.21.1
 

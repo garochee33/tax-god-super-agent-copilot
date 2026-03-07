@@ -23,6 +23,7 @@ class ChatQuery(BaseModel):
     task_type: str = Field(default="", description="Task type hint (tax_compliance, legal, financial, etc.)")
     require_citations: bool = Field(default=True, description="Include tax law citations")
     context: Optional[dict[str, Any]] = Field(default=None, description="Additional context")
+    use_god_mode: bool = Field(default=False, description="Use God Mode v3.0 (DTDA→IMRA→SHVA pipeline)")
 
 
 class ChatResponse(BaseModel):
@@ -50,12 +51,53 @@ async def ai_query(body: ChatQuery, request: Request, current_user: CurrentUser)
     """
     Submit a tax/legal/financial question to Tax God.
     Routes to the appropriate specialist agent automatically.
+    When use_god_mode=True, runs the full DTDA→IMRA→SHVA pipeline (God Mode v3.0).
     Requires authentication.
     """
-    orchestrator = request.app.state.ai_orchestrator
     citation_engine = request.app.state.citation_engine
-
     client_id = resolve_client_id(body.client_id, current_user)
+
+    if body.use_god_mode:
+        advanced = getattr(request.app.state, "advanced_orchestrator", None)
+        if not advanced:
+            raise HTTPException(
+                status_code=503,
+                detail="God Mode v3.0 (advanced orchestrator) is not available",
+            )
+        result = await advanced.process_advanced_query(
+            query=body.query,
+            client_id=client_id,
+            conversation_id=body.conversation_id,
+            context=body.context or {},
+            require_citations=body.require_citations,
+        )
+        msg = result.response
+        enriched = citation_engine.enrich_response(msg.content, body.query)
+        response_conversation_id = msg.metadata.get("conversation_id") or body.conversation_id or ""
+        citations = enriched.get("verified_citations", []) + enriched.get("supplemental_citations", [])
+        if not citations and getattr(msg, "citations", None):
+            citations = msg.citations or []
+        return ChatResponse(
+            content=msg.content,
+            agent=msg.agent.value if msg.agent else None,
+            model_used=msg.model_used,
+            confidence=result.final_confidence,
+            confidence_level="god_mode" if result.decomposition else "",
+            citations=citations,
+            cost_usd=msg.cost_usd,
+            conversation_id=response_conversation_id,
+            requires_human_review=result.requires_human_review,
+            metadata={
+                **(msg.metadata or {}),
+                "god_mode": True,
+                "request_id": result.request_id,
+                "processing_time": result.processing_time,
+                "decomposition_task_type": result.decomposition.task_type.value if result.decomposition and hasattr(result.decomposition.task_type, "value") else str(result.decomposition.task_type) if result.decomposition else None,
+                "fallback_used": result.fallback_used,
+            },
+        )
+
+    orchestrator = request.app.state.ai_orchestrator
     msg = await orchestrator.query(
         query=body.query,
         client_id=client_id,
@@ -65,9 +107,7 @@ async def ai_query(body: ChatQuery, request: Request, current_user: CurrentUser)
         require_citations=body.require_citations,
     )
 
-    # Enrich with verified citations
     enriched = citation_engine.enrich_response(msg.content, body.query)
-
     response_conversation_id = msg.metadata.get("conversation_id") or body.conversation_id or ""
 
     return ChatResponse(

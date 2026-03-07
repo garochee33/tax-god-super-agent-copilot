@@ -46,9 +46,11 @@ export default {
                                 Consult
                             </button>
                         </form>
-                        <div class="input-options" style="margin-top: var(--spacing-sm); display: flex; gap: var(--spacing-md); font-size: 12px; color: #666;">
+                        <div class="input-options" style="margin-top: var(--spacing-sm); display: flex; gap: var(--spacing-md); font-size: 12px; color: #666; flex-wrap: wrap; align-items: center;">
                             <label><input type="checkbox" id="req-citations" checked> Require Citations</label>
+                            <label title="DTDA → IMRA → SHVA pipeline"><input type="checkbox" id="use-god-mode"> God Mode v3.0</label>
                             <span id="model-badge" class="badge badge-gold" style="margin-left: auto;">Model: GPT-4o</span>
+                            <span id="god-mode-badge" class="badge" style="display: none; background: #1a1a2e; color: var(--color-gold);">God Mode</span>
                         </div>
                     </div>
                 </div>
@@ -96,29 +98,35 @@ export default {
             try {
                 const clientId = session.getClientId();
                 const conversationId = getConversationId();
+                const useGodMode = document.getElementById('use-god-mode')?.checked ?? false;
                 const res = await api.post('/api/v1/chat/query', {
                     query,
                     client_id: clientId,
                     conversation_id: conversationId || undefined,
-                    require_citations: document.getElementById('req-citations').checked
+                    require_citations: document.getElementById('req-citations').checked,
+                    use_god_mode: useGodMode
                 });
 
                 document.getElementById(loadingId)?.remove();
 
                 if (res) {
-                    this.appendMessage('ai', res.content, res.confidence);
+                    this.appendMessage('ai', res.content, res.confidence, res.metadata?.god_mode);
                     this.updateCitations(res.citations || []);
                     if (res.conversation_id) {
                         setConversationId(res.conversation_id);
                     }
                     this.updateModelBadge(res.model_used);
+                    this.updateGodModeBadge(!!res.metadata?.god_mode);
                 } else {
                     this.appendMessage('system', 'The Oracle is silent. (API Error)');
                 }
             } catch (err) {
                 console.error(err);
                 document.getElementById(loadingId)?.remove();
-                const msg = err && err.message ? err.message : 'A divine error occurred.';
+                let msg = err && err.message ? err.message : 'A divine error occurred.';
+                if (msg === 'Failed to fetch' || (err && err.name === 'TypeError' && err.message && err.message.includes('fetch'))) {
+                    msg = 'Cannot reach the API. Check that the server is running (e.g. uvicorn) and that you opened this app from the same URL. If the API is on another port, set the API base URL in Temple of Hermes.';
+                }
                 this.appendMessage('system', msg);
             }
             
@@ -126,7 +134,7 @@ export default {
         });
     },
 
-    appendMessage(role, text, confidence = null) {
+    appendMessage(role, text, confidence = null, godMode = false) {
         const history = document.getElementById('chat-history');
         const div = document.createElement('div');
         div.className = `message ${role}`;
@@ -143,17 +151,23 @@ export default {
             if (pct < 50) color = 'red';
             confidenceHtml = `<div class="confidence-meter" style="font-size: 10px; margin-top: 5px; color: ${color};">Confidence: ${pct}%</div>`;
         }
+        const godModeBadge = godMode ? '<span class="badge badge-gold" style="font-size: 10px; margin-left: 8px;">God Mode v3.0</span>' : '';
 
         const formattedText = safeMarkdown(text);
 
         div.innerHTML = `
             <div class="message-avatar">${avatar}</div>
             <div class="message-content">
-                <div class="message-bubble">${formattedText}</div>
+                <div class="message-bubble">${formattedText}${godModeBadge}</div>
                 ${confidenceHtml}
             </div>
         `;
         history.appendChild(div);
+    },
+
+    updateGodModeBadge(show) {
+        const badge = document.getElementById('god-mode-badge');
+        if (badge) badge.style.display = show ? 'inline-block' : 'none';
     },
 
     appendLoading() {

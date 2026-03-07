@@ -757,3 +757,117 @@ a {
 .int-status {
     margin: 2px 0 6px;
 }
+
+/* ========== Gate (public home / login / register) ========== */
+.gate-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary-light) 50%, #0f3460 100%);
+    color: var(--color-text-light);
+    padding: var(--spacing-xl);
+}
+
+.gate-content {
+    width: 100%;
+    max-width: 480px;
+}
+
+.gate-home {
+    text-align: center;
+}
+
+.gate-home .gate-logo {
+    font-family: var(--font-heading);
+    font-size: 42px;
+    color: var(--color-gold);
+    text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    margin-bottom: var(--spacing-xs);
+}
+
+.gate-home .gate-tagline {
+    font-size: 14px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    opacity: 0.85;
+    margin-bottom: var(--spacing-xxl);
+}
+
+.gate-home .gate-hero {
+    font-size: 18px;
+    line-height: 1.7;
+    margin-bottom: var(--spacing-xxl);
+    max-width: 380px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.gate-home .gate-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.gate-form-card {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(212, 165, 116, 0.4);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-xl);
+    box-shadow: var(--shadow-lg);
+}
+
+.gate-form-card h2 {
+    font-family: var(--font-heading);
+    font-size: 22px;
+    color: var(--color-gold);
+    margin-bottom: var(--spacing-lg);
+    text-align: center;
+}
+
+.gate-form-card .form-control {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(212, 165, 116, 0.5);
+    color: var(--color-text-light);
+}
+
+.gate-form-card .form-control::placeholder {
+    color: rgba(255,255,255,0.5);
+}
+
+.gate-form-card .input-label {
+    color: var(--color-gold-light);
+}
+
+.gate-form-card .btn-primary {
+    width: 100%;
+    margin-top: var(--spacing-sm);
+    padding: var(--spacing-md);
+}
+
+.gate-form-card .gate-error {
+    margin-top: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: rgba(192, 57, 43, 0.2);
+    border: 1px solid var(--color-danger);
+    border-radius: var(--border-radius-sm);
+    font-size: 13px;
+    color: #ffb3b3;
+}
+
+.gate-form-card .gate-link {
+    text-align: center;
+    margin-top: var(--spacing-lg);
+    font-size: 14px;
+}
+
+.gate-form-card .gate-link a {
+    color: var(--color-gold);
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.gate-form-card .gate-link a:hover {
+    color: var(--color-gold-light);
+}

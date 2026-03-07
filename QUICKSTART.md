@@ -1,5 +1,24 @@
 # Tax God Quickstart
 
+## Python version (important)
+
+Use **Python 3.10, 3.11, 3.12, or 3.13**. **Python 3.14 is not supported** yet (pydantic-core and other deps rely on PyO3, which supports up to 3.13).
+
+If your default `python3` is 3.14, create the venv with an older interpreter:
+
+```bash
+# macOS with Homebrew (install if needed: brew install python@3.12)
+python3.12 -m venv .venv
+# or
+python3.13 -m venv .venv
+
+source .venv/bin/activate
+pip install -r requirements.txt
+npm run start
+```
+
+Check version: `python --version` or `python3.12 --version`.
+
 ## 1. Configure Environment
 
 ```bash
@@ -8,8 +27,8 @@ cp .env.example .env
 ```
 
 Set at least:
-- `OPENAI_API_KEY`
-- `ANTHROPIC_API_KEY`
+- `OPENAI_API_KEY` — required for Oracle chat when using GPT-4o / gpt-4o-mini (default)
+- `ANTHROPIC_API_KEY` — required if using Claude models or escalation
 - `SECRET_KEY`
 - `INTEGRATION_ENCRYPTION_KEY` (recommended for production)
 
@@ -33,9 +52,18 @@ tax-god 8001      # if 8000 is in use
 **Option B – manual:**
 
 ```bash
-cd /Users/enzogaroche/Desktop/AI_AGENTS/tax-god-copilot
-source venv/bin/activate
-uvicorn app.main:app --reload --port 8000
+cd /path/to/tax-god-copilot
+# Use Python 3.10–3.13 (see Python version section above)
+python3.12 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+npm run start
+```
+
+Or run uvicorn directly (reload only watches `app/` and `specs/`, not `.venv`):
+
+```bash
+uvicorn app.main:app --reload --reload-dir app --reload-dir specs --port 8000
 ```
 
 **If you see "Address already in use" (port 8000):** free the port or use another:

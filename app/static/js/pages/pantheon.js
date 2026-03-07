@@ -99,6 +99,12 @@ export default {
                                 <button type="button" id="run-estimate" class="btn btn-outline btn-sm">Estimate</button>
                             </div>
                             <div id="estimate-result" style="margin-top: 8px; font-size: 12px; color: #666;"></div>
+                            <div class="card-title" style="font-size: 14px; margin: var(--spacing-md) 0 8px;">God Mode v3.0 — Decompose</div>
+                            <div style="display: flex; gap: 8px;">
+                                <input type="text" id="decompose-query" class="form-control" placeholder="Same or different query for DTDA..." style="flex: 1;">
+                                <button type="button" id="run-decompose" class="btn btn-primary btn-sm">Decompose</button>
+                            </div>
+                            <div id="decompose-result" style="margin-top: 8px; font-size: 12px; color: #444;"></div>
                         </div>
                     </div>
                 </div>
@@ -124,6 +130,36 @@ export default {
                     estimateResult.textContent = `~$${cost.toFixed(4)} (${model})`;
                 } catch (err) {
                     estimateResult.textContent = err.message || "Estimate failed.";
+                }
+            });
+        }
+        const runDecompose = document.getElementById("run-decompose");
+        const decomposeQuery = document.getElementById("decompose-query");
+        const decomposeResult = document.getElementById("decompose-result");
+        if (runDecompose && decomposeQuery && decomposeResult) {
+            runDecompose.addEventListener("click", async () => {
+                const q = decomposeQuery.value.trim() || estimateQuery?.value?.trim() || "";
+                if (!q) { decomposeResult.innerHTML = "Enter a query to decompose (or use the one above)."; return; }
+                decomposeResult.innerHTML = "Decomposing (DTDA)...";
+                try {
+                    const res = await api.post("/api/v1/advanced/decompose", {
+                        query: q,
+                        client_id: session.getClientId(),
+                        context: {}
+                    });
+                    const plan = res?.execution_plan ?? "—";
+                    const taskType = res?.task_type ?? "—";
+                    const complexity = res?.complexity ?? 0;
+                    const cost = res?.estimated_cost ?? 0;
+                    const time = res?.estimated_time ?? 0;
+                    const subtasks = res?.subtasks?.length ?? 0;
+                    decomposeResult.innerHTML = `
+                        <div style="margin-bottom: 6px;"><strong>Plan:</strong> ${escapeHtml(plan)} &nbsp;|&nbsp; <strong>Type:</strong> ${escapeHtml(String(taskType))} &nbsp;|&nbsp; <strong>Complexity:</strong> ${complexity.toFixed(1)}</div>
+                        <div style="margin-bottom: 6px;"><strong>Est. cost:</strong> ~$${cost.toFixed(4)} &nbsp;|&nbsp; <strong>Time:</strong> ${time}s &nbsp;|&nbsp; <strong>Subtasks:</strong> ${subtasks}</div>
+                        ${(res?.subtasks?.length ? "<div style=\"margin-top: 4px;\"><strong>Subtasks:</strong> " + res.subtasks.map(s => escapeHtml(s.task || s.description || "")).join("; ") + "</div>" : "")}
+                    `;
+                } catch (err) {
+                    decomposeResult.innerHTML = `<span style="color: var(--color-danger);">${escapeHtml(err.message || "Decompose failed.")}</span>`;
                 }
             });
         }
