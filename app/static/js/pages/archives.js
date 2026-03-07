@@ -4,6 +4,7 @@
 */
 
 import { api } from '../app.js';
+import { escapeHtml, safeMarkdown } from '../utils.js';
 
 export default {
     render() {
@@ -63,7 +64,7 @@ export default {
             } catch (err) {
                 console.error(err);
                 const msg = err && err.message ? err.message : 'The archives are closed (Error).';
-                resultsContainer.innerHTML = `<div class="error" style="grid-column: span 2; text-align: center;">${msg} <button class="btn btn-sm btn-outline" style="margin-top: 8px;">Retry</button></div>`;
+                resultsContainer.innerHTML = `<div class="error" style="grid-column: span 2; text-align: center;">${escapeHtml(msg)} <button class="btn btn-sm btn-outline" style="margin-top: 8px;">Retry</button></div>`;
                 resultsContainer.querySelector('button')?.addEventListener('click', () => { input.focus(); });
             }
         });
@@ -83,12 +84,12 @@ export default {
             card.className = 'card citation-result';
             card.innerHTML = `
                 <div class="card-header">
-                    <span class="citation-ref" style="font-size: 14px; color: var(--color-primary-dark); font-weight: bold;">${cit.reference}</span>
-                    <span class="badge badge-gold">${cit.type}</span>
+                    <span class="citation-ref" style="font-size: 14px; color: var(--color-primary-dark); font-weight: bold;">${escapeHtml(cit.reference)}</span>
+                    <span class="badge badge-gold">${escapeHtml(cit.type)}</span>
                 </div>
-                <div class="citation-title" style="font-weight: 600; margin-bottom: 8px;">${cit.title}</div>
-                <div class="citation-summary" style="font-size: 13px; color: #555;">${cit.summary}</div>
-                <div class="citation-meta" style="margin-top: 10px; font-size: 11px; color: #999;">Year: ${cit.year}</div>
+                <div class="citation-title" style="font-weight: 600; margin-bottom: 8px;">${escapeHtml(cit.title)}</div>
+                <div class="citation-summary" style="font-size: 13px; color: #555;">${escapeHtml(cit.summary)}</div>
+                <div class="citation-meta" style="margin-top: 10px; font-size: 11px; color: #999;">Year: ${escapeHtml(cit.year)}</div>
             `;
             container.appendChild(card);
         });

@@ -4,6 +4,7 @@
 */
 
 import { api, session } from "../app.js";
+import { escapeHtml, safeMarkdown } from '../utils.js';
 
 function formatCurrency(value) {
     return new Intl.NumberFormat("en-US", {
@@ -175,8 +176,8 @@ export default {
             <div class="activity-item">
                 <div class="activity-icon">🧠</div>
                 <div class="activity-details">
-                    <div class="activity-title">Top model: ${dominantModel ? dominantModel[0] : "n/a"}</div>
-                    <div class="activity-meta">${dominantModel ? `${dominantModel[1]} queries` : "No model usage yet"}</div>
+                    <div class="activity-title">Top model: ${dominantModel ? escapeHtml(dominantModel[0]) : "n/a"}</div>
+                    <div class="activity-meta">${dominantModel ? `${escapeHtml(dominantModel[1])} queries` : "No model usage yet"}</div>
                 </div>
                 <span class="badge badge-primary">Routing</span>
             </div>
@@ -186,7 +187,7 @@ export default {
                     <div class="activity-title">Daily budget utilization</div>
                     <div class="activity-meta">${formatCurrency(usage?.daily_spend ?? 0)} of ${formatCurrency(budget?.daily_system_limit ?? 0)}</div>
                 </div>
-                <span class="badge badge-warning">${usage?.budget_mode || "normal"}</span>
+                <span class="badge badge-warning">${escapeHtml(usage?.budget_mode || "normal")}</span>
             </div>
             <div class="activity-item">
                 <div class="activity-icon">📦</div>
@@ -205,7 +206,7 @@ export default {
                 <div class="activity-icon">⚠️</div>
                 <div class="activity-details">
                     <div class="activity-title">Unable to load dashboard metrics</div>
-                    <div class="activity-meta">${message}</div>
+                    <div class="activity-meta">${escapeHtml(message)}</div>
                 </div>
             </div>
         `;

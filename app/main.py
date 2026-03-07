@@ -22,6 +22,7 @@ from prometheus_client import CONTENT_TYPE_LATEST, Counter, Gauge, Histogram, ge
 
 from app.core.config import get_settings
 from app.core.database import check_database_health, engine as db_engine
+from app.middleware.security import RequestIdMiddleware, SecurityHeadersMiddleware, RateLimitMiddleware
 from app.services.ai_service import AIOrchestrator
 from app.services.advanced_orchestrator import AdvancedTaxOrchestrator
 from app.services.agent_gabriel import AgentGabriel
@@ -139,9 +140,17 @@ app = FastAPI(
     redoc_url="/api/redoc",
 )
 
+app.add_middleware(RequestIdMiddleware)
+if settings.is_production:
+    app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(
+    RateLimitMiddleware,
+    requests_per_minute=120 if not settings.is_production else 60,
+    auth_requests_per_minute=10,
+)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=list(
+    allow_origins=list(settings.ALLOWED_ORIGINS) if settings.is_production else list(
         {
             *settings.ALLOWED_ORIGINS,
             "http://127.0.0.1:3000",
@@ -149,8 +158,7 @@ app.add_middleware(
             "http://127.0.0.1:5173",
         }
     ),
-    # Helps local Chrome extension development (origin: chrome-extension://<id>).
-    allow_origin_regex=r"chrome-extension://.*",
+    allow_origin_regex=r"chrome-extension://.*" if not settings.is_production else None,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -199,7 +207,13 @@ async def health_check():
 
 
 @app.get("/metrics")
-async def metrics():
+async def metrics(request: Request):
+    """Prometheus metrics. Requires valid metrics token in production."""
+    if settings.is_production:
+        token = request.headers.get("Authorization", "")
+        expected = f"Bearer {settings.SECRET_KEY[:16]}"
+        if token != expected:
+            return JSONResponse(status_code=403, content={"detail": "Forbidden"})
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 

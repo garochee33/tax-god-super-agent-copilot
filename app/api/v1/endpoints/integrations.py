@@ -16,7 +16,8 @@ from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
-from app.api.deps import CurrentUser
+from app.api.deps import CurrentUser, AdminUser
+from app.models.user import UserRole
 from app.services.circuit_breaker import QB_AGENT_ID
 from app.services.integrations.roadmap_catalog import get_roadmap_catalog
 
@@ -27,19 +28,25 @@ DATE_YYYY_MM_DD = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 class ConnectRequest(BaseModel):
     provider: str
-    user_id: str = Field(default="current_user")
 
 
 class CallbackRequest(BaseModel):
     provider: str
     code: str
-    user_id: str = Field(default="current_user")
     realm_id: str | None = None
 
 
 class DisconnectRequest(BaseModel):
     provider: str
-    user_id: str = Field(default="current_user")
+
+
+def _resolve_user_id(current_user, requested_user_id: str | None) -> str:
+    """Resolve effective user_id: admins can act for others, regular users only themselves."""
+    if not requested_user_id or requested_user_id == current_user.id:
+        return current_user.id
+    if current_user.role == UserRole.ADMIN.value:
+        return requested_user_id
+    return current_user.id
 
 
 def _integration_catalog(
@@ -69,10 +76,10 @@ def _integration_catalog(
 async def list_integrations(
     request: Request,
     current_user: CurrentUser,
-    user_id: str = Query(default=None, description="Client/user identifier (defaults to current user)"),
+    user_id: str = Query(default=None, description="Client/user identifier (admin only; defaults to current user)"),
 ):
     """List integrations and connection status for a user. Requires authentication."""
-    user_id = user_id or current_user.id
+    user_id = _resolve_user_id(current_user, user_id)
     manager = request.app.state.integration_manager
     configured_map = {
         provider: bool(manager.get_provider(provider).is_configured)
@@ -104,20 +111,18 @@ async def connect_integration(body: ConnectRequest, request: Request, current_us
     if not provider.is_configured:
         raise HTTPException(
             status_code=400,
-            detail=(
-                f"{body.provider} is not configured. Add OAuth credentials in .env first."
-            ),
+            detail=f"{body.provider} is not configured. Add OAuth credentials in .env first.",
         )
 
-    url = provider.get_auth_url(state=body.user_id)
-    return {"provider": body.provider, "user_id": body.user_id, "auth_url": url}
+    url = provider.get_auth_url(state=current_user.id)
+    return {"provider": body.provider, "user_id": current_user.id, "auth_url": url}
 
 
 @router.post("/callback")
-async def oauth_callback(body: CallbackRequest, request: Request):
+async def oauth_callback(body: CallbackRequest, request: Request, current_user: CurrentUser):
     """
     Exchange OAuth code for tokens and persist connection credentials.
-    Supports programmatic callbacks.
+    Requires authentication; tokens are stored for the current user.
     """
     manager = request.app.state.integration_manager
     provider = manager.get_provider(body.provider)
@@ -126,8 +131,8 @@ async def oauth_callback(body: CallbackRequest, request: Request):
 
     try:
         tokens = await provider.exchange_code(body.code, realm_id=body.realm_id)
-        await manager.save_credentials(body.user_id, body.provider, tokens)
-        return {"status": "connected", "provider": body.provider, "user_id": body.user_id}
+        await manager.save_credentials(current_user.id, body.provider, tokens)
+        return {"status": "connected", "provider": body.provider, "user_id": current_user.id}
     except Exception as exc:
         raise HTTPException(status_code=400, detail=f"OAuth callback failed: {exc}") from exc
 
@@ -167,16 +172,16 @@ async def oauth_callback_get(
 
 @router.post("/disconnect")
 async def disconnect_integration(body: DisconnectRequest, request: Request, current_user: CurrentUser):
-    """Disconnect an integration. Requires authentication."""
+    """Disconnect an integration. Requires authentication. Disconnects current user."""
     manager = request.app.state.integration_manager
-    removed = await manager.remove_credentials(body.user_id, body.provider)
-    return {"provider": body.provider, "user_id": body.user_id, "disconnected": removed}
+    removed = await manager.remove_credentials(current_user.id, body.provider)
+    return {"provider": body.provider, "user_id": current_user.id, "disconnected": removed}
 
 
 @router.get("/status/{provider}")
 async def integration_status(provider: str, request: Request, current_user: CurrentUser, user_id: str = Query(default=None)):
     """Get integration status. Requires authentication."""
-    user_id = user_id or current_user.id
+    user_id = _resolve_user_id(current_user, user_id)
     manager = request.app.state.integration_manager
     if not manager.get_provider(provider):
         raise HTTPException(status_code=404, detail="Provider not found")
@@ -192,7 +197,7 @@ async def list_google_emails(
     max_results: int = Query(default=10, ge=1, le=50),
 ):
     """List Google emails. Requires authentication."""
-    user_id = user_id or current_user.id
+    user_id = _resolve_user_id(current_user, user_id)
     manager = request.app.state.integration_manager
     provider = manager.get_provider("google")
     if not provider:
@@ -277,7 +282,7 @@ async def quickbooks_company(
     user_id: str = Query(default=None),
 ):
     """Get connected QuickBooks company info. Requires authentication."""
-    user_id = user_id or current_user.id
+    user_id = _resolve_user_id(current_user, user_id)
     _manager, provider, access_token, realm_id = await _quickbooks_creds_and_token(request, user_id)
     _quickbooks_circuit_check(request)
     cb = getattr(request.app.state, "circuit_breaker", None)
@@ -300,7 +305,7 @@ async def quickbooks_profit_loss(
     year: int = Query(default=2024, ge=2000, le=2100),
 ):
     """Profit & Loss report for the given calendar year. Requires authentication."""
-    user_id = user_id or current_user.id
+    user_id = _resolve_user_id(current_user, user_id)
     _manager, provider, access_token, realm_id = await _quickbooks_creds_and_token(request, user_id)
     _quickbooks_circuit_check(request)
     cb = getattr(request.app.state, "circuit_breaker", None)
@@ -323,7 +328,7 @@ async def quickbooks_balance_sheet(
     as_of: str = Query(default=None, description="Date YYYY-MM-DD; default is end of prior month"),
 ):
     """Balance Sheet report as of a given date. Requires authentication."""
-    user_id = user_id or current_user.id
+    user_id = _resolve_user_id(current_user, user_id)
     _manager, provider, access_token, realm_id = await _quickbooks_creds_and_token(request, user_id)
     _quickbooks_circuit_check(request)
     cb = getattr(request.app.state, "circuit_breaker", None)
@@ -356,7 +361,7 @@ async def quickbooks_vendors(
     max_results: int = Query(default=100, ge=1, le=1000),
 ):
     """List vendors (for 1099 prep). Requires authentication."""
-    user_id = user_id or current_user.id
+    user_id = _resolve_user_id(current_user, user_id)
     _manager, provider, access_token, realm_id = await _quickbooks_creds_and_token(request, user_id)
     _quickbooks_circuit_check(request)
     cb = getattr(request.app.state, "circuit_breaker", None)

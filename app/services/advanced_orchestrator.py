@@ -16,7 +16,9 @@ from app.services.cost_governor import CostGovernor
 from app.services.citation_engine import CitationEngine
 
 # Import the core algorithms
-from specs.algorithms.dtda import DynamicTaskDecompositionAlgorithm, DecompositionResult, ExecutionPlan
+import asyncio
+
+from specs.algorithms.dtda import DynamicTaskDecompositionAlgorithm, DecompositionResult, ExecutionPlan, TaskType
 from specs.algorithms.imra import IntelligentMemoryRetrievalAlgorithm, RetrievalContext, MemoryResult
 from specs.algorithms.shva import SelfHealingValidationAlgorithm, ValidationResult
 
@@ -48,15 +50,14 @@ class AdvancedTaxOrchestrator:
         # Fallback to basic orchestrator if algorithms fail
         self.fallback_orchestrator = AIOrchestrator(cost_governor)
 
-        # Enhanced agent routing based on DTDA task types
         self.task_type_agent_mapping = {
-            'tax_preparation': AgentRole.TAX_COMPLIANCE,
-            'tax_planning': AgentRole.FINANCIAL_ANALYST,
-            'legal_entity': AgentRole.LEGAL_COUNSEL,
-            'financial_analysis': AgentRole.FINANCIAL_ANALYST,
-            'audit_defense': AgentRole.AUDIT_DEFENSE,
-            'compliance': AgentRole.TAX_COMPLIANCE,
-            'research': AgentRole.RESEARCH,
+            TaskType.TAX_PREPARATION: AgentRole.TAX_COMPLIANCE,
+            TaskType.TAX_PLANNING: AgentRole.FINANCIAL_ANALYST,
+            TaskType.LEGAL_ENTITY: AgentRole.LEGAL_COUNSEL,
+            TaskType.FINANCIAL_ANALYSIS: AgentRole.FINANCIAL_ANALYST,
+            TaskType.AUDIT_DEFENSE: AgentRole.AUDIT_DEFENSE,
+            TaskType.COMPLIANCE: AgentRole.TAX_COMPLIANCE,
+            TaskType.RESEARCH: AgentRole.RESEARCH,
         }
 
     async def process_advanced_query(
@@ -169,7 +170,7 @@ class AdvancedTaxOrchestrator:
                 "audit_concerns": context.get("audit_concerns", False),
             }
 
-            result = self.dtda.decompose_task(query, dtda_context)
+            result = await asyncio.to_thread(self.dtda.decompose_task, query, dtda_context)
 
             # Log decomposition results
             logger.info(f"DTDA Result: Plan={result.execution_plan.value}, "
@@ -200,7 +201,7 @@ class AdvancedTaxOrchestrator:
                 max_results=10
             )
 
-            results = self.imra.retrieve_context(retrieval_context)
+            results = await asyncio.to_thread(self.imra.retrieve_context, retrieval_context)
 
             # Log memory retrieval results
             tier_counts = {}
@@ -287,12 +288,11 @@ class AdvancedTaxOrchestrator:
             }
 
             # Validate based on task type
-            if task_type in ["tax_preparation", "tax_planning", "financial_analysis"]:
-                # For tax/financial content, validate as tax_return
-                validation_result = self.shva.validate_output(response_data, "tax_analysis")
+            task_type_str = task_type.value if hasattr(task_type, "value") else str(task_type)
+            if task_type_str in ("tax_preparation", "tax_planning", "financial_analysis"):
+                validation_result = await asyncio.to_thread(self.shva.validate_output, response_data, "tax_analysis")
             else:
-                # For other content, validate as general_response
-                validation_result = self.shva.validate_output(response_data, "general_response")
+                validation_result = await asyncio.to_thread(self.shva.validate_output, response_data, "general_response")
 
             logger.info(f"SHVA validation: valid={validation_result.is_valid}, "
                        f"confidence={validation_result.confidence_score:.3f}, "

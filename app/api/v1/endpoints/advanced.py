@@ -11,7 +11,8 @@ from typing import Any, Dict
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
-from app.services.advanced_orchestrator import AdvancedTaxOrchestrator, AdvancedTaxResponse
+from app.api.deps import CurrentUser, AdminUser
+from app.services.advanced_orchestrator import AdvancedTaxOrchestrator
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -61,7 +62,7 @@ class MemoryResultResponse(BaseModel):
     tier: str
     content: str
     final_score: float
-    metadata: Dict[str, Any] = {}
+    metadata: Dict[str, Any] = Field(default_factory=dict)
 
 
 class ValidationResponse(BaseModel):
@@ -137,6 +138,7 @@ async def get_advanced_orchestrator(request: Request) -> AdvancedTaxOrchestrator
 )
 async def process_advanced_tax_query(
     request: AdvancedTaxRequest,
+    current_user: CurrentUser,
     orchestrator: AdvancedTaxOrchestrator = Depends(get_advanced_orchestrator),
 ) -> AdvancedTaxResponseModel:
     """
@@ -162,10 +164,10 @@ async def process_advanced_tax_query(
         return AdvancedTaxResponseModel(**response_data)
 
     except Exception as exc:
-        logger.error(f"Advanced tax query processing failed: {exc}")
+        logger.error("Advanced tax query processing failed: %s", exc)
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to process advanced tax query: {str(exc)}"
+            detail="Failed to process advanced tax query",
         )
 
 
@@ -187,6 +189,7 @@ async def process_advanced_tax_query(
 )
 async def decompose_tax_task(
     request: AdvancedTaxRequest,
+    current_user: CurrentUser,
     orchestrator: AdvancedTaxOrchestrator = Depends(get_advanced_orchestrator),
 ) -> DecompositionResponse:
     """
@@ -224,10 +227,10 @@ async def decompose_tax_task(
         )
 
     except Exception as exc:
-        logger.error(f"Task decomposition failed: {exc}")
+        logger.error("Task decomposition failed: %s", exc)
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to decompose task: {str(exc)}"
+            detail="Failed to decompose task",
         )
 
 
@@ -249,6 +252,7 @@ async def decompose_tax_task(
 )
 async def retrieve_tax_memory(
     request: AdvancedTaxRequest,
+    current_user: CurrentUser,
     orchestrator: AdvancedTaxOrchestrator = Depends(get_advanced_orchestrator),
 ) -> list[MemoryResultResponse]:
     """
@@ -271,10 +275,10 @@ async def retrieve_tax_memory(
         ]
 
     except Exception as exc:
-        logger.error(f"Memory retrieval failed: {exc}")
+        logger.error("Memory retrieval failed: %s", exc)
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to retrieve memory context: {str(exc)}"
+            detail="Failed to retrieve memory context",
         )
 
 
@@ -297,24 +301,17 @@ async def retrieve_tax_memory(
     tags=["Validation & Quality"]
 )
 async def validate_tax_response(
-    content: str,
-    task_type: str = "general",
-    context: Dict[str, Any] = None,
+    body: AdvancedTaxRequest,
+    current_user: CurrentUser,
     orchestrator: AdvancedTaxOrchestrator = Depends(get_advanced_orchestrator),
 ) -> ValidationResponse:
     """
     Validate tax content using SHVA.
     """
     try:
-        if context is None:
-            context = {}
-
-        # Prepare content for validation
-        response_data = {
-            "content": content,
-            "task_type": task_type,
-            "context": context,
-        }
+        content = body.query
+        task_type = body.context.get("task_type", "general") if body.context else "general"
+        context = body.context or {}
 
         validation_result = await orchestrator._validate_response(
             content, task_type, context
@@ -347,10 +344,10 @@ async def validate_tax_response(
             )
 
     except Exception as exc:
-        logger.error(f"Validation failed: {exc}")
+        logger.error("Validation failed: %s", exc)
         raise HTTPException(
             status_code=500,
-            detail=f"Failed to validate response: {str(exc)}"
+            detail="Failed to validate response",
         )
 
 
@@ -361,6 +358,7 @@ async def validate_tax_response(
     tags=["Health & Monitoring"]
 )
 async def advanced_services_health(
+    current_user: AdminUser,
     orchestrator: AdvancedTaxOrchestrator = Depends(get_advanced_orchestrator),
 ) -> Dict[str, Any]:
     """Check health of advanced AI services."""

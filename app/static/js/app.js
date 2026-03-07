@@ -96,12 +96,15 @@ class App {
             }
         } catch (error) {
             console.error("Page load error:", error);
-            this.appContainer.innerHTML = `
-                <div class="card">
-                    <div class="card-title">Failed to Load Page</div>
-                    <p style="margin-top: 8px; color: #666;">${error.message}</p>
-                </div>
-            `;
+            const msg = document.createElement("p");
+            msg.style.cssText = "margin-top: 8px; color: #666;";
+            msg.textContent = error.message;
+            const card = document.createElement("div");
+            card.className = "card";
+            card.innerHTML = '<div class="card-title">Failed to Load Page</div>';
+            card.appendChild(msg);
+            this.appContainer.innerHTML = "";
+            this.appContainer.appendChild(card);
         }
     }
 

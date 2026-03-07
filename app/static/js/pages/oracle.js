@@ -4,6 +4,7 @@
 */
 
 import { api, session } from '../app.js';
+import { escapeHtml, safeMarkdown } from '../utils.js';
 
 // Persist conversation_id for resume (session storage per tab)
 const CONV_KEY = 'taxgod_oracle_conversation_id';
@@ -143,8 +144,7 @@ export default {
             confidenceHtml = `<div class="confidence-meter" style="font-size: 10px; margin-top: 5px; color: ${color};">Confidence: ${pct}%</div>`;
         }
 
-        // Markdown-ish parsing (simple)
-        const formattedText = text.replace(/\n/g, '<br>');
+        const formattedText = safeMarkdown(text);
 
         div.innerHTML = `
             <div class="message-avatar">${avatar}</div>
@@ -196,11 +196,11 @@ export default {
             item.className = 'citation-card';
             item.innerHTML = `
                 <div class="citation-header">
-                    <span class="citation-ref">${cit.reference}</span>
-                    <span class="badge badge-gold">${cit.type || 'IRC'}</span>
+                    <span class="citation-ref">${escapeHtml(cit.reference)}</span>
+                    <span class="badge badge-gold">${escapeHtml(cit.type || 'IRC')}</span>
                 </div>
-                <div class="citation-title">${cit.title || ''}</div>
-                <div class="citation-summary">${cit.summary || ''}</div>
+                <div class="citation-title">${escapeHtml(cit.title || '')}</div>
+                <div class="citation-summary">${escapeHtml(cit.summary || '')}</div>
             `;
             list.appendChild(item);
         });

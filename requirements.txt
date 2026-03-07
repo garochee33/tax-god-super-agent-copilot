@@ -1,49 +1,55 @@
-# Tax God v3.0 - Python Dependencies
+# Tax God v3.0 - Python Dependencies (pinned for reproducible builds)
 
 # -- Web Framework --
-fastapi>=0.115.0
-uvicorn[standard]>=0.32.0
-pydantic>=2.10.0
-pydantic-settings>=2.7.0
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+pydantic==2.10.4
+pydantic-settings==2.7.1
 
 # -- LLM Providers --
-openai>=1.60.0
-anthropic>=0.42.0
+openai==1.61.0
+anthropic==0.42.0
 
 # -- Database --
-sqlalchemy[asyncio]>=2.0.36
-asyncpg>=0.30.0
-alembic>=1.14.0
+sqlalchemy[asyncio]==2.0.36
+asyncpg==0.30.0
+alembic==1.14.1
 
 # -- Cache --
-redis>=5.2.0
+redis==5.2.1
 
 # -- Auth --
-python-jose[cryptography]>=3.3.0
-passlib[bcrypt]>=1.7.4
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+cryptography==44.0.0
 
 # -- Task Queue (for production parallel processing) --
-celery>=5.4.0
+celery==5.4.0
+flower==2.0.1
 
 # -- HTTP --
-httpx>=0.28.0
+httpx==0.28.1
 
 # -- Utilities --
-python-multipart>=0.0.18
-python-dotenv>=1.0.1
+python-multipart==0.0.18
+python-dotenv==1.0.1
 
 # -- Agent Orchestration (Open Source) --
-langchain>=0.3.0
-langgraph>=0.2.0
+langchain==0.3.14
+langgraph==0.2.60
 
 # -- Document intelligence (Trinity GEM) --
-pypdf>=5.0.0
+pypdf==5.1.0
 
 # -- Performance / Reliability --
-orjson>=3.10.0
-tenacity>=9.0.0
-prometheus-client>=0.21.0
+orjson==3.10.13
+tenacity==9.0.0
+prometheus-client==0.21.1
 
 # -- Testing --
-pytest>=8.3.0
-pytest-asyncio>=0.25.0
+pytest==8.3.4
+pytest-asyncio==0.25.2
+pytest-cov==6.0.0
+
+# -- Code Quality --
+ruff==0.9.4

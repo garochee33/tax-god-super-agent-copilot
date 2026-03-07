@@ -4,6 +4,7 @@
 */
 
 import { api } from '../app.js';
+import { escapeHtml, safeMarkdown } from '../utils.js';
 
 export default {
     render() {
@@ -156,7 +157,7 @@ export default {
 
     renderError(msg) {
         const panel = document.getElementById('results-content');
-        panel.innerHTML = `<div style="color: var(--color-danger);">${msg}</div>`;
+        panel.innerHTML = `<div style="color: var(--color-danger);">${escapeHtml(msg)}</div>`;
     },
 
     renderResults(report) {
@@ -188,11 +189,11 @@ export default {
             flagsHtml += `
                 <div class="flag-item" style="background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid ${flag.severity === 'red' ? 'var(--color-danger)' : (flag.severity === 'green' ? 'var(--color-success)' : 'var(--color-warning)')}; text-align: left;">
                     <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                        <span style="font-weight: 600; display: flex; align-items: center; gap: 8px;">${icon} ${flag.title}</span>
-                        <span class="badge ${colorClass}">${flag.category}</span>
+                        <span style="font-weight: 600; display: flex; align-items: center; gap: 8px;">${icon} ${escapeHtml(flag.title)}</span>
+                        <span class="badge ${colorClass}">${escapeHtml(flag.category)}</span>
                     </div>
-                    <div style="font-size: 13px; color: #444; margin-bottom: 8px;">${flag.description}</div>
-                    <div style="font-size: 12px; font-style: italic; color: #666;">Recommendation: ${flag.recommendation}</div>
+                    <div style="font-size: 13px; color: #444; margin-bottom: 8px;">${escapeHtml(flag.description)}</div>
+                    <div style="font-size: 12px; font-style: italic; color: #666;">Recommendation: ${escapeHtml(flag.recommendation)}</div>
                 </div>
             `;
         });
@@ -200,7 +201,7 @@ export default {
         panel.innerHTML = `
             ${savingsHtml}
             <div class="summary" style="text-align: left; margin-bottom: 20px; font-style: italic;">
-                "${report.summary}"
+                "${escapeHtml(report.summary)}"
             </div>
             <div class="flags-list">
                 ${flagsHtml}

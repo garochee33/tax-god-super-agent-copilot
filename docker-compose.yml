@@ -7,24 +7,27 @@ services:
     env_file:
       - .env
     environment:
-      DATABASE_URL: postgresql+asyncpg://taxgod:taxgod123@postgres:5432/taxgod
-      REDIS_URL: redis://redis:6379/0
-      CELERY_BROKER_URL: amqp://guest:guest@rabbitmq:5672//
-      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-taxgod}:${POSTGRES_PASSWORD:-taxgod123}@postgres:5432/${POSTGRES_DB:-taxgod}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-}@redis:6379/0
+      CELERY_BROKER_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq:5672//
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD:-}@redis:6379/1
       GOOGLE_REDIRECT_URI: http://localhost:8000/api/v1/integrations/callback
       QUICKBOOKS_REDIRECT_URI: http://localhost:8000/api/v1/integrations/callback
     ports:
       - "8000:8000"
     depends_on:
-      - postgres
-      - redis
-      - rabbitmq
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/readiness"]
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/readiness')"]
       interval: 20s
       timeout: 5s
       retries: 5
-      start_period: 20s
+      start_period: 30s
 
   celery-worker:
     build:
@@ -34,12 +37,10 @@ services:
     env_file:
       - .env
     environment:
-      DATABASE_URL: postgresql+asyncpg://taxgod:taxgod123@postgres:5432/taxgod
-      REDIS_URL: redis://redis:6379/0
-      CELERY_BROKER_URL: amqp://guest:guest@rabbitmq:5672//
-      CELERY_RESULT_BACKEND: redis://redis:6379/1
-      GOOGLE_REDIRECT_URI: http://localhost:8000/api/v1/integrations/callback
-      QUICKBOOKS_REDIRECT_URI: http://localhost:8000/api/v1/integrations/callback
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-taxgod}:${POSTGRES_PASSWORD:-taxgod123}@postgres:5432/${POSTGRES_DB:-taxgod}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-}@redis:6379/0
+      CELERY_BROKER_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq:5672//
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD:-}@redis:6379/1
     command: celery -A app.tasks.celery_app:celery_app worker --loglevel=info
     depends_on:
       - postgres
@@ -54,12 +55,10 @@ services:
     env_file:
       - .env
     environment:
-      DATABASE_URL: postgresql+asyncpg://taxgod:taxgod123@postgres:5432/taxgod
-      REDIS_URL: redis://redis:6379/0
-      CELERY_BROKER_URL: amqp://guest:guest@rabbitmq:5672//
-      CELERY_RESULT_BACKEND: redis://redis:6379/1
-      GOOGLE_REDIRECT_URI: http://localhost:8000/api/v1/integrations/callback
-      QUICKBOOKS_REDIRECT_URI: http://localhost:8000/api/v1/integrations/callback
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-taxgod}:${POSTGRES_PASSWORD:-taxgod123}@postgres:5432/${POSTGRES_DB:-taxgod}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-}@redis:6379/0
+      CELERY_BROKER_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq:5672//
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD:-}@redis:6379/1
     command: celery -A app.tasks.celery_app:celery_app beat --loglevel=info
     depends_on:
       - celery-worker
@@ -72,11 +71,11 @@ services:
     env_file:
       - .env
     environment:
-      DATABASE_URL: postgresql+asyncpg://taxgod:taxgod123@postgres:5432/taxgod
-      REDIS_URL: redis://redis:6379/0
-      CELERY_BROKER_URL: amqp://guest:guest@rabbitmq:5672//
-      CELERY_RESULT_BACKEND: redis://redis:6379/1
-    command: celery -A app.tasks.celery_app:celery_app flower --port=5555
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-taxgod}:${POSTGRES_PASSWORD:-taxgod123}@postgres:5432/${POSTGRES_DB:-taxgod}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-}@redis:6379/0
+      CELERY_BROKER_URL: amqp://${RABBITMQ_USER:-guest}:${RABBITMQ_PASSWORD:-guest}@rabbitmq:5672//
+      CELERY_RESULT_BACKEND: redis://:${REDIS_PASSWORD:-}@redis:6379/1
+    command: celery -A app.tasks.celery_app:celery_app flower --port=5555 --basic-auth=${FLOWER_USER:-admin}:${FLOWER_PASSWORD:-admin}
     ports:
       - "5555:5555"
     depends_on:
@@ -86,9 +85,9 @@ services:
     image: postgres:15-alpine
     container_name: taxgod-postgres
     environment:
-      POSTGRES_DB: taxgod
-      POSTGRES_USER: taxgod
-      POSTGRES_PASSWORD: taxgod123
+      POSTGRES_DB: ${POSTGRES_DB:-taxgod}
+      POSTGRES_USER: ${POSTGRES_USER:-taxgod}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-taxgod123}
     ports:
       - "5433:5432"
     volumes:
@@ -102,7 +101,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: taxgod-redis
-    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    command: ["redis-server", "--save", "60", "1", "--requirepass", "${REDIS_PASSWORD:-}"]
     ports:
       - "6379:6379"
     volumes:
@@ -141,8 +140,8 @@ services:
     image: grafana/grafana:11.1.5
     container_name: taxgod-grafana
     environment:
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-changeme}
     ports:
       - "3000:3000"
     volumes:

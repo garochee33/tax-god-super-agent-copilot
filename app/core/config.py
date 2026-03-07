@@ -144,6 +144,27 @@ class Settings(BaseSettings):
     def is_production(self) -> bool:
         return self.ENVIRONMENT == Environment.PRODUCTION
 
+    @field_validator("SECRET_KEY", mode="after")
+    @classmethod
+    def _check_secret_key(cls, v: str, info) -> str:
+        env = info.data.get("ENVIRONMENT")
+        if env == Environment.PRODUCTION and (
+            not v or v == "CHANGE-ME-IN-PRODUCTION" or len(v) < 32
+        ):
+            raise ValueError(
+                "SECRET_KEY must be a strong random string (>=32 chars) in production. "
+                "Generate with: openssl rand -hex 32"
+            )
+        return v
+
+    @field_validator("DEBUG", mode="after")
+    @classmethod
+    def _check_debug(cls, v: bool, info) -> bool:
+        env = info.data.get("ENVIRONMENT")
+        if env == Environment.PRODUCTION and v:
+            raise ValueError("DEBUG must be false in production")
+        return v
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"

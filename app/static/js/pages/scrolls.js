@@ -4,6 +4,7 @@
 */
 
 import { api } from '../app.js';
+import { escapeHtml, safeMarkdown } from '../utils.js';
 
 export default {
     render() {
@@ -200,13 +201,11 @@ export default {
 
     renderError(msg) {
         const preview = document.getElementById('doc-preview');
-        preview.innerHTML = `<div style="color: var(--color-danger); text-align: center; margin-top: 100px;">${msg}</div>`;
+        preview.innerHTML = `<div style="color: var(--color-danger); text-align: center; margin-top: 100px;">${escapeHtml(msg)}</div>`;
     },
 
     renderDocument(content) {
         const preview = document.getElementById('doc-preview');
-        // Simple markdown-ish to HTML
-        const html = content.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-        preview.innerHTML = `<div id="doc-content">${html}</div>`;
+        preview.innerHTML = `<div id="doc-content">${safeMarkdown(content)}</div>`;
     }
 };

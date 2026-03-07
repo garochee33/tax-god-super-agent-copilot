@@ -4,18 +4,7 @@
 */
 
 import { api, session } from "../app.js";
-
-/** Escape for HTML text content to avoid XSS when rendering API error messages. */
-function escapeHtml(str) {
-    if (str == null) return "";
-    const s = String(str);
-    return s
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
-}
+import { escapeHtml, safeMarkdown } from '../utils.js';
 
 const PROVIDER_ICONS = {
     google: `
@@ -196,12 +185,12 @@ export default {
         card.innerHTML = `
             <div class="integration-card-inner">
                 <div class="provider-icon">${icon}</div>
-                <div class="int-name">${integration.name}</div>
-                <div class="int-desc">${integration.description || "Integration connector"}</div>
+                <div class="int-name">${escapeHtml(integration.name)}</div>
+                <div class="int-desc">${escapeHtml(integration.description || "Integration connector")}</div>
                 ${isConfigured ? "" : '<div class="int-desc" style="color:#b05a00;">OAuth credentials missing</div>'}
                 <div class="int-status">${statusBadge(integration.status)}</div>
                 <div class="int-actions" style="display: flex; gap: 8px; margin-top: 8px;">
-                    <button class="btn ${isConnected ? "btn-outline" : "btn-primary"} btn-sm" data-connect-provider="${integration.id}" ${!isConfigured ? "disabled" : ""}>${connectText}</button>
+                    <button class="btn ${isConnected ? "btn-outline" : "btn-primary"} btn-sm" data-connect-provider="${escapeHtml(integration.id)}" ${!isConfigured ? "disabled" : ""}>${escapeHtml(connectText)}</button>
                 </div>
                 ${quickbooksDataPanel}
             </div>
@@ -311,9 +300,9 @@ export default {
         };
         rows.forEach(walk);
         const parts = [];
-        if (totalIncome != null) parts.push(`<strong>Total Income:</strong> ${totalIncome}`);
-        if (totalExpenses != null) parts.push(`<strong>Total Expenses:</strong> ${totalExpenses}`);
-        if (netIncome != null) parts.push(`<strong>Net Income:</strong> ${netIncome}`);
+        if (totalIncome != null) parts.push(`<strong>Total Income:</strong> ${escapeHtml(totalIncome)}`);
+        if (totalExpenses != null) parts.push(`<strong>Total Expenses:</strong> ${escapeHtml(totalExpenses)}`);
+        if (netIncome != null) parts.push(`<strong>Net Income:</strong> ${escapeHtml(netIncome)}`);
         if (parts.length === 0) return "<p>P&L report loaded. (Summary not parsed.)</p>";
         return "<p>" + parts.join(" &middot; ") + "</p>";
     },
@@ -336,9 +325,9 @@ export default {
         };
         rows.forEach(walk);
         const parts = [];
-        if (totalAssets != null) parts.push(`<strong>Total Assets:</strong> ${totalAssets}`);
-        if (totalLiabilities != null) parts.push(`<strong>Total Liabilities:</strong> ${totalLiabilities}`);
-        if (totalEquity != null) parts.push(`<strong>Total Equity:</strong> ${totalEquity}`);
+        if (totalAssets != null) parts.push(`<strong>Total Assets:</strong> ${escapeHtml(totalAssets)}`);
+        if (totalLiabilities != null) parts.push(`<strong>Total Liabilities:</strong> ${escapeHtml(totalLiabilities)}`);
+        if (totalEquity != null) parts.push(`<strong>Total Equity:</strong> ${escapeHtml(totalEquity)}`);
         if (parts.length === 0) return "<p>Balance Sheet loaded. (Summary not parsed.)</p>";
         return "<p>" + parts.join(" &middot; ") + "</p>";
     },
@@ -347,9 +336,9 @@ export default {
         if (!vendors.length) return "<p>No vendors in QuickBooks.</p>";
         let table = '<p style="margin-bottom: 6px;">Use for 1099 prep. Missing TIN = may need W-9.</p><table style="width: 100%; border-collapse: collapse; font-size: 12px;"><thead><tr style="text-align: left; border-bottom: 1px solid #ddd;"><th style="padding: 6px;">Name</th><th style="padding: 6px;">Company</th><th style="padding: 6px;">TIN</th></tr></thead><tbody>';
         vendors.forEach((v) => {
-            const name = (v.DisplayName || v.CompanyName || "—").replace(/</g, "&lt;");
-            const company = (v.CompanyName || "—").replace(/</g, "&lt;");
-            const tin = (v.TaxIdentifier || "—").replace(/</g, "&lt;");
+            const name = escapeHtml(v.DisplayName || v.CompanyName || "—");
+            const company = escapeHtml(v.CompanyName || "—");
+            const tin = escapeHtml(v.TaxIdentifier || "—");
             const missing = !v.TaxIdentifier ? ' <span class="badge badge-warning">Missing TIN</span>' : "";
             table += `<tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px;">${name}${missing}</td><td style="padding: 6px;">${company}</td><td style="padding: 6px;">${tin}</td></tr>`;
         });
