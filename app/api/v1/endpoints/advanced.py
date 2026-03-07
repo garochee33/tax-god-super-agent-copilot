@@ -11,7 +11,7 @@ from typing import Any, Dict
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
-from app.api.deps import CurrentUser, AdminUser
+from app.api.deps import CurrentUser, AdminUser, resolve_client_id
 from app.services.advanced_orchestrator import AdvancedTaxOrchestrator
 
 logger = logging.getLogger(__name__)
@@ -152,7 +152,7 @@ async def process_advanced_tax_query(
 
         result = await orchestrator.process_advanced_query(
             query=request.query,
-            client_id=request.client_id,
+            client_id=resolve_client_id(request.client_id, current_user),
             conversation_id=request.conversation_id,
             context=request.context,
             require_citations=request.require_citations,
@@ -261,7 +261,7 @@ async def retrieve_tax_memory(
     try:
         memory_results = await orchestrator._retrieve_context(
             request.query,
-            request.client_id
+            resolve_client_id(request.client_id, current_user)
         )
 
         return [

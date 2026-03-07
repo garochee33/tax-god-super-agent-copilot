@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     DEBUG: bool = True
     LOG_LEVEL: str = "INFO"
     SECRET_KEY: str = "CHANGE-ME-IN-PRODUCTION"
+    METRICS_TOKEN: str = ""
 
     # -- Server ---------------------------------------------------------------
     HOST: str = "0.0.0.0"

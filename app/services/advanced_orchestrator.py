@@ -184,7 +184,7 @@ class AdvancedTaxOrchestrator:
             # Return a basic decomposition
             return DecompositionResult(
                 execution_plan=ExecutionPlan.SEQUENTIAL_SPECIALIZED,
-                task_type="research",  # Default fallback
+                task_type=TaskType.RESEARCH,
                 complexity=5.0,
                 subtasks=[],
                 dependency_graph={},

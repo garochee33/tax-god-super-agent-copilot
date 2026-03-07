@@ -91,7 +91,9 @@ async def get_current_user_optional(
 
     try:
         return await get_current_user(credentials, db)
-    except HTTPException:
+    except HTTPException as exc:
+        if exc.status_code == status.HTTP_403_FORBIDDEN:
+            raise
         return None
 
 
@@ -111,6 +113,19 @@ def require_roles(*roles: UserRole):
             )
         return current_user
     return role_checker
+
+
+def resolve_client_id(body_client_id: str | None, current_user: User) -> str:
+    """
+    Enforce client_id ownership.
+    - Regular users: always forced to their own ID.
+    - Admin/Preparer: may act for another client_id if provided.
+    """
+    if not body_client_id or body_client_id == current_user.id:
+        return current_user.id
+    if current_user.role in (UserRole.ADMIN.value, UserRole.PREPARER.value):
+        return body_client_id
+    return current_user.id
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]

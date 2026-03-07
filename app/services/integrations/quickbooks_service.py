@@ -180,12 +180,17 @@ class QuickBooksService(BaseIntegration):
         query_response = data.get("QueryResponse", {})
         raw = query_response.get("Vendor", [])
         vendors = raw if isinstance(raw, list) else ([raw] if raw else [])
+        def _mask_tax_id(val: str | None) -> str | None:
+            if not val:
+                return None
+            return f"***{val[-4:]}" if len(val) >= 4 else "****"
+
         return [
             {
                 "Id": v.get("Id"),
                 "DisplayName": v.get("DisplayName"),
                 "CompanyName": v.get("CompanyName"),
-                "TaxIdentifier": v.get("TaxIdentifier"),
+                "TaxIdentifier": _mask_tax_id(v.get("TaxIdentifier")),
             }
             for v in vendors
         ]

@@ -9,7 +9,7 @@ from typing import Any, Optional
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
-from app.api.deps import CurrentUser
+from app.api.deps import CurrentUser, resolve_client_id
 
 router = APIRouter()
 
@@ -55,7 +55,7 @@ async def ai_query(body: ChatQuery, request: Request, current_user: CurrentUser)
     orchestrator = request.app.state.ai_orchestrator
     citation_engine = request.app.state.citation_engine
 
-    client_id = body.client_id or current_user.id
+    client_id = resolve_client_id(body.client_id, current_user)
     msg = await orchestrator.query(
         query=body.query,
         client_id=client_id,

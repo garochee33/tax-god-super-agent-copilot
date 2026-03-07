@@ -9,7 +9,7 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field, model_validator
 
-from app.api.deps import AdminUser, CurrentUser
+from app.api.deps import AdminUser, CurrentUser, resolve_client_id
 from app.core.config import get_settings
 from app.services.roi_engine import compute_roi, project_incremental_revenue
 
@@ -102,7 +102,8 @@ async def cost_governor_kill_switch(
 async def get_usage_analytics(request: Request, current_user: CurrentUser, client_id: Optional[str] = None):
     """Get usage analytics and cost breakdown. Requires authentication."""
     governor = request.app.state.cost_governor
-    return await governor.get_analytics(client_id)
+    resolved_id = resolve_client_id(client_id, current_user)
+    return await governor.get_analytics(resolved_id)
 
 
 @router.get("/budget/{client_id}")
@@ -110,6 +111,7 @@ async def get_client_budget(client_id: str, request: Request, current_user: Curr
     """Get remaining budget for a specific client. Requires authentication."""
     governor = request.app.state.cost_governor
     settings = get_settings()
+    client_id = resolve_client_id(client_id, current_user)
 
     month_spend = await governor.budget.get_client_month_spend(client_id)
     daily_spend = await governor.budget.get_daily_spend()
@@ -150,7 +152,7 @@ async def estimate_query_cost(
 
     estimate = await governor.estimate(
         query=effective.query,
-        client_id=effective.client_id,
+        client_id=resolve_client_id(effective.client_id, current_user),
         task_type=effective.task_type,
         context=effective.context,
     )

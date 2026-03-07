@@ -55,6 +55,23 @@ class OAuthCredentials:
             "created_at": self.created_at.isoformat(),
         }
 
+    def to_safe_dict(self) -> dict[str, Any]:
+        """Return dict with tokens masked for logging / API responses."""
+        def _mask(token: str) -> str:
+            if not token or len(token) < 4:
+                return "***"
+            return f"***{token[-4:]}"
+
+        return {
+            "access_token": _mask(self.access_token),
+            "refresh_token": _mask(self.refresh_token),
+            "token_type": self.token_type,
+            "expires_at": self.expires_at.isoformat() if self.expires_at else None,
+            "scope": self.scope,
+            "metadata": self.metadata,
+            "created_at": self.created_at.isoformat(),
+        }
+
     @classmethod
     def from_dict(cls, payload: dict[str, Any]) -> "OAuthCredentials":
         expires_at_raw = payload.get("expires_at")

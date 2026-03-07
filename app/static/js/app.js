@@ -16,6 +16,7 @@ const routes = {
 const STORAGE_KEYS = {
     clientId: "taxgod_client_id",
     apiBase: "taxgod_api_base",
+    accessToken: "taxgod_access_token",
 };
 
 function ensureClientId() {
@@ -115,6 +116,32 @@ class App {
     }
 }
 
+let _tokenPromise = null;
+async function ensureAccessToken() {
+    if (localStorage.getItem(STORAGE_KEYS.accessToken)) return;
+    if (_tokenPromise) return _tokenPromise;
+
+    _tokenPromise = (async () => {
+        try {
+            const res = await fetch(buildApiUrl("/api/v1/auth/dev-token"), {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.access_token) {
+                    localStorage.setItem(STORAGE_KEYS.accessToken, data.access_token);
+                }
+            }
+        } catch (_) {
+            /* dev-token not available (production) — user must login manually */
+        } finally {
+            _tokenPromise = null;
+        }
+    })();
+    return _tokenPromise;
+}
+
 export const session = {
     getClientId() {
         return ensureClientId();
@@ -125,6 +152,15 @@ export const session = {
     getApiBase,
     setApiBase(apiBase) {
         localStorage.setItem(STORAGE_KEYS.apiBase, apiBase);
+    },
+    getAccessToken() {
+        return localStorage.getItem(STORAGE_KEYS.accessToken);
+    },
+    setAccessToken(token) {
+        localStorage.setItem(STORAGE_KEYS.accessToken, token);
+    },
+    clearAuth() {
+        localStorage.removeItem(STORAGE_KEYS.accessToken);
     },
 };
 
@@ -138,12 +174,21 @@ export const api = {
     async request(method, endpoint, data = null, options = {}) {
         const { retries = 0 } = options;
         const url = buildApiUrl(endpoint);
+
+        await ensureAccessToken();
+
         let lastErr;
         for (let attempt = 0; attempt <= retries; attempt++) {
             try {
+                const headers = { "Content-Type": "application/json" };
+                const token = localStorage.getItem(STORAGE_KEYS.accessToken);
+                if (token) {
+                    headers["Authorization"] = `Bearer ${token}`;
+                }
+
                 const response = await fetch(url, {
                     method,
-                    headers: { "Content-Type": "application/json" },
+                    headers,
                     body: data ? JSON.stringify(data) : undefined,
                 });
 

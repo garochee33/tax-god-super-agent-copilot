@@ -133,10 +133,12 @@ def extract_entities_tax_doc(text: str) -> list[dict[str, str]]:
     entities: list[dict[str, str]] = []
     # SSN pattern (XXX-XX-XXXX)
     for m in re.finditer(r"\b(\d{3}-\d{2}-\d{4})\b", text):
-        entities.append({"type": "ssn", "label": "SSN", "value": m.group(1)})
+        val = m.group(1)
+        entities.append({"type": "ssn", "label": "SSN", "value": val, "masked_value": f"***-**-{val[-4:]}"})
     # EIN (XX-XXXXXXX)
     for m in re.finditer(r"\b(\d{2}-\d{7})\b", text):
-        entities.append({"type": "ein", "label": "EIN", "value": m.group(1)})
+        val = m.group(1)
+        entities.append({"type": "ein", "label": "EIN", "value": val, "masked_value": f"**-***{val[-4:]}"})
     # Tax year
     for m in re.finditer(r"\b(20\d{2})\s+(?:tax\s+)?year\b", text, re.I):
         entities.append({"type": "year", "label": "Tax year", "value": m.group(1)})

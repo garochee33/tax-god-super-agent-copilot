@@ -6,6 +6,7 @@ Production: validated params, rate-limit handling (429), structured logging.
 
 from __future__ import annotations
 
+import hmac
 import logging
 import re
 from datetime import datetime, timedelta, timezone
@@ -17,6 +18,7 @@ from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
 from app.api.deps import CurrentUser, AdminUser
+from app.core.config import get_settings
 from app.models.user import UserRole
 from app.services.circuit_breaker import QB_AGENT_ID
 from app.services.integrations.roadmap_catalog import get_roadmap_catalog
@@ -47,6 +49,23 @@ def _resolve_user_id(current_user, requested_user_id: str | None) -> str:
     if current_user.role == UserRole.ADMIN.value:
         return requested_user_id
     return current_user.id
+
+
+def _sign_oauth_state(user_id: str) -> str:
+    settings = get_settings()
+    sig = hmac.new(settings.SECRET_KEY.encode(), user_id.encode(), "sha256").hexdigest()[:16]
+    return f"{user_id}:{sig}"
+
+
+def _verify_oauth_state(state: str) -> str | None:
+    if ":" not in state:
+        return None
+    user_id, sig = state.rsplit(":", 1)
+    settings = get_settings()
+    expected = hmac.new(settings.SECRET_KEY.encode(), user_id.encode(), "sha256").hexdigest()[:16]
+    if not hmac.compare_digest(sig, expected):
+        return None
+    return user_id
 
 
 def _integration_catalog(
@@ -114,7 +133,7 @@ async def connect_integration(body: ConnectRequest, request: Request, current_us
             detail=f"{body.provider} is not configured. Add OAuth credentials in .env first.",
         )
 
-    url = provider.get_auth_url(state=current_user.id)
+    url = provider.get_auth_url(state=_sign_oauth_state(current_user.id))
     return {"provider": body.provider, "user_id": current_user.id, "auth_url": url}
 
 
@@ -154,9 +173,13 @@ async def oauth_callback_get(
     if not integration:
         raise HTTPException(status_code=404, detail="Provider not found")
 
+    user_id = _verify_oauth_state(state)
+    if not user_id:
+        raise HTTPException(status_code=400, detail="Invalid OAuth state signature")
+
     try:
         tokens = await integration.exchange_code(code, realm_id=realmId)
-        await manager.save_credentials(state, provider, tokens)
+        await manager.save_credentials(user_id, provider, tokens)
         return HTMLResponse(
             """
             <html><body style="font-family: sans-serif; padding: 24px;">
@@ -225,8 +248,8 @@ async def _quickbooks_creds_and_token(request: Request, user_id: str):
     if not creds or not access_token:
         raise HTTPException(status_code=401, detail="QuickBooks is not connected")
     realm_id = creds.metadata.get("realm_id") if creds.metadata else None
-    if not realm_id:
-        raise HTTPException(status_code=400, detail="QuickBooks realm_id is missing")
+    if not realm_id or not re.match(r"^\d+$", realm_id):
+        raise HTTPException(status_code=400, detail="Invalid QuickBooks realm_id")
     return manager, provider, access_token, realm_id
 
 
@@ -260,7 +283,7 @@ def _quickbooks_http_error(
         else:
             logger.warning("QuickBooks API error status=%s user_id=%s endpoint=%s", status, user_id, endpoint)
         detail = getattr(exc, "message", str(exc)) or f"QuickBooks request failed (HTTP {status})"
-        raise HTTPException(status_code=400 if status >= 500 else status, detail=detail) from exc
+        raise HTTPException(status_code=502 if status >= 500 else status, detail=detail) from exc
     logger.exception("QuickBooks unexpected error user_id=%s endpoint=%s", user_id, endpoint)
     raise HTTPException(status_code=400, detail=f"QuickBooks request failed: {exc}") from exc
 

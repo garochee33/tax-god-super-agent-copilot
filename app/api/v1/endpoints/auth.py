@@ -175,3 +175,41 @@ async def logout(current_user: CurrentUser):
     Client should discard the tokens.
     """
     return {"message": "Logged out successfully"}
+
+
+@router.post("/dev-token", response_model=TokenResponse)
+async def dev_token(db: DBSession):
+    """
+    Development-only: auto-create a demo admin user and return tokens.
+    Disabled in production.
+    """
+    from app.core.config import get_settings, Environment
+    settings = get_settings()
+    if settings.ENVIRONMENT != Environment.DEV:
+        raise HTTPException(status_code=404, detail="Not found")
+
+    demo_email = "admin@taxgod.dev"
+    result = await db.execute(select(User).where(User.email == demo_email))
+    user = result.scalar_one_or_none()
+
+    if not user:
+        user = User(
+            email=demo_email,
+            hashed_password=hash_password("dev-password-only"),
+            full_name="Zeus (Admin)",
+            role=UserRole.ADMIN.value,
+            is_active=True,
+            is_verified=True,
+        )
+        db.add(user)
+        await db.commit()
+        await db.refresh(user)
+
+    access_token = create_access_token(user.id, extra={"role": user.role})
+    refresh_token = create_refresh_token(user.id)
+
+    return TokenResponse(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+    )

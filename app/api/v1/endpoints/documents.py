@@ -6,13 +6,14 @@ Trinity GEM: PDF ingest (advanced PDF + document intelligence).
 
 from __future__ import annotations
 
+import asyncio
 import base64
 from typing import Any, Optional
 
 from fastapi import APIRouter, File, HTTPException, Request, UploadFile
 from pydantic import BaseModel, Field
 
-from app.api.deps import CurrentUser
+from app.api.deps import CurrentUser, resolve_client_id
 from app.services.document_intelligence import (
     extract_entities_tax_doc,
     extract_text_from_pdf,
@@ -89,10 +90,10 @@ async def ingest_pdf(
         raise HTTPException(status_code=400, detail=f"PDF too large (max {MAX_PDF_SIZE_BYTES // (1024*1024)} MB)")
     if len(raw) == 0:
         raise HTTPException(status_code=400, detail="Empty PDF")
-    result = extract_text_from_pdf(raw)
+    result = await asyncio.to_thread(extract_text_from_pdf, raw)
     entities: list[dict[str, str]] = []
     if extract_entities and result.text:
-        entities = extract_entities_tax_doc(result.text)
+        entities = await asyncio.to_thread(extract_entities_tax_doc, result.text)
     tables_dict = [
         {"headers": t.headers, "rows": t.rows, "raw_text": t.raw_text}
         for t in result.tables
@@ -112,7 +113,7 @@ async def batch_process_documents(body: BatchDocumentRequest, request: Request, 
     processor = request.app.state.parallel_processor
 
     job = await processor.batch_process_documents(
-        client_id=body.client_id,
+        client_id=resolve_client_id(body.client_id, current_user),
         documents=body.documents,
     )
 
@@ -125,7 +126,7 @@ async def multi_state_research(body: MultiStateRequest, request: Request, curren
     processor = request.app.state.parallel_processor
 
     job = await processor.multi_state_research(
-        client_id=body.client_id,
+        client_id=resolve_client_id(body.client_id, current_user),
         entity_type=body.entity_type,
         income_by_state=body.income_by_state,
     )
@@ -139,7 +140,7 @@ async def scenario_analysis(body: ScenarioRequest, request: Request, current_use
     processor = request.app.state.parallel_processor
 
     job = await processor.run_scenario_analysis(
-        client_id=body.client_id,
+        client_id=resolve_client_id(body.client_id, current_user),
         base_income=body.base_income,
         base_deductions=body.base_deductions,
         scenarios=body.scenarios,
@@ -154,5 +155,5 @@ async def get_job_status(job_id: str, request: Request, current_user: CurrentUse
     processor = request.app.state.parallel_processor
     result = processor.get_job_results(job_id)
     if not result:
-        return {"error": "Job not found"}
+        raise HTTPException(status_code=404, detail="Job not found")
     return result

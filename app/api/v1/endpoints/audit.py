@@ -9,7 +9,7 @@ from typing import Any, Optional
 from fastapi import APIRouter, Request
 from pydantic import BaseModel, Field
 
-from app.api.deps import CurrentUser, PreparerOrAdmin
+from app.api.deps import CurrentUser, PreparerOrAdmin, resolve_client_id
 
 router = APIRouter()
 
@@ -45,7 +45,7 @@ async def run_audit(body: AuditRequest, request: Request, current_user: Preparer
     gabriel = request.app.state.agent_gabriel
 
     report = await gabriel.audit_individual_return(
-        client_id=body.client_id,
+        client_id=resolve_client_id(body.client_id, current_user),
         tax_year=body.tax_year,
         return_data=body.return_data,
     )
@@ -73,7 +73,7 @@ async def generate_memo(body: MemoRequest, request: Request, current_user: Prepa
         subject=body.subject,
         facts=body.facts,
         client_name=body.client_name,
-        client_id=body.client_id,
+        client_id=resolve_client_id(body.client_id, current_user),
         tax_year=body.tax_year,
     )
 
@@ -101,7 +101,7 @@ async def generate_irs_response(body: AuditResponseRequest, request: Request, cu
         taxpayer_name=body.taxpayer_name,
         tax_years=body.tax_years,
         supporting_facts=body.supporting_facts,
-        client_id=body.client_id,
+        client_id=resolve_client_id(body.client_id, current_user),
     )
 
     return {

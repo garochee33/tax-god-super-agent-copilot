@@ -711,6 +711,8 @@ class CostGovernor:
         """Record actual usage after an LLM call completes."""
         await self.budget.record_spend(usage.client_id, usage.actual_cost_usd)
         self._usage_log.append(usage)
+        if len(self._usage_log) > 10_000:
+            self._usage_log = self._usage_log[-5_000:]
         logger.info(
             "LLM call: model=%s cost=$%.4f tokens_in=%d tokens_out=%d latency=%.1fs",
             usage.model_name,

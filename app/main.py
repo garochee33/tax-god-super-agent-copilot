@@ -20,7 +20,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Gauge, Histogram, generate_latest
 
-from app.core.config import get_settings
+from app.core.config import Environment, get_settings
 from app.core.database import check_database_health, engine as db_engine
 from app.middleware.security import RequestIdMiddleware, SecurityHeadersMiddleware, RateLimitMiddleware
 from app.services.ai_service import AIOrchestrator
@@ -136,8 +136,8 @@ app = FastAPI(
     description="Multi-agent AI tax, legal & financial co-pilot",
     version=settings.APP_VERSION,
     lifespan=lifespan,
-    docs_url="/api/docs",
-    redoc_url="/api/redoc",
+    docs_url="/api/docs" if not settings.is_production else None,
+    redoc_url="/api/redoc" if not settings.is_production else None,
 )
 
 app.add_middleware(RequestIdMiddleware)
@@ -169,6 +169,9 @@ app.add_middleware(
 async def metrics_middleware(request: Request, call_next):
     start = time.perf_counter()
     path = request.url.path
+    route = request.scope.get("route")
+    if route:
+        path = route.path
     status_code = 500
     try:
         response = await call_next(request)
@@ -208,10 +211,10 @@ async def health_check():
 
 @app.get("/metrics")
 async def metrics(request: Request):
-    """Prometheus metrics. Requires valid metrics token in production."""
-    if settings.is_production:
+    """Prometheus metrics. Requires valid METRICS_TOKEN in production."""
+    if settings.is_production and settings.METRICS_TOKEN:
         token = request.headers.get("Authorization", "")
-        expected = f"Bearer {settings.SECRET_KEY[:16]}"
+        expected = f"Bearer {settings.METRICS_TOKEN}"
         if token != expected:
             return JSONResponse(status_code=403, content={"detail": "Forbidden"})
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
@@ -219,6 +222,10 @@ async def metrics(request: Request):
 
 @app.get("/health/detailed")
 async def health_detailed(request: Request):
+    if settings.ENVIRONMENT != Environment.DEV:
+        if not request.headers.get("Authorization"):
+            return JSONResponse(status_code=401, content={"detail": "Authentication required"})
+
     redis_client = request.app.state.redis
     integration_manager = request.app.state.integration_manager
 

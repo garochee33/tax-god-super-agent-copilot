@@ -13,9 +13,11 @@ This is the brain of Tax God. It:
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import time
 import uuid
+from collections import OrderedDict
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
@@ -311,12 +313,19 @@ class LLMClient:
         all_messages = [{"role": "system", "content": system_prompt}]
         all_messages.extend(messages)
 
-        response = await client.chat.completions.create(
-            model=model,
-            messages=all_messages,
-            temperature=temp,
-            max_tokens=max_tokens,
-        )
+        try:
+            response = await asyncio.wait_for(
+                client.chat.completions.create(
+                    model=model,
+                    messages=all_messages,
+                    temperature=temp,
+                    max_tokens=max_tokens,
+                ),
+                timeout=60.0,
+            )
+        except asyncio.TimeoutError:
+            raise TimeoutError(f"OpenAI call to {model} timed out after 60s")
+
         choice = response.choices[0]
         usage = response.usage
 
@@ -332,13 +341,20 @@ class LLMClient:
         self, model: str, system_prompt: str, messages: list[dict], temp: float, max_tokens: int
     ) -> dict[str, Any]:
         client = self._get_anthropic()
-        response = await client.messages.create(
-            model=model,
-            system=system_prompt,
-            messages=messages,
-            temperature=temp,
-            max_tokens=max_tokens,
-        )
+
+        try:
+            response = await asyncio.wait_for(
+                client.messages.create(
+                    model=model,
+                    system=system_prompt,
+                    messages=messages,
+                    temperature=temp,
+                    max_tokens=max_tokens,
+                ),
+                timeout=60.0,
+            )
+        except asyncio.TimeoutError:
+            raise TimeoutError(f"Anthropic call to {model} timed out after 60s")
 
         content = ""
         for block in response.content:
@@ -422,20 +438,30 @@ class AIOrchestrator:
       8. Return annotated response
     """
 
+    _MAX_CONVERSATIONS = 5000
+    _EVICT_COUNT = 1000
+
     def __init__(self, cost_governor: CostGovernor):
         self.governor = cost_governor
         self.llm = LLMClient()
-        self._conversations: dict[str, ConversationState] = {}
+        self._conversations: OrderedDict[str, ConversationState] = OrderedDict()
+
+    def _evict_oldest(self) -> None:
+        if len(self._conversations) > self._MAX_CONVERSATIONS:
+            for _ in range(min(self._EVICT_COUNT, len(self._conversations))):
+                self._conversations.popitem(last=False)
 
     def get_or_create_conversation(
         self, conversation_id: str | None = None, client_id: str = ""
     ) -> ConversationState:
         if conversation_id and conversation_id in self._conversations:
+            self._conversations.move_to_end(conversation_id)
             return self._conversations[conversation_id]
         state = ConversationState(client_id=client_id)
         if conversation_id:
             state.conversation_id = conversation_id
         self._conversations[state.conversation_id] = state
+        self._evict_oldest()
         return state
 
     async def query(

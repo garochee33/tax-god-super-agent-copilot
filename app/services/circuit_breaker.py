@@ -221,16 +221,27 @@ class CircuitBreaker:
         for agent_id in list(self._circuits):
             self.reset_agent(agent_id)
 
+    def _peek_state(self, agent_id: str) -> str:
+        """Return the current state string for *agent_id* without side effects."""
+        circuit = self._circuits.get(agent_id)
+        if circuit is None:
+            return "closed"
+        if circuit.state != "open":
+            return circuit.state
+        if circuit.closes_at is not None and time.monotonic() >= circuit.closes_at:
+            return "half-open"
+        return "open"
+
     def get_status(self) -> dict[str, Any]:
         """Return status for all agents (config, agents, tripped, healthy)."""
         tripped: list[str] = []
         healthy: list[str] = []
         agents: dict[str, dict[str, Any]] = {}
         for aid, circuit in self._circuits.items():
-            check = self.can_execute(aid)
+            current_state = self._peek_state(aid)
             agents[aid] = {
                 "agent_id": circuit.agent_id,
-                "state": circuit.state,
+                "state": current_state,
                 "total_calls": circuit.total_calls,
                 "total_failures": circuit.total_failures,
                 "window_calls": circuit.window_calls,
@@ -238,7 +249,7 @@ class CircuitBreaker:
                 "trip_count": circuit.trip_count,
                 "last_failure": circuit.last_failure,
             }
-            if check.state == "open":
+            if current_state == "open":
                 tripped.append(aid)
             else:
                 healthy.append(aid)
