@@ -19,8 +19,9 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from prometheus_client import CONTENT_TYPE_LATEST, REGISTRY, Counter, Gauge, Histogram, generate_latest
 
+import app.models  # noqa: F401 — register all models with Base.metadata
 from app.core.config import Environment, get_settings
-from app.core.database import check_database_health
+from app.core.database import Base, check_database_health
 from app.core.database import engine as db_engine
 from app.middleware.security import RateLimitMiddleware, RequestIdMiddleware, SecurityHeadersMiddleware
 from app.services.advanced_orchestrator import AdvancedTaxOrchestrator
@@ -72,6 +73,10 @@ async def lifespan(app: FastAPI):
     """Initialize and teardown shared services."""
     logger.info("Starting Tax God v%s [%s]", settings.APP_VERSION, settings.ENVIRONMENT.value)
     SERVICE_UP.set(1)
+
+    # Auto-create tables (SQLite local dev)
+    async with db_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
     # Connect Redis (graceful fallback if unavailable)
     redis_client = None
@@ -329,6 +334,7 @@ async def readiness_check(request: Request):
 # ---------------------------------------------------------------------------
 
 from app.api.v1.endpoints import (  # noqa: E402
+    accounts,
     advanced,
     analytics,
     audit,
@@ -338,9 +344,13 @@ from app.api.v1.endpoints import (  # noqa: E402
     clients,
     documents,
     integrations,
+    invoices,
+    notes,
     profile,
-    settings,
+    projects,
+    spreadsheets,
 )
+from app.api.v1.endpoints import settings as settings_ep  # noqa: E402
 
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
 app.include_router(billing.router, prefix="/api/v1/billing", tags=["Billing"])
@@ -352,7 +362,12 @@ app.include_router(integrations.router, prefix="/api/v1/integrations", tags=["In
 app.include_router(advanced.router, prefix="/api/v1/advanced", tags=["Advanced Tax Processing"])
 app.include_router(clients.router, prefix="/api/v1/clients", tags=["Clients (Agora)"])
 app.include_router(profile.router, prefix="/api/v1/profile", tags=["Profile"])
-app.include_router(settings.router, prefix="/api/v1/settings", tags=["Settings"])
+app.include_router(settings_ep.router, prefix="/api/v1/settings", tags=["Settings"])
+app.include_router(accounts.router, prefix="/api/v1/accounts", tags=["Accounts"])
+app.include_router(invoices.router, prefix="/api/v1/invoices", tags=["Invoices"])
+app.include_router(projects.router, prefix="/api/v1/projects", tags=["Projects"])
+app.include_router(spreadsheets.router, prefix="/api/v1/spreadsheets", tags=["Spreadsheets"])
+app.include_router(notes.router, prefix="/api/v1/notes", tags=["Notes"])
 
 
 # ---------------------------------------------------------------------------
