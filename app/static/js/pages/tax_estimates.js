@@ -3,7 +3,8 @@
  */
 window.TaxEstimatesPage = {
   async render(container) {
-    container.innerHTML = `
+    container.innerHTML = `<div class="spinner"></div>`;
+    const content = `
       <div class="page-header"><h1>Tax Estimates</h1></div>
       <div class="grid grid-2">
         <div class="card" id="quarterly-card">
@@ -32,6 +33,7 @@ window.TaxEstimatesPage = {
         </form>
         <div id="scenario-result"></div>
       </div>`;
+    container.innerHTML = content;
     this.loadQuarterly();
     this.loadDeadlines();
     document.getElementById('scenario-form').addEventListener('submit', e => { e.preventDefault(); this.runScenario(); });

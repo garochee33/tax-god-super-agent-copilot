@@ -7,12 +7,14 @@ const APP_ROUTES = {
     pantheon: { title: "Dashboard", module: "/static/js/pages/pantheon.js" },
     oracle: { title: "Tax God Agent", module: "/static/js/pages/oracle.js" },
     agora: { title: "Clients", module: "/static/js/pages/agora.js" },
+    portal: { title: "Client Portal", module: "/static/js/pages/portal.js" },
     finance: { title: "Finance", module: "/static/js/pages/finance.js" },
     expenses: { title: "Expenses", module: "/static/js/pages/expenses.js" },
     time_tracking: { title: "Time Tracking", module: "/static/js/pages/time_tracking.js" },
     vendors: { title: "Vendors", module: "/static/js/pages/vendors.js" },
     transactions: { title: "Transactions", module: "/static/js/pages/transactions.js" },
     reports: { title: "Reports", module: "/static/js/pages/reports.js" },
+    tax_estimates: { title: "Tax Estimates", module: "/static/js/pages/tax_estimates.js" },
     projects: { title: "Projects", module: "/static/js/pages/projects_page.js" },
     scrolls: { title: "Documents", module: "/static/js/pages/scrolls.js" },
     archives: { title: "Research", module: "/static/js/pages/archives.js" },
@@ -168,7 +170,8 @@ class App {
             if (!businesses.length) {
                 select.innerHTML = '<option value="">+ Add Business</option>';
                 // Auto-trigger setup wizard on first login (0 businesses)
-                if (!sessionStorage.getItem("taxgod_wizard_dismissed")) {
+                if (!sessionStorage.getItem("taxgod_wizard_shown")) {
+                    sessionStorage.setItem("taxgod_wizard_shown", "1");
                     this.navigate("onboarding");
                 }
             } else {

@@ -4,6 +4,8 @@ export default {
     render() {
         return `
             <div class="page-description">Client Portal — Preview what your clients see when they log in.</div>
+            <div id="portal-loading"><div class="spinner"></div></div>
+            <div id="portal-content" style="display:none">
             <div class="card" style="margin-bottom:var(--spacing-lg)">
                 <div class="card-title">Invoices</div>
                 <table class="table" id="portal-invoices"><thead><tr><th>#</th><th>Amount</th><th>Status</th><th>Due</th></tr></thead><tbody></tbody></table>
@@ -27,6 +29,7 @@ export default {
                     <input class="form-control" name="content" placeholder="Type a message..." required style="flex:1">
                     <button class="btn btn-primary btn-sm" type="submit">Send</button>
                 </form>
+            </div>
             </div>`;
     },
 
@@ -49,6 +52,8 @@ export default {
     },
 
     async load() {
+        document.getElementById("portal-loading").style.display = "none";
+        document.getElementById("portal-content").style.display = "block";
         const invoices = await api.get("/api/v1/portal/invoices").catch(() => []);
         document.getElementById("portal-invoices").querySelector("tbody").innerHTML =
             (invoices || []).map(i => `<tr><td>${i.invoice_number}</td><td>$${(i.amount||0).toFixed(2)}</td><td>${i.status}</td><td>${i.due_date||"—"}</td></tr>`).join("") || "<tr><td colspan=4>No invoices</td></tr>";

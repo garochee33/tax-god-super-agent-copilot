@@ -11,6 +11,7 @@ export default {
                 <div class="card stat-card"><div class="stat-value" id="kpi-outstanding">--</div><div class="stat-label">Outstanding Invoices</div></div>
                 <div class="card stat-card"><div class="stat-value" id="kpi-expenses">--</div><div class="stat-label">Expenses This Month</div></div>
                 <div class="card stat-card"><div class="stat-value" id="kpi-profit">--</div><div class="stat-label">Net Profit</div></div>
+                <div class="card stat-card"><div class="stat-value" id="kpi-quarterly-tax">--</div><div class="stat-label">Quarterly Tax Due</div></div>
             </div>
             <div class="grid grid-2" style="margin-top:var(--spacing-xl)">
                 <div class="card"><div class="card-title">Recent Activity</div><div id="recent-activity"><p>Loading...</p></div></div>
@@ -42,6 +43,12 @@ export default {
         document.getElementById("kpi-outstanding").textContent = `${sentArr.length} / ${fmt(outstanding)}`;
         document.getElementById("kpi-expenses").textContent = fmt(expenses);
         document.getElementById("kpi-profit").textContent = fmt(revenue - expenses);
+
+        api.get("/api/v1/estimates/quarterly").then(d => {
+            document.getElementById("kpi-quarterly-tax").textContent = fmt(d.quarterly_payment);
+        }).catch(() => {
+            document.getElementById("kpi-quarterly-tax").textContent = "N/A";
+        });
 
         const items = Array.isArray(transactions) ? transactions.slice(0, 5) : [];
         document.getElementById("recent-activity").innerHTML = items.length
