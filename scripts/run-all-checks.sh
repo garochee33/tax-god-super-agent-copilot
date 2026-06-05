@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -uo pipefail
 
+# Activate venv if exists
+if [ -f ".venv/bin/activate" ]; then
+    source .venv/bin/activate
+fi
+
 echo "═══════════════════════════════════════"
 echo "  Tax God — Pre-Deploy Checks"
 echo "═══════════════════════════════════════"
@@ -26,6 +31,13 @@ run_check() {
 run_check "ruff lint" ruff check app/ tests/ --select E,F,W --ignore E402,E501,E741
 
 # 2. Tests
+export DATABASE_URL="${DATABASE_URL:-postgresql+asyncpg://$(whoami)@localhost:5432/taxgod}"
+export REDIS_URL="${REDIS_URL:-redis://localhost:6379/0}"
+export SECRET_KEY="${SECRET_KEY:-test-run-checks}"
+export ENVIRONMENT="${ENVIRONMENT:-development}"
+export OPENAI_API_KEY="${OPENAI_API_KEY:-sk-test}"
+export ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY:-sk-ant-test}"
+
 run_check "pytest" pytest tests/ -q --tb=no
 
 # 3. Git status clean
