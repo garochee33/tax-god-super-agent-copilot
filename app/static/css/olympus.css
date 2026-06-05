@@ -919,3 +919,25 @@ a {
 .gate-form-card .gate-link a:hover {
     color: var(--color-gold-light);
 }
+
+/* Settings Page */
+.settings-section { margin-bottom: 1.5rem; border-bottom: 1px solid #2a2a3e; padding-bottom: 1.25rem; }
+.settings-section:last-of-type { border-bottom: none; }
+.settings-section-title { color: var(--color-gold); margin-bottom: .75rem; font-size: 1rem; }
+.settings-grid { display: flex; flex-direction: column; gap: .5rem; }
+.settings-row { display: flex; align-items: center; gap: .75rem; min-height: 2.2rem; }
+.settings-label { width: 280px; flex-shrink: 0; }
+.settings-key, .settings-key-link { font-family: monospace; font-size: .82rem; color: #ccc; display: block; }
+.settings-key-link { color: var(--color-gold-light); text-decoration: none; }
+.settings-key-link:hover { text-decoration: underline; color: var(--color-gold); }
+.settings-help { font-size: .72rem; color: #666; display: block; margin-top: 1px; }
+.settings-input { flex: 1; padding: .4rem .6rem; background: var(--color-primary-dark); border: 1px solid #333; border-radius: 4px; color: #eee; font-size: .82rem; min-width: 0; }
+.settings-input:focus { border-color: var(--color-gold); outline: none; }
+select.settings-input { appearance: auto; }
+.settings-input-wrap { flex: 1; display: flex; align-items: center; gap: .4rem; }
+.settings-input-wrap input { flex: 1; }
+.settings-masked { font-size: .72rem; color: #555; white-space: nowrap; }
+.btn-toggle-vis { background: none; border: none; cursor: pointer; font-size: .9rem; padding: 0 .3rem; }
+.btn-gold { padding: .6rem 1.5rem; background: var(--color-gold); color: var(--color-primary-dark); border: none; border-radius: 4px; font-weight: 600; cursor: pointer; font-size: .9rem; }
+.btn-gold:hover { background: var(--color-gold-light); }
+.nav-settings { margin-top: auto; border-top: 1px solid #2a2a3e; padding-top: .5rem; }
