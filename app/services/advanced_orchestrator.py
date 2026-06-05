@@ -8,12 +8,11 @@ from __future__ import annotations
 import logging
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, List
 
 from app.core.config import get_settings
-from app.services.ai_service import AIOrchestrator, AgentRole, AgentMessage, ConversationState
+from app.services.ai_service import AIOrchestrator, AgentRole, AgentMessage
 from app.services.cost_governor import CostGovernor
-from app.services.citation_engine import CitationEngine
 
 # Import the core algorithms
 import asyncio

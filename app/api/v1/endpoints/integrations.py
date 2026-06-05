@@ -15,9 +15,9 @@ from typing import Any
 import httpx
 from fastapi import APIRouter, HTTPException, Query, Request
 from fastapi.responses import HTMLResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 
-from app.api.deps import CurrentUser, AdminUser
+from app.api.deps import CurrentUser
 from app.core.config import get_settings
 from app.models.user import UserRole
 from app.services.circuit_breaker import QB_AGENT_ID

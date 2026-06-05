@@ -1,7 +1,7 @@
 """
 Self-Healing Validation Algorithm (SHVA)
 =========================================
-Automatically detect and correct errors in tax calculations, form completion, 
+Automatically detect and correct errors in tax calculations, form completion,
 and compliance before client delivery.
 
 Author: Tax God v3.0 System
@@ -9,10 +9,9 @@ License: Proprietary
 """
 
 import re
-from typing import Dict, List, Any, Optional, Tuple
+from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, field
 from enum import Enum
-from datetime import datetime
 
 
 class ValidationStage(Enum):
@@ -70,7 +69,7 @@ class ValidationResult:
 class SelfHealingValidationAlgorithm:
     """
     SHVA - Multi-stage error detection and auto-correction
-    
+
     Features:
     - Structure validation
     - Calculation verification
@@ -80,7 +79,7 @@ class SelfHealingValidationAlgorithm:
     - Automatic error correction
     - Confidence scoring
     """
-    
+
     # Calculated fields with formulas
     CALCULATED_FIELDS = {
         'adjusted_gross_income': 'total_income - adjustments',
@@ -89,7 +88,7 @@ class SelfHealingValidationAlgorithm:
         'amount_owed': 'total_tax - payments',
         'refund_amount': 'payments - total_tax'
     }
-    
+
     # Required fields for different output types
     REQUIRED_FIELDS = {
         '1040': [
@@ -104,7 +103,7 @@ class SelfHealingValidationAlgorithm:
             'ein', 'partnership_name', 'total_income', 'ordinary_income'
         ]
     }
-    
+
     # Tax brackets for 2024 (Single)
     TAX_BRACKETS_SINGLE = [
         (11600, 0.10),
@@ -115,7 +114,7 @@ class SelfHealingValidationAlgorithm:
         (609350, 0.35),
         (float('inf'), 0.37)
     ]
-    
+
     # Standard deduction 2024
     STANDARD_DEDUCTION = {
         'single': 14600,
@@ -123,7 +122,7 @@ class SelfHealingValidationAlgorithm:
         'married_filing_separately': 14600,
         'head_of_household': 21900
     }
-    
+
     def validate_output(
         self,
         result: Dict[str, Any],
@@ -132,12 +131,12 @@ class SelfHealingValidationAlgorithm:
     ) -> ValidationResult:
         """
         Main validation pipeline with auto-healing
-        
+
         Args:
             result: Output to validate (e.g., tax return data)
             output_type: Type of output ('1040', '1120', etc.)
             context: Optional context data
-            
+
         Returns:
             ValidationResult with healing log
         """
@@ -148,13 +147,13 @@ class SelfHealingValidationAlgorithm:
             (ValidationStage.CONSISTENCY, self._validate_consistency),
             (ValidationStage.COMPLETENESS, self._validate_completeness)
         ]
-        
+
         healing_log = []
         current_result = result.copy()
-        
+
         for stage, validator in validation_stages:
             validation_result = validator(current_result, output_type, context or {})
-            
+
             if not validation_result['is_valid']:
                 # Attempt auto-healing
                 healing_attempt = self._attempt_healing(
@@ -163,9 +162,9 @@ class SelfHealingValidationAlgorithm:
                     errors=validation_result['errors'],
                     context=context or {}
                 )
-                
+
                 healing_log.append(healing_attempt)
-                
+
                 if healing_attempt.success:
                     current_result = healing_attempt.corrections_made[0].get(
                         'corrected_result', current_result
@@ -181,16 +180,16 @@ class SelfHealingValidationAlgorithm:
                         requires_human_review=True,
                         confidence_score=0.0
                     )
-        
+
         confidence = self._calculate_confidence(healing_log)
-        
+
         return ValidationResult(
             is_valid=True,
             result=current_result,
             healing_log=healing_log,
             confidence_score=confidence
         )
-    
+
     def _validate_structure(
         self,
         result: Dict[str, Any],
@@ -199,11 +198,11 @@ class SelfHealingValidationAlgorithm:
     ) -> Dict[str, Any]:
         """Verify data structure and types"""
         errors = []
-        
+
         # Check for required fields
         required = self.REQUIRED_FIELDS.get(output_type, [])
-        
-        for field in required:
+
+        for field in required:  # noqa: F402
             if field not in result or result[field] is None:
                 errors.append(ValidationError(
                     stage=ValidationStage.STRUCTURE,
@@ -212,13 +211,13 @@ class SelfHealingValidationAlgorithm:
                     error_type='missing_field',
                     message=f"Required field '{field}' is missing"
                 ))
-        
+
         # Check data types
         numeric_fields = [
             'total_income', 'adjusted_gross_income', 'taxable_income',
             'total_tax', 'deductions', 'credits'
         ]
-        
+
         for field in numeric_fields:
             if field in result and result[field] is not None:
                 if not isinstance(result[field], (int, float)):
@@ -230,12 +229,12 @@ class SelfHealingValidationAlgorithm:
                         message=f"Field '{field}' must be numeric, got {type(result[field]).__name__}",
                         provided_value=result[field]
                     ))
-        
+
         return {
             'is_valid': len(errors) == 0,
             'errors': errors
         }
-    
+
     def _validate_calculations(
         self,
         result: Dict[str, Any],
@@ -244,7 +243,7 @@ class SelfHealingValidationAlgorithm:
     ) -> Dict[str, Any]:
         """Verify mathematical accuracy"""
         errors = []
-        
+
         if output_type in ['1040', '1120', '1065', 'tax_return']:
             # Check arithmetic consistency
             for field, formula in self.CALCULATED_FIELDS.items():
@@ -252,7 +251,7 @@ class SelfHealingValidationAlgorithm:
                     try:
                         calculated_value = self._evaluate_formula(formula, result)
                         provided_value = result[field]
-                        
+
                         if abs(calculated_value - provided_value) > 1.0:  # $1 tolerance
                             errors.append(ValidationError(
                                 stage=ValidationStage.CALCULATION,
@@ -273,12 +272,12 @@ class SelfHealingValidationAlgorithm:
                             message=f"Could not evaluate formula: {str(e)}",
                             formula=formula
                         ))
-        
+
         return {
             'is_valid': len(errors) == 0,
             'errors': errors
         }
-    
+
     def _validate_compliance(
         self,
         result: Dict[str, Any],
@@ -287,7 +286,7 @@ class SelfHealingValidationAlgorithm:
     ) -> Dict[str, Any]:
         """Check regulatory compliance rules"""
         errors = []
-        
+
         if output_type == '1040':
             # SSN format check
             if 'ssn' in result:
@@ -300,11 +299,11 @@ class SelfHealingValidationAlgorithm:
                         message="SSN must be in format XXX-XX-XXXX",
                         provided_value=result.get('ssn')
                     ))
-            
+
             # Filing status rules
             if 'filing_status' in result:
                 valid_statuses = [
-                    'single', 'married_filing_jointly', 
+                    'single', 'married_filing_jointly',
                     'married_filing_separately', 'head_of_household',
                     'qualifying_widow'
                 ]
@@ -317,7 +316,7 @@ class SelfHealingValidationAlgorithm:
                         message=f"Filing status must be one of: {', '.join(valid_statuses)}",
                         provided_value=result['filing_status']
                     ))
-            
+
             # Standard deduction check
             if 'deductions' in result and 'filing_status' in result:
                 min_deduction = self.STANDARD_DEDUCTION.get(result['filing_status'], 0)
@@ -331,12 +330,12 @@ class SelfHealingValidationAlgorithm:
                         provided_value=result['deductions'],
                         expected_value=min_deduction
                     ))
-        
+
         return {
             'is_valid': len(errors) == 0,
             'errors': errors
         }
-    
+
     def _validate_consistency(
         self,
         result: Dict[str, Any],
@@ -345,7 +344,7 @@ class SelfHealingValidationAlgorithm:
     ) -> Dict[str, Any]:
         """Check internal consistency"""
         errors = []
-        
+
         # Check that income >= AGI >= taxable income
         if all(k in result for k in ['total_income', 'adjusted_gross_income', 'taxable_income']):
             if result['total_income'] < result['adjusted_gross_income']:
@@ -356,7 +355,7 @@ class SelfHealingValidationAlgorithm:
                     error_type='logical_inconsistency',
                     message="AGI cannot exceed total income"
                 ))
-            
+
             if result['adjusted_gross_income'] < result['taxable_income']:
                 errors.append(ValidationError(
                     stage=ValidationStage.CONSISTENCY,
@@ -365,7 +364,7 @@ class SelfHealingValidationAlgorithm:
                     error_type='logical_inconsistency',
                     message="Taxable income cannot exceed AGI"
                 ))
-        
+
         # Check refund vs owed consistency
         if 'refund_amount' in result and 'amount_owed' in result:
             if result['refund_amount'] > 0 and result['amount_owed'] > 0:
@@ -376,12 +375,12 @@ class SelfHealingValidationAlgorithm:
                     error_type='mutual_exclusivity_violation',
                     message="Cannot have both refund and amount owed"
                 ))
-        
+
         return {
             'is_valid': len(errors) == 0,
             'errors': errors
         }
-    
+
     def _validate_completeness(
         self,
         result: Dict[str, Any],
@@ -390,7 +389,7 @@ class SelfHealingValidationAlgorithm:
     ) -> Dict[str, Any]:
         """Verify all necessary data is present"""
         errors = []
-        
+
         # This overlaps with structure validation but focuses on business logic
         if output_type == '1040':
             # If married filing jointly, need spouse info
@@ -403,7 +402,7 @@ class SelfHealingValidationAlgorithm:
                         error_type='missing_required_data',
                         message="Spouse SSN required for married filing jointly"
                     ))
-            
+
             # If claiming dependents, need dependent details
             if result.get('num_dependents', 0) > 0:
                 if not result.get('dependent_details'):
@@ -414,12 +413,12 @@ class SelfHealingValidationAlgorithm:
                         error_type='missing_supporting_data',
                         message="Dependent details required when claiming dependents"
                     ))
-        
+
         return {
             'is_valid': len(errors) == 0,
             'errors': errors
         }
-    
+
     def _attempt_healing(
         self,
         result: Dict[str, Any],
@@ -428,7 +427,7 @@ class SelfHealingValidationAlgorithm:
         context: Dict[str, Any]
     ) -> HealingAttempt:
         """Attempt automatic error correction"""
-        
+
         if stage == ValidationStage.CALCULATION:
             return self._heal_calculations(result, errors, context)
         elif stage == ValidationStage.STRUCTURE:
@@ -443,7 +442,7 @@ class SelfHealingValidationAlgorithm:
                 stage=stage,
                 reason='No healing strategy for this stage'
             )
-    
+
     def _heal_calculations(
         self,
         result: Dict[str, Any],
@@ -453,36 +452,36 @@ class SelfHealingValidationAlgorithm:
         """Auto-correct calculation errors"""
         corrected_result = result.copy()
         corrections_made = []
-        
+
         for error in errors:
             if error.error_type == 'calculation_mismatch':
                 field = error.field
                 correct_value = error.expected_value
-                
+
                 # Update field with correct calculation
                 corrected_result[field] = correct_value
-                
+
                 corrections_made.append({
                     'field': field,
                     'old_value': error.provided_value,
                     'new_value': correct_value,
                     'formula': error.formula
                 })
-        
+
         # Re-validate calculations
         revalidation = self._validate_calculations(
-            corrected_result, 
-            result.get('form_type', '1040'), 
+            corrected_result,
+            result.get('form_type', '1040'),
             context
         )
-        
+
         return HealingAttempt(
             success=revalidation['is_valid'],
             stage=ValidationStage.CALCULATION,
             corrections_made=[{'corrected_result': corrected_result}] if revalidation['is_valid'] else [],
             iterations=1
         )
-    
+
     def _heal_structure(
         self,
         result: Dict[str, Any],
@@ -492,7 +491,7 @@ class SelfHealingValidationAlgorithm:
         """Auto-correct structure errors"""
         corrected_result = result.copy()
         corrections_made = []
-        
+
         for error in errors:
             if error.error_type == 'invalid_type':
                 try:
@@ -504,20 +503,20 @@ class SelfHealingValidationAlgorithm:
                         'old_value': error.provided_value,
                         'new_value': corrected_result[error.field]
                     })
-                except:
+                except Exception:
                     return HealingAttempt(
                         success=False,
                         stage=ValidationStage.STRUCTURE,
                         reason=f"Cannot convert {error.field} to numeric type"
                     )
-        
+
         return HealingAttempt(
             success=len(corrections_made) > 0,
             stage=ValidationStage.STRUCTURE,
             corrections_made=[{'corrected_result': corrected_result}] if corrections_made else [],
             iterations=1
         )
-    
+
     def _heal_compliance(
         self,
         result: Dict[str, Any],
@@ -527,10 +526,10 @@ class SelfHealingValidationAlgorithm:
         """Auto-correct compliance errors"""
         # Most compliance errors require human intervention
         # But some can be auto-fixed
-        
+
         corrected_result = result.copy()
         corrections_made = []
-        
+
         for error in errors:
             if error.error_type == 'below_standard_deduction':
                 # Auto-upgrade to standard deduction
@@ -541,7 +540,7 @@ class SelfHealingValidationAlgorithm:
                     'old_value': error.provided_value,
                     'new_value': error.expected_value
                 })
-        
+
         return HealingAttempt(
             success=len(corrections_made) > 0,
             stage=ValidationStage.COMPLIANCE,
@@ -549,7 +548,7 @@ class SelfHealingValidationAlgorithm:
             iterations=1,
             reason='Some compliance errors require manual review' if not corrections_made else None
         )
-    
+
     def _heal_consistency(
         self,
         result: Dict[str, Any],
@@ -564,53 +563,53 @@ class SelfHealingValidationAlgorithm:
             stage=ValidationStage.CONSISTENCY,
             reason='Consistency errors require manual review'
         )
-    
+
     def _calculate_confidence(self, healing_log: List[HealingAttempt]) -> float:
         """
         Confidence score based on healing complexity
-        
+
         Args:
             healing_log: List of healing attempts
-            
+
         Returns:
             Confidence score (0.5 - 1.0)
         """
         if len(healing_log) == 0:
             return 1.0  # No healing needed = perfect confidence
-        
+
         healing_complexity = sum([
             0.05 for h in healing_log if h.success
         ]) + sum([
             0.20 for h in healing_log if not h.success
         ])
-        
+
         return max(0.5, 1.0 - healing_complexity)
-    
+
     def _evaluate_formula(self, formula: str, data: Dict[str, Any]) -> float:
         """
         Safely evaluate a formula with data
-        
+
         Args:
             formula: Formula string (e.g., 'total_income - adjustments')
             data: Data dictionary
-            
+
         Returns:
             Calculated value
         """
         # Replace field names with values
         formula_eval = formula
-        for field, value in data.items():
+        for field, value in data.items():  # noqa: F402
             if isinstance(value, (int, float)):
                 formula_eval = formula_eval.replace(field, str(value))
-        
+
         # Safe evaluation (only allow basic math)
         try:
             # Remove any remaining field names (treat as 0)
             formula_eval = re.sub(r'[a-zA-Z_]\w*', '0', formula_eval)
             return eval(formula_eval, {"__builtins__": {}}, {})
-        except:
+        except Exception:
             raise ValueError(f"Cannot evaluate formula: {formula}")
-    
+
     def _check_ssn_format(self, ssn: str) -> bool:
         """Check if SSN is in valid format"""
         pattern = r'^\d{3}-\d{2}-\d{4}$'
@@ -620,7 +619,7 @@ class SelfHealingValidationAlgorithm:
 # Example usage
 if __name__ == "__main__":
     shva = SelfHealingValidationAlgorithm()
-    
+
     # Test 1: Valid return
     valid_return = {
         'form_type': '1040',
@@ -639,14 +638,14 @@ if __name__ == "__main__":
         'refund_amount': 500,
         'amount_owed': 0
     }
-    
+
     result1 = shva.validate_output(valid_return, '1040')
     print("Test 1 - Valid Return:")
     print(f"  Valid: {result1.is_valid}")
     print(f"  Confidence: {result1.confidence_score:.2f}")
     print(f"  Healing attempts: {len(result1.healing_log)}")
     print()
-    
+
     # Test 2: Return with calculation error
     error_return = {
         'form_type': '1040',
@@ -665,7 +664,7 @@ if __name__ == "__main__":
         'refund_amount': 1000,
         'amount_owed': 0
     }
-    
+
     result2 = shva.validate_output(error_return, '1040')
     print("Test 2 - Return with Calculation Error:")
     print(f"  Valid: {result2.is_valid}")

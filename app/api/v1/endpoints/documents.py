@@ -18,7 +18,6 @@ from app.services.document_intelligence import (
     extract_entities_tax_doc,
     extract_text_from_pdf,
 )
-from app.services.parallel_processor import JobType
 
 router = APIRouter()
 

@@ -163,26 +163,26 @@ def test_agent_system():
         print("Testing DTDA...")
         from specs.algorithms.dtda import DynamicTaskDecompositionAlgorithm
         dtda = DynamicTaskDecompositionAlgorithm()
-        result = dtda.decompose_task("Test tax query", {})
+        dtda.decompose_task("Test tax query", {})
         print("✅ DTDA: Working")
 
         print("Testing IMRA...")
         from specs.algorithms.imra import IntelligentMemoryRetrievalAlgorithm, RetrievalContext
         imra = IntelligentMemoryRetrievalAlgorithm()
         context = RetrievalContext(query="test", client_id="test")
-        results = imra.retrieve_context(context)
+        imra.retrieve_context(context)
         print("✅ IMRA: Working")
 
         print("Testing SHVA...")
         from specs.algorithms.shva import SelfHealingValidationAlgorithm
         shva = SelfHealingValidationAlgorithm()
         test_data = {"content": "Test response", "task_type": "tax_analysis"}
-        validation = shva.validate_output(test_data, "tax_analysis")
+        shva.validate_output(test_data, "tax_analysis")
         print("✅ SHVA: Working")
 
         # Test advanced orchestrator
         print("Testing Advanced Orchestrator...")
-        from app.services.advanced_orchestrator import AdvancedTaxOrchestrator
+        from app.services.advanced_orchestrator import AdvancedTaxOrchestrator  # noqa: F401
         print("✅ Advanced Orchestrator: Import successful")
 
         print("\n✅ All agent system components working!")

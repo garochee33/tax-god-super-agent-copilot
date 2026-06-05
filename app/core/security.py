@@ -6,7 +6,7 @@ JWT token creation/verification + password hashing.
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from typing import Any, Optional
+from typing import Any
 
 from jose import JWTError, jwt
 from passlib.context import CryptContext

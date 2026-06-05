@@ -4,12 +4,12 @@ Tax God API - Agent Gabriel (Audit) Endpoints
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, Request
 from pydantic import BaseModel, Field
 
-from app.api.deps import CurrentUser, PreparerOrAdmin, resolve_client_id
+from app.api.deps import PreparerOrAdmin, resolve_client_id
 
 router = APIRouter()
 

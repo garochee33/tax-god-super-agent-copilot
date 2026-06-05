@@ -18,9 +18,9 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
-from app.services.ai_service import AIOrchestrator, AgentRole
+from app.services.ai_service import AIOrchestrator
 from app.services.citation_engine import CitationEngine
 
 logger = logging.getLogger(__name__)
