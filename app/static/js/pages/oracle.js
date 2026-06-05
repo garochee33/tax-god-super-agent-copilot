@@ -20,6 +20,7 @@ function setConversationId(id) {
 export default {
     render() {
         return `
+            <div class="page-description">Ask the Oracle any tax question and get AI-powered answers with citations from the IRC, IRS publications, and case law. Enable God Mode for multi-agent deep analysis.</div>
             <div class="oracle-container grid grid-2" style="height: calc(100vh - 140px); overflow: hidden;">
                 
                 <!-- Chat Column -->
@@ -65,6 +66,7 @@ export default {
                         <div class="empty-state" style="text-align: center; color: #999; margin-top: 40px;">
                             <div style="font-size: 40px; margin-bottom: 10px;">📜</div>
                             <p>No scrolls consulted yet.</p>
+                            <p style="font-size: 12px; margin-top: 8px;">Citations from IRC, IRS publications, and case law will appear here as you ask questions.</p>
                         </div>
                     </div>
                 </div>

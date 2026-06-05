@@ -34,6 +34,7 @@ function statusBadge(status) {
 export default {
     render() {
         return `
+            <div class="page-description">Connect external services like Google and QuickBooks to pull live financial data into the platform. View P&L reports, balance sheets, and vendor lists directly from your accounting software.</div>
             <div class="hermes-container">
                 <div class="card" style="margin-bottom: var(--spacing-lg);">
                     <div class="card-header">

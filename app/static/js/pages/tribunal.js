@@ -9,6 +9,7 @@ import { escapeHtml, safeMarkdown } from '../utils.js';
 export default {
     render() {
         return `
+            <div class="page-description">Submit tax return data for an AI-powered audit review. The Tribunal scores your return, flags risks, identifies savings opportunities, and provides actionable recommendations.</div>
             <div class="tribunal-container grid grid-2">
                 
                 <!-- Input Form (The Plea) -->
@@ -19,6 +20,7 @@ export default {
                             <button id="load-sample" class="btn btn-outline btn-sm">Load Sample</button>
                         </div>
                     </div>
+                    <p style="font-size: 13px; color: #666; margin-bottom: var(--spacing-md);">Enter income, deductions, and filing details below. Click "Load Sample" to pre-fill with example data.</p>
                     
                     <form id="audit-form">
                         <div class="grid grid-2" style="gap: var(--spacing-md);">
@@ -87,6 +89,7 @@ export default {
                     <div id="results-content" style="text-align: center; padding: 40px; color: #666;">
                         <div style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;">⚖️</div>
                         <p>Submit a plea to receive judgment.</p>
+                        <p style="font-size: 12px; margin-top: 8px;">The AI audit agent will score your return, flag risks, and recommend savings.</p>
                     </div>
                     <div id="god-mode-analysis-block" style="display: none; margin-top: var(--spacing-lg); padding-top: var(--spacing-md); border-top: 1px solid var(--color-gold); text-align: left;"></div>
                 </div>

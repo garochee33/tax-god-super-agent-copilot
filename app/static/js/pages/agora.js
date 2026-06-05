@@ -45,7 +45,7 @@ function statusBadge(status) {
 function renderList(data) {
   const { clients, total, page, per_page } = data;
   const totalPages = Math.ceil(total / per_page);
-  if (!clients.length) return '<p style="opacity:0.6">No clients yet. Add your first client above.</p>';
+  if (!clients.length) return '<p style="opacity:0.6">No clients yet. Use the form above to add your first client.</p>';
   let html = `<table class="data-table"><thead><tr><th>Name</th><th>Email</th><th>Company</th><th>Filing</th><th>Status</th><th>Actions</th></tr></thead><tbody>`;
   for (const c of clients) {
     html += `<tr data-id="${c.id}">
@@ -172,9 +172,10 @@ export default {
   render() {
     currentPage = 1;
     return `<div class="page-container agora-page">
+      <div class="page-description">Manage your client roster — add, edit, search, and organize clients by filing type and status. Client data is used across the platform for personalized queries and audits.</div>
       <h1>⚖️ Agora — Client Management</h1>
       <div class="agora-controls">
-        <input type="text" id="agora-search" class="form-control" placeholder="Search clients..." style="max-width:300px;">
+        <input type="text" id="agora-search" class="form-control" placeholder="Search clients by name, email, or company..." style="max-width:300px;">
       </div>
       <div id="client-form-area">${formHtml()}</div>
       <div id="client-list"><p style="opacity:0.6">Loading...</p></div>

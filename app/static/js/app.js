@@ -11,6 +11,8 @@ const APP_ROUTES = {
     scrolls: { title: "Sacred Scrolls", module: "/static/js/pages/scrolls.js" },
     agora: { title: "The Agora", module: "/static/js/pages/agora.js" },
     hermes: { title: "Temple of Hermes", module: "/static/js/pages/hermes.js" },
+    profile: { title: "Profile", module: "/static/js/pages/profile.js" },
+    settings: { title: "Settings", module: "/static/js/pages/settings.js" },
 };
 
 const GATE_VIEWS = ["home", "login", "register"];

@@ -9,6 +9,7 @@ import { escapeHtml, safeMarkdown } from '../utils.js';
 export default {
     render() {
         return `
+            <div class="page-description">Generate professional tax memos and IRS response letters using AI. Fill in the details and the system drafts a complete document with proper legal structure and citations.</div>
             <div class="scrolls-container grid grid-2">
                 
                 <!-- Generator Forms -->
@@ -91,6 +92,7 @@ export default {
                         <div class="empty-state" style="text-align: center; color: #999; margin-top: 100px;">
                             <div style="font-size: 40px; margin-bottom: 10px;">✍️</div>
                             <p>Instruct the scribe to begin.</p>
+                            <p style="font-size: 12px; margin-top: 8px;">Fill out the form on the left and submit — the AI will generate a formatted document here.</p>
                         </div>
                     </div>
                 </div>

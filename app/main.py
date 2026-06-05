@@ -338,6 +338,8 @@ from app.api.v1.endpoints import (  # noqa: E402
     clients,
     documents,
     integrations,
+    profile,
+    settings,
 )
 
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
@@ -349,6 +351,8 @@ app.include_router(analytics.router, prefix="/api/v1/analytics", tags=["Analytic
 app.include_router(integrations.router, prefix="/api/v1/integrations", tags=["Integrations"])
 app.include_router(advanced.router, prefix="/api/v1/advanced", tags=["Advanced Tax Processing"])
 app.include_router(clients.router, prefix="/api/v1/clients", tags=["Clients (Agora)"])
+app.include_router(profile.router, prefix="/api/v1/profile", tags=["Profile"])
+app.include_router(settings.router, prefix="/api/v1/settings", tags=["Settings"])
 
 
 # ---------------------------------------------------------------------------

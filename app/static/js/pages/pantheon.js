@@ -17,6 +17,7 @@ function formatCurrency(value) {
 export default {
     render() {
         return `
+            <div class="page-description">Your command center — view live usage metrics, API costs, budget status, and system health at a glance. Use the tools below to estimate query costs or decompose complex questions.</div>
             <div class="pantheon-container">
                 <div class="grid grid-4">
                     <div class="card stat-card">
@@ -62,6 +63,7 @@ export default {
                             <span class="card-title">Realm Influence (Tax Nexus)</span>
                             <button class="btn btn-outline btn-sm" id="refresh-dashboard">Refresh Metrics</button>
                         </div>
+                        <p style="font-size: 12px; color: #666; padding: 0 var(--spacing-md); margin-bottom: var(--spacing-sm);">Visual overview of state tax exposure based on client activity. Updates as clients are analyzed.</p>
                         <div class="map-placeholder">
                             <svg viewBox="0 0 800 500" class="nexus-map">
                                 <path d="M50,100 Q200,50 350,100 T650,100" fill="none" stroke="#e0e0e0" stroke-width="2"/>
@@ -83,6 +85,7 @@ export default {
                             <span class="card-title">System Signals</span>
                             <span class="badge badge-gold">Live API</span>
                         </div>
+                        <p style="font-size: 12px; color: #666; padding: 0 var(--spacing-md); margin-bottom: var(--spacing-sm);">Real-time operational status — model routing, budget utilization, and cache performance.</p>
                         <div class="activity-list" id="activity-list">
                             <div class="activity-item">
                                 <div class="activity-icon">🛰️</div>

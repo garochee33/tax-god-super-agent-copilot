@@ -9,6 +9,7 @@ import { escapeHtml, safeMarkdown } from '../utils.js';
 export default {
     render() {
         return `
+            <div class="page-description">Search the tax law knowledge base — IRC sections, IRS publications, revenue rulings, and case law. Find authoritative sources to support your positions.</div>
             <div class="archives-container">
                 <div class="card" style="margin-bottom: var(--spacing-lg);">
                     <div class="card-header">
@@ -28,6 +29,7 @@ export default {
                     <div class="empty-state" style="grid-column: span 2; text-align: center; color: #999; margin-top: 40px;">
                         <div style="font-size: 40px; margin-bottom: 10px;">📚</div>
                         <p>Enter a query to search the archives.</p>
+                        <p style="font-size: 12px; margin-top: 8px;">Try searching for an IRC section (e.g. "IRC 179"), a topic (e.g. "home office deduction"), or a publication number.</p>
                     </div>
                 </div>
             </div>
