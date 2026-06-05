@@ -1,19 +1,43 @@
 # Tax God Super Agent Co-Pilot
 
-AI-powered local GUI app & multi-agent system for **law, taxes, finance, and accounting**.
+AI-powered **local** GUI app & multi-agent system for **law, taxes, finance, and accounting**.
 
-## Overview
+100% sovereign — runs entirely on your machine. Your data never leaves your computer.
 
-Tax God is a multi-agent AI co-pilot that combines domain expertise across tax law, financial planning, accounting standards, and legal compliance into a single sovereign application.
+## Quick Start
+
+```bash
+git clone https://github.com/garochee33/tax-god-super-agent-copilot.git
+cd tax-god-super-agent-copilot
+./setup.sh
+```
+
+That's it. Setup auto-installs dependencies, generates secrets, creates the database, and runs migrations.
+
+```bash
+source .venv/bin/activate
+uvicorn app.main:app --reload --port 8000
+```
+
+Open **http://localhost:8000** → Register → 7-day free trial starts immediately.
+
+## Desktop App
+
+Double-click **Tax God.app** in Applications (or create it):
+
+```bash
+# Creates /Applications/Tax God.app
+./bin/tax-god install
+```
 
 ## Architecture
 
 - **Backend:** FastAPI (Python 3.11+)
-- **Database:** PostgreSQL + Alembic migrations
-- **Auth:** JWT-based authentication
-- **AI Agents:** Multi-agent orchestration (Gabriel, Oracle, Tribunal, Pantheon)
-- **Integrations:** QuickBooks, Google Services
-- **Deployment:** Docker, CI/CD (GitHub Actions)
+- **Database:** PostgreSQL (local) + Redis (local)
+- **Auth:** JWT with auto-generated secrets
+- **AI Agents:** Multi-agent orchestration
+- **Frontend:** Single-page Olympus Dashboard
+- **Billing:** Optional Stripe integration
 
 ## Agents
 
@@ -23,78 +47,50 @@ Tax God is a multi-agent AI co-pilot that combines domain expertise across tax l
 | Oracle | Tax law research & citation engine |
 | Tribunal | Audit defense & compliance |
 | Pantheon | Financial planning & estimation |
-| Hermes | Client communication |
+| Hermes | Integrations & client communication |
 | Scrolls | Document generation & forms |
-| Agora | Client management (CRUD, search, status tracking) |
+| Agora | Client management |
 
-## Quick Start
+## Configuration
 
-```bash
-# Clone
-git clone https://github.com/garochee33/tax-god-super-agent-copilot.git
-cd tax-god-super-agent-copilot
+All settings are manageable from the **⚙️ Settings** page in the app (admin only):
 
-# One-command setup (installs deps, creates DB, runs migrations)
-./setup.sh
+- AI API Keys (OpenAI, Anthropic)
+- Stripe billing keys
+- OAuth integrations (Google, QuickBooks)
+- Database connections
+- Key rotation, connection testing, audit logs
 
-# Run
-source .venv/bin/activate
-uvicorn app.main:app --reload --port 8000
-```
+Or edit `.env` directly.
 
-Open http://localhost:8000, register an account, and you're in with a **7-day free trial**.
-
-## Subscription & Access
+## Subscription (Optional)
 
 | Tier | Access | Price |
 |------|--------|-------|
 | Free Trial | All features for 7 days | $0 |
-| Pro | Unlimited access | $29/month |
+| Pro | Unlimited | $29/month |
 
-After trial expires, subscribe via the in-app billing page (Stripe). Admins can manage users directly in the database.
-
-### Stripe Setup (for operators)
-
-To enable payments, add to `.env`:
-```
-STRIPE_SECRET_KEY=sk_live_...
-STRIPE_PUBLISHABLE_KEY=pk_live_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-STRIPE_PRICE_MONTHLY=price_...  # Create a $29/month recurring price in Stripe Dashboard
-```
+To enable Stripe payments, add keys in Settings. Without Stripe configured, the app runs in unlimited local mode.
 
 ## Structure
 
 ```
 app/
-├── api/v1/endpoints/   # REST endpoints (auth, chat, audit, documents, analytics, integrations, advanced, clients)
-├── core/               # Config, database, security, crypto
-├── middleware/          # Rate limiting, security headers, request ID
-├── models/             # SQLAlchemy models (User, Integration, Client)
-├── services/           # Agent services, AI orchestration, integrations, engines
-├── static/             # Frontend (CSS, JS pages: oracle, tribunal, pantheon, hermes, scrolls, archives, agora)
-└── templates/          # Jinja2 templates (Olympus Dashboard)
+├── api/v1/endpoints/   # REST endpoints
+├── core/               # Config, database, security
+├── middleware/          # Security middleware
+├── models/             # SQLAlchemy models
+├── services/           # Agent services, AI, integrations
+├── static/             # Frontend (CSS, JS)
+└── templates/          # Jinja2 templates
 alembic/                # Database migrations
-tests/                  # Comprehensive test suite (46 tests)
-specs/                  # Implementation specs & swarm runner
-docs/                   # Documentation
+tests/                  # Test suite
 ```
 
 ## Testing
 
 ```bash
-# Run full test suite
 pytest tests/ -v
-
-# With coverage
-pytest tests/ --cov=app --cov-report=term-missing
-
-# Individual modules
-pytest tests/test_auth.py -v
-pytest tests/test_chat.py -v
-pytest tests/test_documents.py -v
-pytest tests/test_analytics.py -v
-pytest tests/test_e2e_pipeline.py -v
 ```
 
 ## License

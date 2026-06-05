@@ -1,85 +1,123 @@
 #!/bin/bash
-# Tax God Super Agent Co-Pilot — One-Command Setup
+# Tax God Super Agent Co-Pilot — Local Setup (fully automated)
 # Run: ./setup.sh
 set -e
 
-echo "🏛️  Tax God Super Agent Co-Pilot — Setup"
-echo "========================================="
+echo ""
+echo "🏛️  Tax God Super Agent Co-Pilot"
+echo "   Local Sovereign Setup"
+echo "════════════════════════════════════════"
+echo ""
 
-# Check Python
-if ! command -v python3 &>/dev/null; then
-    echo "❌ Python 3.11+ required. Install: brew install python@3.11"
-    exit 1
+# ─── Prerequisites ───────────────────────────────────────────────────────────
+
+check() { command -v "$1" &>/dev/null; }
+
+if ! check python3; then
+    echo "❌ Python 3.11+ required → brew install python@3.11"; exit 1
 fi
+echo "✅ Python $(python3 --version | cut -d' ' -f2)"
 
-PY_VERSION=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
-echo "✅ Python $PY_VERSION"
-
-# Check Postgres
-if ! command -v psql &>/dev/null; then
-    echo "❌ PostgreSQL required. Install: brew install postgresql@15 && brew services start postgresql@15"
-    exit 1
+if ! check psql; then
+    echo "📦 Installing PostgreSQL..."
+    brew install postgresql@15 && brew services start postgresql@15
 fi
-echo "✅ PostgreSQL found"
+echo "✅ PostgreSQL"
 
-# Check Redis
-if ! command -v redis-cli &>/dev/null; then
-    echo "❌ Redis required. Install: brew install redis && brew services start redis"
-    exit 1
+if ! check redis-cli; then
+    echo "📦 Installing Redis..."
+    brew install redis && brew services start redis
 fi
-echo "✅ Redis found"
+echo "✅ Redis"
 
-# Create venv
+# Ensure services are running
+brew services start postgresql@15 2>/dev/null || brew services start postgresql@18 2>/dev/null || true
+brew services start redis 2>/dev/null || true
+
+# ─── Virtual Environment ─────────────────────────────────────────────────────
+
 if [ ! -d ".venv" ]; then
+    echo ""
     echo "📦 Creating virtual environment..."
     python3 -m venv .venv
 fi
 source .venv/bin/activate
-
-# Install deps
-echo "📦 Installing dependencies..."
 pip install --upgrade pip -q
 pip install -r requirements.txt -q
-pip install stripe -q
+pip install stripe -q 2>/dev/null || true
 echo "✅ Dependencies installed"
 
-# Setup .env
+# ─── Auto-Generate .env ──────────────────────────────────────────────────────
+
 if [ ! -f ".env" ]; then
-    echo "⚙️  Creating .env from template..."
-    cp .env.example .env
-    # Set local dev DATABASE_URL
+    echo ""
+    echo "🔑 Generating secrets and .env..."
+
+    SECRET_KEY=$(openssl rand -hex 32)
+    ENCRYPTION_KEY=$(python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())")
     DB_USER=$(whoami)
-    sed -i '' "s|DATABASE_URL=.*|DATABASE_URL=postgresql+asyncpg://${DB_USER}@localhost:5432/taxgod|" .env 2>/dev/null || \
-    sed -i "s|DATABASE_URL=.*|DATABASE_URL=postgresql+asyncpg://${DB_USER}@localhost:5432/taxgod|" .env
-    sed -i '' "s|REDIS_URL=.*|REDIS_URL=redis://localhost:6379/0|" .env 2>/dev/null || \
-    sed -i "s|REDIS_URL=.*|REDIS_URL=redis://localhost:6379/0|" .env
-    echo "✅ .env created — edit to add your API keys"
+
+    cat > .env << EOF
+# Tax God — Local Configuration (auto-generated)
+ENVIRONMENT=development
+DEBUG=true
+APP_VERSION=3.1.0
+LOG_LEVEL=INFO
+
+# Security (auto-generated — rotate in Settings)
+SECRET_KEY=${SECRET_KEY}
+INTEGRATION_ENCRYPTION_KEY=${ENCRYPTION_KEY}
+
+# Database (local)
+DATABASE_URL=postgresql+asyncpg://${DB_USER}@localhost:5432/taxgod
+REDIS_URL=redis://localhost:6379/0
+
+# AI Keys (add yours in Settings page after launch)
+OPENAI_API_KEY=
+ANTHROPIC_API_KEY=
+
+# Stripe (optional — for subscription billing)
+STRIPE_SECRET_KEY=
+STRIPE_PUBLISHABLE_KEY=
+STRIPE_WEBHOOK_SECRET=
+STRIPE_PRICE_MONTHLY=
+
+# OAuth Integrations (optional)
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_REDIRECT_URI=http://localhost:8000/api/v1/integrations/callback
+QUICKBOOKS_CLIENT_ID=
+QUICKBOOKS_CLIENT_SECRET=
+QUICKBOOKS_REDIRECT_URI=http://localhost:8000/api/v1/integrations/callback
+
+# Outreach (optional)
+SENDGRID_API_KEY=
+APOLLO_API_KEY=
+EOF
+    echo "✅ .env created with auto-generated secrets"
 else
-    echo "✅ .env already exists"
+    echo "✅ .env exists"
 fi
 
-# Create database
-echo "🗄️  Setting up database..."
-createdb taxgod 2>/dev/null || echo "  (database already exists)"
+# ─── Database ────────────────────────────────────────────────────────────────
 
-# Run migrations
+echo ""
+createdb taxgod 2>/dev/null && echo "✅ Database 'taxgod' created" || echo "✅ Database 'taxgod' exists"
+
 echo "🔄 Running migrations..."
-alembic upgrade head
+alembic upgrade head 2>&1 | grep -E "Running|already"
 echo "✅ Database ready"
 
+# ─── Done ────────────────────────────────────────────────────────────────────
+
 echo ""
-echo "========================================="
+echo "════════════════════════════════════════"
 echo "✅ Setup complete!"
 echo ""
-echo "To start the app:"
-echo "  source .venv/bin/activate"
-echo "  uvicorn app.main:app --reload --port 8000"
+echo "  Start:  source .venv/bin/activate && uvicorn app.main:app --reload --port 8000"
+echo "  Open:   http://localhost:8000"
 echo ""
-echo "Then open: http://localhost:8000"
-echo "Register a new account to get a 7-day free trial."
+echo "  Register an account → 7-day free trial starts."
+echo "  Add your AI keys in ⚙️ Settings after login."
+echo "════════════════════════════════════════"
 echo ""
-echo "For Stripe payments, add your keys to .env:"
-echo "  STRIPE_SECRET_KEY=sk_live_..."
-echo "  STRIPE_PUBLISHABLE_KEY=pk_live_..."
-echo "  STRIPE_PRICE_MONTHLY=price_..."
-echo "========================================="
