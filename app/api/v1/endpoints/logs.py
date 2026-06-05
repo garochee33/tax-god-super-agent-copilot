@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter, Query
@@ -10,7 +10,7 @@ from pydantic import BaseModel
 from sqlalchemy import desc, select
 
 from app.api.deps import AdminUser, CurrentUser, DBSession
-from app.models.activity import ActivityCategory, ActivityLog, BuildLog, KnowledgeEntry
+from app.models.activity import ActivityLog, BuildLog, KnowledgeEntry
 
 router = APIRouter()
 

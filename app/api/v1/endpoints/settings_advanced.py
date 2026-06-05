@@ -25,7 +25,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from cryptography.fernet import Fernet
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from app.api.deps import AdminUser, CurrentUser
