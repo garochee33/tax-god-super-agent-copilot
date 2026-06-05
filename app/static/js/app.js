@@ -5,7 +5,7 @@
 
 const APP_ROUTES = {
     pantheon: { title: "Dashboard", module: "/static/js/pages/pantheon.js" },
-    oracle: { title: "AI Assistant", module: "/static/js/pages/oracle.js" },
+    oracle: { title: "Tax God Agent", module: "/static/js/pages/oracle.js" },
     agora: { title: "Clients", module: "/static/js/pages/agora.js" },
     finance: { title: "Finance", module: "/static/js/pages/finance.js" },
     expenses: { title: "Expenses", module: "/static/js/pages/expenses.js" },

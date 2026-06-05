@@ -20,7 +20,7 @@ function setConversationId(id) {
 export default {
     render() {
         return `
-            <div class="page-description">Ask the Oracle any tax question and get AI-powered answers with citations from the IRC, IRS publications, and case law. Enable God Mode for multi-agent deep analysis.</div>
+            <div class="page-description">Tax God Super Agent — your AI-powered command center for tax, legal, and finance. Ask questions, run analyses, create invoices, add expenses, manage clients, generate reports, and execute any financial task through natural language. God Mode enables multi-agent deep analysis with DTDA→IMRA→SHVA pipeline.</div>
             <div class="oracle-container grid grid-2" style="height: calc(100vh - 140px); overflow: hidden;">
                 
                 <!-- Chat Column -->
@@ -40,8 +40,16 @@ export default {
 
                     <!-- Input Area -->
                     <div class="chat-input-area card" style="padding: var(--spacing-md);">
+                        <div class="quick-actions" style="margin-bottom:8px;display:flex;gap:6px;flex-wrap:wrap;font-size:0.8rem;">
+                            <button type="button" class="btn-sm qa-btn" data-q="What deductions can I claim for my home office?">🏠 Home Office</button>
+                            <button type="button" class="btn-sm qa-btn" data-q="Help me create an invoice for a client">📄 Invoice</button>
+                            <button type="button" class="btn-sm qa-btn" data-q="Summarize my expenses this month by category">📊 Expenses</button>
+                            <button type="button" class="btn-sm qa-btn" data-q="What's my estimated quarterly tax payment?">💰 Est. Tax</button>
+                            <button type="button" class="btn-sm qa-btn" data-q="Analyze my P&L and suggest tax savings">📈 P&L</button>
+                            <button type="button" class="btn-sm qa-btn" data-q="What are the tax implications of forming an LLC vs S-Corp?">🏢 Entity</button>
+                        </div>
                         <form id="chat-form" style="display: flex; gap: var(--spacing-md);">
-                            <input type="text" id="chat-input" class="form-control" placeholder="Ask a tax question..." autocomplete="off">
+                            <input type="text" id="chat-input" class="form-control" placeholder="Ask Tax God anything — taxes, invoices, expenses, reports, legal, financial analysis..." autocomplete="off">
                             <button type="submit" class="btn btn-primary">
                                 <svg viewBox="0 0 24 24" style="width: 20px; height: 20px; fill: currentColor;"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
                                 Consult
@@ -81,6 +89,14 @@ export default {
         const history = document.getElementById('chat-history');
         const citationsList = document.getElementById('citations-list');
         const citationCount = document.getElementById('citation-count');
+
+        // Quick action buttons
+        document.querySelectorAll('.qa-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                input.value = btn.dataset.q;
+                form.dispatchEvent(new Event('submit'));
+            });
+        });
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
