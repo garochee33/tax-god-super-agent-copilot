@@ -39,11 +39,11 @@ async def test_estimates_scenario_valid(client: AsyncClient):
 
 @pytest.mark.asyncio
 async def test_estimates_scenario_invalid_filing_status(client: AsyncClient):
-    """Invalid filing_status causes a server error (unhandled KeyError)."""
-    with pytest.raises(KeyError):
-        await client.post("/api/v1/estimates/scenario", json={
-            "income": 100000, "expenses": 20000, "filing_status": "invalid_status",
-        })
+    """Invalid filing_status returns 422 with validation error."""
+    res = await client.post("/api/v1/estimates/scenario", json={
+        "income": 100000, "expenses": 20000, "filing_status": "invalid_status",
+    })
+    assert res.status_code == 422
 
 
 @pytest.mark.asyncio

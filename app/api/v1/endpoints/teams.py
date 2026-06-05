@@ -80,6 +80,12 @@ async def remove_member(team_id: str, user_id: str, user: AdminUser, db: DBSessi
 
 @router.post("/assign-client", status_code=status.HTTP_201_CREATED)
 async def assign_client(body: AssignClient, user: PreparerOrAdmin, db: DBSession):
+    client = await db.get(Client, body.client_id)
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found")
+    preparer = await db.get(User, body.preparer_id)
+    if not preparer:
+        raise HTTPException(status_code=404, detail="Preparer not found")
     assignment = ClientAssignment(
         client_id=body.client_id, preparer_id=body.preparer_id, assigned_by=user.id
     )

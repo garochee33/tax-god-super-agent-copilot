@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, status
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy import select
 
 from app.api.deps import CurrentUser, DBSession
@@ -26,7 +26,7 @@ class LinkResponse(BaseModel):
 
 
 class ExchangeRequest(BaseModel):
-    public_token: str
+    public_token: str = Field(..., min_length=1)
     institution_name: str
     account_name: str
     account_mask: str

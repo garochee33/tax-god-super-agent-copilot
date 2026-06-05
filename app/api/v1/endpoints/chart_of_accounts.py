@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 
 from fastapi import APIRouter, HTTPException, Query, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import select
 
 from app.api.deps import CurrentUser, DBSession
@@ -42,6 +42,14 @@ class JournalLineCreate(BaseModel):
     debit: float = 0.0
     credit: float = 0.0
     memo: str | None = None
+
+    @model_validator(mode="after")
+    def check_debit_credit(self):
+        if self.debit > 0 and self.credit > 0:
+            raise ValueError("A line must have either debit or credit, not both")
+        if self.debit <= 0 and self.credit <= 0:
+            raise ValueError("A line must have either debit > 0 or credit > 0")
+        return self
 
 
 class JournalEntryCreate(BaseModel):

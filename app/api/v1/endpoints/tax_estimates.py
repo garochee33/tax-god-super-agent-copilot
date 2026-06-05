@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from datetime import UTC, date, datetime
+from enum import Enum
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from sqlalchemy import func, select
 
@@ -19,10 +20,17 @@ from app.services.tax_calculator import (
 router = APIRouter()
 
 
+class FilingStatus(str, Enum):
+    single = "single"
+    married_filing_jointly = "married_filing_jointly"
+    married_filing_separately = "married_filing_separately"
+    head_of_household = "head_of_household"
+
+
 class ScenarioRequest(BaseModel):
     income: float
     expenses: float
-    filing_status: str = "single"
+    filing_status: FilingStatus = FilingStatus.single
     state: str | None = None
 
 
@@ -46,7 +54,10 @@ async def quarterly_estimate(current_user: CurrentUser, db: DBSession):
     )
     expenses = expense_result.scalar_one()
 
-    return calculate_quarterly_estimate(income, expenses)
+    try:
+        return calculate_quarterly_estimate(income, expenses)
+    except KeyError:
+        return calculate_quarterly_estimate(income, expenses, "single")
 
 
 @router.get("/projection")
@@ -86,7 +97,7 @@ async def full_year_projection(current_user: CurrentUser, db: DBSession):
 
 @router.post("/scenario")
 async def scenario_estimate(body: ScenarioRequest):
-    return calculate_quarterly_estimate(body.income, body.expenses, body.filing_status, body.state)
+    return calculate_quarterly_estimate(body.income, body.expenses, body.filing_status.value, body.state)
 
 
 @router.get("/deadlines")

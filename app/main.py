@@ -24,6 +24,7 @@ import app.models  # noqa: F401 — register all models with Base.metadata
 from app.core.config import Environment, get_settings
 from app.core.database import Base, check_database_health
 from app.core.database import engine as db_engine
+from app.middleware.audit_middleware import AuditMiddleware
 from app.middleware.security import RateLimitMiddleware, RequestIdMiddleware, SecurityHeadersMiddleware
 from app.services.advanced_orchestrator import AdvancedTaxOrchestrator
 from app.services.agent_gabriel import AgentGabriel
@@ -203,6 +204,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+app.add_middleware(AuditMiddleware)
 
 
 @app.middleware("http")

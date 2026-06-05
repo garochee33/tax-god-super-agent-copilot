@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import json
+from datetime import UTC, datetime, timedelta
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Query, Request
+from sqlalchemy import delete, func, select
 
 from app.api.deps import AdminUser, CurrentUser, DBSession
+from app.models.audit_event import AuditEvent
 from app.services.audit_service import get_audit_trail, get_compliance_summary, log_event
 
 router = APIRouter()
@@ -61,4 +64,51 @@ def _serialize(e) -> dict:
         "ip_address": e.ip_address,
         "user_agent": e.user_agent,
         "created_at": e.created_at.isoformat() if e.created_at else None,
+    }
+
+
+@router.delete("/purge")
+async def purge_old_events(
+    db: DBSession,
+    current_user: AdminUser,
+    request: Request,
+    older_than_days: int = Query(default=90, ge=1),
+):
+    cutoff = datetime.now(UTC) - timedelta(days=older_than_days)
+    result = await db.execute(
+        delete(AuditEvent).where(AuditEvent.created_at < cutoff)
+    )
+    deleted_count = result.rowcount
+    await db.commit()
+    await log_event(db, current_user.id, "purge", "audit_trail", changes={"older_than_days": older_than_days, "deleted": deleted_count}, request=request)
+    return {"deleted": deleted_count, "older_than_days": older_than_days}
+
+
+@router.get("/stats")
+async def audit_stats(db: DBSession, current_user: AdminUser):
+    now = datetime.now(UTC)
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    week_start = today_start - timedelta(days=today_start.weekday())
+    month_start = today_start.replace(day=1)
+
+    events_today = (await db.execute(select(func.count(AuditEvent.id)).where(AuditEvent.created_at >= today_start))).scalar() or 0
+    events_this_week = (await db.execute(select(func.count(AuditEvent.id)).where(AuditEvent.created_at >= week_start))).scalar() or 0
+    events_this_month = (await db.execute(select(func.count(AuditEvent.id)).where(AuditEvent.created_at >= month_start))).scalar() or 0
+
+    top_actions_rows = (await db.execute(
+        select(AuditEvent.action, func.count(AuditEvent.id).label("cnt"))
+        .group_by(AuditEvent.action).order_by(func.count(AuditEvent.id).desc()).limit(5)
+    )).all()
+
+    top_entities_rows = (await db.execute(
+        select(AuditEvent.entity_type, func.count(AuditEvent.id).label("cnt"))
+        .group_by(AuditEvent.entity_type).order_by(func.count(AuditEvent.id).desc()).limit(5)
+    )).all()
+
+    return {
+        "events_today": events_today,
+        "events_this_week": events_this_week,
+        "events_this_month": events_this_month,
+        "top_actions": [{"action": r[0], "count": r[1]} for r in top_actions_rows],
+        "top_entities": [{"entity_type": r[0], "count": r[1]} for r in top_entities_rows],
     }
