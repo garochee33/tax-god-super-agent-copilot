@@ -1,7 +1,7 @@
 [project]
-name = "tax-god-copilot"
-version = "3.0.0"
-description = "Multi-agent AI tax, legal & financial co-pilot"
+name = "tax-god-super-agent-copilot"
+version = "3.1.0"
+description = "Tax God Super Agent Co-Pilot — AI-powered multi-agent system for law, taxes, finance, and accounting"
 requires-python = ">=3.11"
 
 [tool.ruff]
