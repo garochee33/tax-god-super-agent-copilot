@@ -3,6 +3,7 @@ Tax God - SQLAlchemy Models
 """
 
 from app.models.account import Account
+from app.models.audit_event import AuditEvent
 from app.models.activity import ActivityLog, BuildLog, KnowledgeEntry
 from app.models.bank_connection import BankConnection
 from app.models.business import Business
@@ -17,6 +18,7 @@ from app.models.project import Project
 from app.models.settings_audit import SettingsAuditLog
 from app.models.spreadsheet import Spreadsheet
 from app.models.subscription import Subscription
+from app.models.team import ClientAssignment, Team, TeamMember
 from app.models.time_entry import TimeEntry
 from app.models.transaction import Transaction
 from app.models.user import User
@@ -26,6 +28,7 @@ from app.models.vendor import Vendor
 __all__ = [
     "Account",
     "ActivityLog",
+    "AuditEvent",
     "BankConnection",
     "BuildLog",
     "Business",
@@ -43,6 +46,9 @@ __all__ = [
     "SettingsAuditLog",
     "Spreadsheet",
     "Subscription",
+    "Team",
+    "TeamMember",
+    "ClientAssignment",
     "TimeEntry",
     "Transaction",
     "User",

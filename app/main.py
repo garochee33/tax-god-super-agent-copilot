@@ -354,6 +354,7 @@ from app.api.v1.endpoints import (  # noqa: E402
     advanced,
     analytics,
     audit,
+    audit_trail,
     auth,
     bank_feeds,
     billing,
@@ -363,6 +364,7 @@ from app.api.v1.endpoints import (  # noqa: E402
     client_portal,
     clients,
     dev_tracking,
+    doc_generation,
     documents,
     expenses,
     integrations,
@@ -375,6 +377,8 @@ from app.api.v1.endpoints import (  # noqa: E402
     recurring,
     spreadsheets,
     tax_estimates,
+    tax_planning,
+    teams,
     time_entries,
     transactions,
     vendors,
@@ -390,6 +394,7 @@ app.include_router(billing.router, prefix="/api/v1/billing", tags=["Billing"])
 app.include_router(logs_ep.router, prefix="/api/v1/logs", tags=["Logs & Knowledge Base"])
 app.include_router(chat.router, prefix="/api/v1/chat", tags=["AI Chat"])
 app.include_router(audit.router, prefix="/api/v1/audit", tags=["Agent Gabriel"])
+app.include_router(audit_trail.router, prefix="/api/v1/audit-trail", tags=["Audit Trail"])
 app.include_router(documents.router, prefix="/api/v1/documents", tags=["Documents"])
 app.include_router(analytics.router, prefix="/api/v1/analytics", tags=["Analytics"])
 app.include_router(integrations.router, prefix="/api/v1/integrations", tags=["Integrations"])
@@ -413,7 +418,10 @@ app.include_router(vendors.router, prefix="/api/v1/vendors", tags=["Vendors"])
 app.include_router(transactions.router, prefix="/api/v1/transactions", tags=["Transactions"])
 app.include_router(chart_of_accounts.router, prefix="/api/v1/ledger", tags=["Chart of Accounts"])
 app.include_router(tax_estimates.router, prefix="/api/v1/estimates", tags=["Tax Estimates"])
+app.include_router(tax_planning.router, prefix="/api/v1/tax-planning", tags=["Tax Planning"])
 app.include_router(client_portal.router, prefix="/api/v1/portal", tags=["Client Portal"])
+app.include_router(doc_generation.router, prefix="/api/v1/documents", tags=["Document Generation"])
+app.include_router(teams.router, prefix="/api/v1/teams", tags=["Teams"])
 
 
 # ---------------------------------------------------------------------------
