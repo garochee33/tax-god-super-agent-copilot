@@ -1,158 +1,128 @@
-"""
-Tax God API - User Settings Endpoints
-"""
+"""Tax God - Admin Settings Endpoint (manage .env keys from UI)"""
 
 from __future__ import annotations
 
-import json
+import os
+from pathlib import Path
 
-from fastapi import APIRouter, Request, status
-from pydantic import BaseModel, Field
-from sqlalchemy import select
+from fastapi import APIRouter, HTTPException, status
+from pydantic import BaseModel
 
-from app.api.deps import CurrentUser, DBSession
-from app.core.crypto import get_fernet
-from app.models.integration import IntegrationCredential
-from app.models.user_settings import UserSettings
+from app.api.deps import AdminUser
 
 router = APIRouter()
 
+# Keys that can be managed from the UI (grouped by section)
+MANAGED_KEYS = {
+    "ai": ["OPENAI_API_KEY", "ANTHROPIC_API_KEY"],
+    "stripe": ["STRIPE_SECRET_KEY", "STRIPE_PUBLISHABLE_KEY", "STRIPE_WEBHOOK_SECRET", "STRIPE_PRICE_MONTHLY"],
+    "database": ["DATABASE_URL", "REDIS_URL"],
+    "integrations": [
+        "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_REDIRECT_URI",
+        "QUICKBOOKS_CLIENT_ID", "QUICKBOOKS_CLIENT_SECRET", "QUICKBOOKS_REDIRECT_URI",
+        "INTEGRATION_ENCRYPTION_KEY",
+    ],
+    "outreach": ["SENDGRID_API_KEY", "APOLLO_API_KEY"],
+    "app": ["SECRET_KEY", "ENVIRONMENT", "DEBUG", "LOG_LEVEL"],
+}
+
+ENV_PATH = Path(__file__).resolve().parents[4] / ".env"
+
+
+def _mask(value: str) -> str:
+    """Mask sensitive values, showing only last 4 chars."""
+    if not value or len(value) <= 8:
+        return "••••" if value else ""
+    return f"••••••••{value[-4:]}"
+
+
+def _read_env() -> dict[str, str]:
+    """Read current .env file into dict."""
+    env = {}
+    if ENV_PATH.exists():
+        for line in ENV_PATH.read_text().splitlines():
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                key, _, val = line.partition("=")
+                env[key.strip()] = val.strip()
+    return env
+
+
+def _write_env(env: dict[str, str]) -> None:
+    """Write dict back to .env preserving comments and order."""
+    lines = []
+    if ENV_PATH.exists():
+        written_keys = set()
+        for line in ENV_PATH.read_text().splitlines():
+            stripped = line.strip()
+            if stripped and not stripped.startswith("#") and "=" in stripped:
+                key = stripped.partition("=")[0].strip()
+                if key in env:
+                    lines.append(f"{key}={env[key]}")
+                    written_keys.add(key)
+                else:
+                    lines.append(line)
+            else:
+                lines.append(line)
+        # Append any new keys not in original file
+        for key, val in env.items():
+            if key not in written_keys:
+                lines.append(f"{key}={val}")
+    else:
+        for key, val in env.items():
+            lines.append(f"{key}={val}")
+    ENV_PATH.write_text("\n".join(lines) + "\n")
+
 
 class SettingsResponse(BaseModel):
-    theme: str
-    notifications_enabled: bool
-    default_model: str
-    timezone: str
-    settings_json: dict | None = None
+    sections: dict[str, dict[str, str]]
 
 
-class SettingsUpdate(BaseModel):
-    theme: str | None = Field(default=None, pattern=r"^(light|dark|system)$")
-    notifications_enabled: bool | None = None
-    default_model: str | None = Field(default=None, max_length=100)
-    timezone: str | None = Field(default=None, max_length=50)
-    settings_json: dict | None = None
-
-
-class SecretSaveRequest(BaseModel):
-    key_name: str = Field(default="", max_length=100)
-    key_value: str = Field(default="")
-    secrets: dict[str, str] | None = None
-
-
-class SecretNameResponse(BaseModel):
-    key_names: list[str]
-
-
-class IntegrationStatusResponse(BaseModel):
-    provider: str
-    connected: bool
-
-
-async def _get_or_create_settings(user_id: str, db) -> UserSettings:
-    result = await db.execute(select(UserSettings).where(UserSettings.user_id == user_id))
-    settings = result.scalar_one_or_none()
-    if not settings:
-        settings = UserSettings(user_id=user_id)
-        db.add(settings)
-        await db.commit()
-        await db.refresh(settings)
-    return settings
-
-
-def _settings_to_response(s: UserSettings) -> SettingsResponse:
-    extra = json.loads(s.settings_json) if s.settings_json else None
-    return SettingsResponse(
-        theme=s.theme,
-        notifications_enabled=s.notifications_enabled,
-        default_model=s.default_model,
-        timezone=s.timezone,
-        settings_json=extra,
-    )
+class SettingsUpdateRequest(BaseModel):
+    updates: dict[str, str]
 
 
 @router.get("", response_model=SettingsResponse)
-async def get_settings(current_user: CurrentUser, db: DBSession):
-    """Get user settings."""
-    s = await _get_or_create_settings(current_user.id, db)
-    return _settings_to_response(s)
+async def get_settings(user: AdminUser):
+    """Get all manageable settings (masked)."""
+    env = _read_env()
+    sensitive_prefixes = ("sk_", "sk-", "pk_", "whsec_", "price_")
+    sensitive_keys = {"SECRET_KEY", "INTEGRATION_ENCRYPTION_KEY", "DATABASE_URL", "REDIS_URL"}
+
+    sections = {}
+    for section, keys in MANAGED_KEYS.items():
+        sections[section] = {}
+        for key in keys:
+            val = env.get(key, os.environ.get(key, ""))
+            if key in sensitive_keys or any(val.startswith(p) for p in sensitive_prefixes):
+                sections[section][key] = _mask(val)
+            else:
+                sections[section][key] = val
+    return SettingsResponse(sections=sections)
 
 
-@router.patch("", response_model=SettingsResponse)
-async def update_settings(body: SettingsUpdate, current_user: CurrentUser, db: DBSession):
-    """Update user settings."""
-    s = await _get_or_create_settings(current_user.id, db)
-    updates = body.model_dump(exclude_unset=True)
-
-    if "settings_json" in updates:
-        updates["settings_json"] = json.dumps(updates["settings_json"]) if updates["settings_json"] else None
-
-    for field, value in updates.items():
-        setattr(s, field, value)
-
-    await db.commit()
-    await db.refresh(s)
-    return _settings_to_response(s)
-
-
-@router.get("/integrations", response_model=list[IntegrationStatusResponse])
-async def list_integrations(current_user: CurrentUser, db: DBSession, request: Request):
-    """List connected integrations status."""
-    integration_manager = request.app.state.integration_manager
-    providers = integration_manager.list_provider_names()
-
-    result = await db.execute(
-        select(IntegrationCredential.provider).where(IntegrationCredential.user_id == current_user.id)
-    )
-    connected_providers = set(result.scalars().all())
-
-    return [IntegrationStatusResponse(provider=p, connected=p in connected_providers) for p in providers]
-
-
-@router.post("/secrets", status_code=status.HTTP_200_OK)
-async def save_secret(body: SecretSaveRequest, current_user: CurrentUser, db: DBSession):
-    """Save or update API keys. Accepts single (key_name+key_value) or bulk (secrets dict)."""
-    fernet = get_fernet()
-
-    # Build key map from either format
-    keys_to_save = {}
-    if body.secrets:
-        keys_to_save = {k: v for k, v in body.secrets.items() if k and v}
-    elif body.key_name and body.key_value:
-        keys_to_save = {body.key_name: body.key_value}
-
-    if not keys_to_save:
-        from fastapi import HTTPException
-
-        raise HTTPException(status_code=400, detail="No keys provided")
-
-    for key_name, key_value in keys_to_save.items():
-        encrypted = fernet.encrypt(key_value.encode()).decode()
-        result = await db.execute(
-            select(IntegrationCredential).where(
-                IntegrationCredential.user_id == current_user.id,
-                IntegrationCredential.provider == key_name,
-            )
+@router.put("")
+async def update_settings(body: SettingsUpdateRequest, user: AdminUser):
+    """Update settings in .env file. Only allowed keys can be set."""
+    all_allowed = {k for keys in MANAGED_KEYS.values() for k in keys}
+    invalid = set(body.updates.keys()) - all_allowed
+    if invalid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Keys not allowed: {sorted(invalid)}",
         )
-        existing = result.scalar_one_or_none()
-        if existing:
-            existing.payload_encrypted = encrypted
-        else:
-            cred = IntegrationCredential(
-                user_id=current_user.id,
-                provider=key_name,
-                payload_encrypted=encrypted,
-            )
-            db.add(cred)
 
-    await db.commit()
-    return {"message": f"Saved {len(keys_to_save)} secret(s)", "keys": list(keys_to_save.keys())}
+    env = _read_env()
+    changed = []
+    for key, val in body.updates.items():
+        if val and val != env.get(key, ""):
+            env[key] = val
+            changed.append(key)
 
+    if changed:
+        _write_env(env)
+        # Also update current process env so changes take effect without restart
+        for key in changed:
+            os.environ[key] = env[key]
 
-@router.get("/secrets", response_model=SecretNameResponse)
-async def list_secrets(current_user: CurrentUser, db: DBSession):
-    """List saved secret key names (not values)."""
-    result = await db.execute(
-        select(IntegrationCredential.provider).where(IntegrationCredential.user_id == current_user.id)
-    )
-    return SecretNameResponse(key_names=list(result.scalars().all()))
+    return {"updated": changed, "message": f"{len(changed)} key(s) updated. Restart server for full effect."}
