@@ -40,6 +40,9 @@ export ANTHROPIC_API_KEY="${ANTHROPIC_API_KEY:-sk-ant-test}"
 
 run_check "pytest" pytest tests/ -q --tb=no
 
+# Reset test artifacts (dev_tracking tests write to .dev/)
+git checkout -- .dev/ 2>/dev/null || true
+
 # 3. Git status clean
 echo -n "  [git clean] ... "
 if [ -z "$(git status --porcelain)" ]; then
