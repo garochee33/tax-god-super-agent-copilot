@@ -128,6 +128,7 @@ class App {
         if (shell) shell.style.display = "flex";
         this._appReady = true;
         this.refreshUserDisplay();
+        this.loadBusinessSwitcher();
         this.bindLogout();
         this.initAppRouter();
     }
@@ -154,6 +155,24 @@ class App {
         } catch (_) {
             nameEl.textContent = "User";
             if (avatarEl) avatarEl.textContent = "?";
+        }
+    }
+
+    async loadBusinessSwitcher() {
+        const select = document.getElementById("active-business");
+        if (!select) return;
+        try {
+            const data = await api.get("/api/v1/businesses");
+            const businesses = data.businesses || data || [];
+            if (!businesses.length) {
+                select.innerHTML = '<option value="">+ Add Business</option>';
+            } else {
+                select.innerHTML = businesses.map(b =>
+                    `<option value="${b.id}" ${b.is_default ? 'selected' : ''}>${b.name}</option>`
+                ).join('') + '<option value="__new">+ Add New</option>';
+            }
+        } catch (_) {
+            select.innerHTML = '<option value="">No businesses</option>';
         }
     }
 

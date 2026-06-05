@@ -60,14 +60,14 @@ const SECTION_CONFIG = {
 function buildApiUrl(path) { return `${window.location.origin}${path}`; }
 
 async function apiGet(path) {
-    const token = localStorage.getItem("access_token");
+    const token = localStorage.getItem("taxgod_access_token");
     const res = await fetch(buildApiUrl(path), { headers: { "Authorization": `Bearer ${token}` } });
     if (!res.ok) throw new Error(`${res.status}: ${res.statusText}`);
     return res.json();
 }
 
 async function apiPut(path, body) {
-    const token = localStorage.getItem("access_token");
+    const token = localStorage.getItem("taxgod_access_token");
     const res = await fetch(buildApiUrl(path), {
         method: "PUT",
         headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" },
