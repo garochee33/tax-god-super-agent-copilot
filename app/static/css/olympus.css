@@ -1057,3 +1057,20 @@ select.settings-input { appearance: auto; }
     .gate-home .gate-logo { font-size: 28px; }
     .gate-home .gate-actions { flex-direction: column; }
 }
+/* --- Paywall Modal --- */
+#paywall-modal { display: none; position: fixed; inset: 0; z-index: 9999; }
+#paywall-modal.paywall-visible { display: flex; align-items: center; justify-content: center; }
+.paywall-backdrop { position: absolute; inset: 0; background: rgba(26,26,46,0.85); }
+.paywall-card {
+    position: relative; background: var(--color-parchment); border-radius: 12px;
+    padding: var(--spacing-xl); max-width: 400px; width: 90%; text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4); border: 2px solid var(--color-gold);
+}
+.paywall-card h2 { font-family: var(--font-heading); color: var(--color-primary-dark); margin: 0 0 8px; }
+.paywall-sub { color: var(--color-text-dark); margin: 0 0 16px; }
+.paywall-plan { font-size: 0.85rem; color: var(--color-gold-dark); margin-bottom: 20px; }
+.paywall-btn { display: block; width: 100%; padding: 12px; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; margin-bottom: 10px; }
+.paywall-btn-primary { background: var(--color-gold); color: var(--color-primary-dark); font-weight: 600; }
+.paywall-btn-primary:hover { background: var(--color-gold-dark); color: #fff; }
+.paywall-btn-secondary { background: transparent; color: var(--color-text-dark); border: 1px solid var(--color-parchment-dark); }
+.paywall-btn-secondary:hover { background: var(--color-parchment-dark); }
