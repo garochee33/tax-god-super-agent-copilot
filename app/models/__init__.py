@@ -10,6 +10,7 @@ from app.models.integration import IntegrationCredential
 from app.models.invoice import Invoice
 from app.models.note import Note
 from app.models.project import Project
+from app.models.settings_audit import SettingsAuditLog
 from app.models.spreadsheet import Spreadsheet
 from app.models.subscription import Subscription
 from app.models.time_entry import TimeEntry
@@ -27,6 +28,7 @@ __all__ = [
     "Invoice",
     "Note",
     "Project",
+    "SettingsAuditLog",
     "Spreadsheet",
     "Subscription",
     "TimeEntry",

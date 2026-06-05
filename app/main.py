@@ -356,6 +356,7 @@ from app.api.v1.endpoints import (  # noqa: E402
     vendors,
 )
 from app.api.v1.endpoints import settings as settings_ep  # noqa: E402
+from app.api.v1.endpoints import settings_advanced as settings_adv  # noqa: E402
 
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
 app.include_router(billing.router, prefix="/api/v1/billing", tags=["Billing"])
@@ -368,6 +369,7 @@ app.include_router(advanced.router, prefix="/api/v1/advanced", tags=["Advanced T
 app.include_router(clients.router, prefix="/api/v1/clients", tags=["Clients (Agora)"])
 app.include_router(profile.router, prefix="/api/v1/profile", tags=["Profile"])
 app.include_router(settings_ep.router, prefix="/api/v1/settings", tags=["Settings"])
+app.include_router(settings_adv.router, prefix="/api/v1/settings", tags=["Settings Advanced"])
 app.include_router(accounts.router, prefix="/api/v1/accounts", tags=["Accounts"])
 app.include_router(invoices.router, prefix="/api/v1/invoices", tags=["Invoices"])
 app.include_router(projects.router, prefix="/api/v1/projects", tags=["Projects"])
