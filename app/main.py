@@ -5,6 +5,7 @@ Multi-agent tax, legal & financial AI co-pilot.
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import time
@@ -137,6 +138,21 @@ async def lifespan(app: FastAPI):
     app.state.tax_writer = tax_writer
     app.state.parallel_processor = parallel_processor
     app.state.integration_manager = integration_manager
+
+    # Background task: daily recurring invoice processing
+    async def _recurring_invoice_loop():
+        from app.core.database import async_session_factory
+        from app.services.invoice_scheduler import process_recurring_invoices
+
+        while True:
+            try:
+                async with async_session_factory() as session:
+                    await process_recurring_invoices(session)
+            except Exception as exc:
+                logger.error("Recurring invoice task error: %s", exc)
+            await asyncio.sleep(86400)  # 24 hours
+
+    asyncio.create_task(_recurring_invoice_loop())
 
     logger.info("All services initialized. Tax God is ready.")
     yield
@@ -339,10 +355,12 @@ from app.api.v1.endpoints import (  # noqa: E402
     analytics,
     audit,
     auth,
+    bank_feeds,
     billing,
     businesses,
     chart_of_accounts,
     chat,
+    client_portal,
     clients,
     dev_tracking,
     documents,
@@ -354,7 +372,9 @@ from app.api.v1.endpoints import (  # noqa: E402
     profile,
     projects,
     receipts,
+    recurring,
     spreadsheets,
+    tax_estimates,
     time_entries,
     transactions,
     vendors,
@@ -364,6 +384,7 @@ from app.api.v1.endpoints import settings as settings_ep  # noqa: E402
 from app.api.v1.endpoints import settings_advanced as settings_adv  # noqa: E402
 
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
+app.include_router(bank_feeds.router, prefix="/api/v1/bank-feeds", tags=["Bank Feeds"])
 app.include_router(dev_tracking.router, prefix="/api/v1/dev", tags=["Dev Tracking"])
 app.include_router(billing.router, prefix="/api/v1/billing", tags=["Billing"])
 app.include_router(logs_ep.router, prefix="/api/v1/logs", tags=["Logs & Knowledge Base"])
@@ -379,6 +400,7 @@ app.include_router(settings_ep.router, prefix="/api/v1/settings", tags=["Setting
 app.include_router(settings_adv.router, prefix="/api/v1/settings", tags=["Settings Advanced"])
 app.include_router(accounts.router, prefix="/api/v1/accounts", tags=["Accounts"])
 app.include_router(invoices.router, prefix="/api/v1/invoices", tags=["Invoices"])
+app.include_router(recurring.router, prefix="/api/v1/recurring", tags=["Recurring Invoices"])
 app.include_router(payments.router, prefix="/api/v1/payments", tags=["Stripe Payments"])
 app.include_router(projects.router, prefix="/api/v1/projects", tags=["Projects"])
 app.include_router(spreadsheets.router, prefix="/api/v1/spreadsheets", tags=["Spreadsheets"])
@@ -390,6 +412,8 @@ app.include_router(time_entries.router, prefix="/api/v1/time-entries", tags=["Ti
 app.include_router(vendors.router, prefix="/api/v1/vendors", tags=["Vendors"])
 app.include_router(transactions.router, prefix="/api/v1/transactions", tags=["Transactions"])
 app.include_router(chart_of_accounts.router, prefix="/api/v1/ledger", tags=["Chart of Accounts"])
+app.include_router(tax_estimates.router, prefix="/api/v1/estimates", tags=["Tax Estimates"])
+app.include_router(client_portal.router, prefix="/api/v1/portal", tags=["Client Portal"])
 
 
 # ---------------------------------------------------------------------------

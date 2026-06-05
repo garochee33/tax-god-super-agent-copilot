@@ -4,6 +4,7 @@ Tax God - SQLAlchemy Models
 
 from app.models.account import Account
 from app.models.activity import ActivityLog, BuildLog, KnowledgeEntry
+from app.models.bank_connection import BankConnection
 from app.models.business import Business
 from app.models.chart_of_accounts import ChartOfAccount, JournalEntry, JournalLine
 from app.models.client import Client
@@ -11,6 +12,7 @@ from app.models.expense import Expense
 from app.models.integration import IntegrationCredential
 from app.models.invoice import Invoice
 from app.models.note import Note
+from app.models.portal_message import PortalMessage
 from app.models.project import Project
 from app.models.settings_audit import SettingsAuditLog
 from app.models.spreadsheet import Spreadsheet
@@ -24,6 +26,7 @@ from app.models.vendor import Vendor
 __all__ = [
     "Account",
     "ActivityLog",
+    "BankConnection",
     "BuildLog",
     "Business",
     "ChartOfAccount",
@@ -35,6 +38,7 @@ __all__ = [
     "JournalLine",
     "KnowledgeEntry",
     "Note",
+    "PortalMessage",
     "Project",
     "SettingsAuditLog",
     "Spreadsheet",

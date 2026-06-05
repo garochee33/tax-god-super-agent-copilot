@@ -31,6 +31,7 @@ class Client(Base):
     company: Mapped[str | None] = mapped_column(String(255), nullable=True)
     status: Mapped[str] = mapped_column(String(50), default=ClientStatus.ACTIVE.value, nullable=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    invite_code: Mapped[str | None] = mapped_column(String(50), nullable=True)
     tax_id: Mapped[str | None] = mapped_column(String(50), nullable=True)
     filing_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
