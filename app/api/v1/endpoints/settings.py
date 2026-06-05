@@ -35,8 +35,9 @@ class SettingsUpdate(BaseModel):
 
 
 class SecretSaveRequest(BaseModel):
-    key_name: str = Field(..., min_length=1, max_length=100)
-    key_value: str = Field(..., min_length=1)
+    key_name: str = Field(default="", max_length=100)
+    key_value: str = Field(default="")
+    secrets: dict[str, str] | None = None
 
 
 class SecretNameResponse(BaseModel):
@@ -110,30 +111,42 @@ async def list_integrations(current_user: CurrentUser, db: DBSession, request: R
 
 @router.post("/secrets", status_code=status.HTTP_200_OK)
 async def save_secret(body: SecretSaveRequest, current_user: CurrentUser, db: DBSession):
-    """Save or update an encrypted API key."""
+    """Save or update API keys. Accepts single (key_name+key_value) or bulk (secrets dict)."""
     fernet = get_fernet()
-    encrypted = fernet.encrypt(body.key_value.encode()).decode()
 
-    result = await db.execute(
-        select(IntegrationCredential).where(
-            IntegrationCredential.user_id == current_user.id,
-            IntegrationCredential.provider == body.key_name,
-        )
-    )
-    existing = result.scalar_one_or_none()
+    # Build key map from either format
+    keys_to_save = {}
+    if body.secrets:
+        keys_to_save = {k: v for k, v in body.secrets.items() if k and v}
+    elif body.key_name and body.key_value:
+        keys_to_save = {body.key_name: body.key_value}
 
-    if existing:
-        existing.payload_encrypted = encrypted
-    else:
-        cred = IntegrationCredential(
-            user_id=current_user.id,
-            provider=body.key_name,
-            payload_encrypted=encrypted,
+    if not keys_to_save:
+        from fastapi import HTTPException
+
+        raise HTTPException(status_code=400, detail="No keys provided")
+
+    for key_name, key_value in keys_to_save.items():
+        encrypted = fernet.encrypt(key_value.encode()).decode()
+        result = await db.execute(
+            select(IntegrationCredential).where(
+                IntegrationCredential.user_id == current_user.id,
+                IntegrationCredential.provider == key_name,
+            )
         )
-        db.add(cred)
+        existing = result.scalar_one_or_none()
+        if existing:
+            existing.payload_encrypted = encrypted
+        else:
+            cred = IntegrationCredential(
+                user_id=current_user.id,
+                provider=key_name,
+                payload_encrypted=encrypted,
+            )
+            db.add(cred)
 
     await db.commit()
-    return {"message": f"Secret '{body.key_name}' saved"}
+    return {"message": f"Saved {len(keys_to_save)} secret(s)", "keys": list(keys_to_save.keys())}
 
 
 @router.get("/secrets", response_model=SecretNameResponse)

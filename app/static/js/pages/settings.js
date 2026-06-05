@@ -119,7 +119,7 @@ export default {
         let savedKeys = [];
         try {
             const res = await api.get('/api/v1/settings/secrets');
-            savedKeys = res.keys || res || [];
+            savedKeys = res.key_names || res.keys || res || [];
         } catch (_) {}
 
         const hasOpenAI = savedKeys.includes('OPENAI_API_KEY');
