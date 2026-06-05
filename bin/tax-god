@@ -21,5 +21,7 @@ if command -v lsof &>/dev/null && lsof -i ":${PORT}" -sTCP:LISTEN -t &>/dev/null
 fi
 
 source .venv/bin/activate
-export $(grep -v '^#' .env | grep -v '^\s*$' | xargs)
+export DATABASE_URL="sqlite+aiosqlite:///${ROOT}/db/taxgod.db"
+export SECRET_KEY="${SECRET_KEY:-taxgod-local-dev-key-change-in-prod}"
+export ENVIRONMENT="${ENVIRONMENT:-development}"
 exec uvicorn app.main:app --reload --host 127.0.0.1 --port "$PORT"
