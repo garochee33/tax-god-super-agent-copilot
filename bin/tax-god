@@ -1,24 +1,25 @@
 #!/usr/bin/env bash
-# Tax God v3.0 - Local dev launcher
+# Tax God v3.1 - Local dev launcher
 # Usage: tax-god [port]
-# Default port: 8000. If 8000 is in use, try: tax-god 8001
+# Default port: 8000
 
 set -e
 PORT="${1:-8000}"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-if [ ! -d "venv" ]; then
-  echo "No venv found. Create one: python3 -m venv venv && source venv/bin/activate && pip install -r requirements.txt"
+if [ ! -d ".venv" ]; then
+  echo "No .venv found. Run: python3.11 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt"
   exit 1
 fi
 
 if command -v lsof &>/dev/null && lsof -i ":${PORT}" -sTCP:LISTEN -t &>/dev/null; then
   echo "Port ${PORT} is already in use."
   echo "  Stop the other process, or run: tax-god 8001"
-  echo "  To free 8000: lsof -ti:8000 | xargs kill"
+  echo "  To free ${PORT}: lsof -ti:${PORT} | xargs kill"
   exit 1
 fi
 
-source venv/bin/activate
-exec uvicorn app.main:app --reload --port "$PORT"
+source .venv/bin/activate
+export $(grep -v '^#' .env | grep -v '^\s*$' | xargs)
+exec uvicorn app.main:app --reload --host 127.0.0.1 --port "$PORT"
