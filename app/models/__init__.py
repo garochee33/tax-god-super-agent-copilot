@@ -3,6 +3,7 @@ Tax God - SQLAlchemy Models
 """
 
 from app.models.account import Account
+from app.models.activity import ActivityLog, BuildLog, KnowledgeEntry
 from app.models.business import Business
 from app.models.client import Client
 from app.models.expense import Expense
@@ -21,11 +22,14 @@ from app.models.vendor import Vendor
 
 __all__ = [
     "Account",
+    "ActivityLog",
+    "BuildLog",
     "Business",
     "Client",
     "Expense",
     "IntegrationCredential",
     "Invoice",
+    "KnowledgeEntry",
     "Note",
     "Project",
     "SettingsAuditLog",

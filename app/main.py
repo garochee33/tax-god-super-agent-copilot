@@ -357,9 +357,11 @@ from app.api.v1.endpoints import (  # noqa: E402
 )
 from app.api.v1.endpoints import settings as settings_ep  # noqa: E402
 from app.api.v1.endpoints import settings_advanced as settings_adv  # noqa: E402
+from app.api.v1.endpoints import logs as logs_ep  # noqa: E402
 
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
 app.include_router(billing.router, prefix="/api/v1/billing", tags=["Billing"])
+app.include_router(logs_ep.router, prefix="/api/v1/logs", tags=["Logs & Knowledge Base"])
 app.include_router(chat.router, prefix="/api/v1/chat", tags=["AI Chat"])
 app.include_router(audit.router, prefix="/api/v1/audit", tags=["Agent Gabriel"])
 app.include_router(documents.router, prefix="/api/v1/documents", tags=["Documents"])
