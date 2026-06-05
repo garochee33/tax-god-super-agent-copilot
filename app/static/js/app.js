@@ -20,6 +20,7 @@ const APP_ROUTES = {
     business: { title: "Business", module: "/static/js/pages/business.js" },
     profile: { title: "Profile", module: "/static/js/pages/profile.js" },
     settings: { title: "Settings", module: "/static/js/pages/settings.js" },
+    onboarding: { title: "Setup Guide", module: "/static/js/pages/onboarding.js" },
 };
 
 const GATE_VIEWS = ["home", "login", "register"];

@@ -188,7 +188,7 @@ function bindGateListeners() {
                 if (window.taxGodApp && typeof window.taxGodApp.showApp === "function") {
                     window.taxGodApp.showApp();
                 }
-                window.location.hash = "pantheon";
+                window.location.hash = "onboarding";
             } catch (err) {
                 showError("gate-register-error", err.message || "Network error. Check API base URL.");
             } finally {
