@@ -351,6 +351,9 @@ from app.api.v1.endpoints import (  # noqa: E402
     profile,
     projects,
     spreadsheets,
+    time_entries,
+    transactions,
+    vendors,
 )
 from app.api.v1.endpoints import settings as settings_ep  # noqa: E402
 
@@ -372,6 +375,9 @@ app.include_router(spreadsheets.router, prefix="/api/v1/spreadsheets", tags=["Sp
 app.include_router(notes.router, prefix="/api/v1/notes", tags=["Notes"])
 app.include_router(businesses.router, prefix="/api/v1/businesses", tags=["Businesses"])
 app.include_router(expenses.router, prefix="/api/v1/expenses", tags=["Expenses"])
+app.include_router(time_entries.router, prefix="/api/v1/time-entries", tags=["Time Entries"])
+app.include_router(vendors.router, prefix="/api/v1/vendors", tags=["Vendors"])
+app.include_router(transactions.router, prefix="/api/v1/transactions", tags=["Transactions"])
 
 
 # ---------------------------------------------------------------------------

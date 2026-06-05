@@ -12,8 +12,11 @@ from app.models.note import Note
 from app.models.project import Project
 from app.models.spreadsheet import Spreadsheet
 from app.models.subscription import Subscription
+from app.models.time_entry import TimeEntry
+from app.models.transaction import Transaction
 from app.models.user import User
 from app.models.user_settings import UserSettings
+from app.models.vendor import Vendor
 
 __all__ = [
     "Account",
@@ -26,6 +29,9 @@ __all__ = [
     "Project",
     "Spreadsheet",
     "Subscription",
+    "TimeEntry",
+    "Transaction",
     "User",
     "UserSettings",
+    "Vendor",
 ]
