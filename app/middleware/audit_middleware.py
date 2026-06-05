@@ -5,14 +5,13 @@ from __future__ import annotations
 import logging
 
 from jose import jwt
+from starlette.background import BackgroundTask
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
-from starlette.background import BackgroundTask
 
 from app.core.config import get_settings
 from app.core.database import async_session_factory
-from app.services.audit_service import log_event
 
 logger = logging.getLogger(__name__)
 
@@ -48,8 +47,8 @@ def _extract_user_id(request: Request) -> str | None:
 async def _log_audit_event(user_id: str, action: str, entity_type: str, ip: str | None, ua: str | None):
     try:
         async with async_session_factory() as db:
+
             from app.models.audit_event import AuditEvent
-            import json
             event = AuditEvent(
                 user_id=user_id,
                 action=action,

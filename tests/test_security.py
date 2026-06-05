@@ -11,7 +11,6 @@ import pytest_asyncio
 from httpx import AsyncClient
 from jose import jwt
 
-from app.core.database import async_session_factory
 from app.core.security import hash_password
 from app.models.subscription import Subscription, SubscriptionStatus, SubscriptionTier
 from app.models.user import User, UserRole

@@ -3,8 +3,8 @@ Tax God - SQLAlchemy Models
 """
 
 from app.models.account import Account
-from app.models.audit_event import AuditEvent
 from app.models.activity import ActivityLog, BuildLog, KnowledgeEntry
+from app.models.audit_event import AuditEvent
 from app.models.bank_connection import BankConnection
 from app.models.business import Business
 from app.models.chart_of_accounts import ChartOfAccount, JournalEntry, JournalLine

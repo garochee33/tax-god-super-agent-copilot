@@ -3,7 +3,6 @@
 import pytest
 from httpx import AsyncClient
 
-
 # ─── Tax Estimates ───────────────────────────────────────────────────────────
 
 @pytest.mark.asyncio
@@ -171,7 +170,7 @@ async def test_ledger_journal_unbalanced_entry(client: AsyncClient, auth_headers
     await client.post("/api/v1/ledger/accounts", headers=auth_headers, json={
         "code": "1000", "name": "Cash", "account_type": "asset",
     })
-    acct2 = await client.post("/api/v1/ledger/accounts", headers=auth_headers, json={
+    await client.post("/api/v1/ledger/accounts", headers=auth_headers, json={
         "code": "4000", "name": "Revenue", "account_type": "revenue",
     })
     acct1_id = (await client.get("/api/v1/ledger/accounts", headers=auth_headers)).json()[0]["id"]

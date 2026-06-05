@@ -11,9 +11,9 @@ from app.models.expense import Expense
 from app.models.invoice import Invoice
 from app.services.tax_calculator import (
     BRACKETS_2024,
-    STANDARD_DEDUCTION_2024,
     SE_NET_FACTOR,
     SE_TAX_RATE,
+    STANDARD_DEDUCTION_2024,
     _compute_federal_tax,
 )
 

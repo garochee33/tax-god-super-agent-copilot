@@ -3,7 +3,6 @@
 import pytest
 from httpx import AsyncClient
 
-
 # ─── AI Document Generation ─────────────────────────────────────────────────
 
 @pytest.mark.asyncio
