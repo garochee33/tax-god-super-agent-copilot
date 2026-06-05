@@ -340,9 +340,11 @@ from app.api.v1.endpoints import (  # noqa: E402
     audit,
     auth,
     billing,
+    businesses,
     chat,
     clients,
     documents,
+    expenses,
     integrations,
     invoices,
     notes,
@@ -368,6 +370,8 @@ app.include_router(invoices.router, prefix="/api/v1/invoices", tags=["Invoices"]
 app.include_router(projects.router, prefix="/api/v1/projects", tags=["Projects"])
 app.include_router(spreadsheets.router, prefix="/api/v1/spreadsheets", tags=["Spreadsheets"])
 app.include_router(notes.router, prefix="/api/v1/notes", tags=["Notes"])
+app.include_router(businesses.router, prefix="/api/v1/businesses", tags=["Businesses"])
+app.include_router(expenses.router, prefix="/api/v1/expenses", tags=["Expenses"])
 
 
 # ---------------------------------------------------------------------------

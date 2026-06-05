@@ -4,14 +4,17 @@
 */
 
 const APP_ROUTES = {
-    pantheon: { title: "The Pantheon", module: "/static/js/pages/pantheon.js" },
-    oracle: { title: "The Oracle", module: "/static/js/pages/oracle.js" },
-    tribunal: { title: "Gabriel's Tribunal", module: "/static/js/pages/tribunal.js" },
-    archives: { title: "The Archives", module: "/static/js/pages/archives.js" },
-    scrolls: { title: "Sacred Scrolls", module: "/static/js/pages/scrolls.js" },
-    agora: { title: "The Agora", module: "/static/js/pages/agora.js" },
-    hermes: { title: "Temple of Hermes", module: "/static/js/pages/hermes.js" },
+    pantheon: { title: "Dashboard", module: "/static/js/pages/pantheon.js" },
+    oracle: { title: "AI Assistant", module: "/static/js/pages/oracle.js" },
+    agora: { title: "Clients", module: "/static/js/pages/agora.js" },
     finance: { title: "Finance", module: "/static/js/pages/finance.js" },
+    expenses: { title: "Expenses", module: "/static/js/pages/expenses.js" },
+    reports: { title: "Reports", module: "/static/js/pages/reports.js" },
+    projects: { title: "Projects", module: "/static/js/pages/projects_page.js" },
+    scrolls: { title: "Documents", module: "/static/js/pages/scrolls.js" },
+    archives: { title: "Research", module: "/static/js/pages/archives.js" },
+    tribunal: { title: "Audit", module: "/static/js/pages/tribunal.js" },
+    business: { title: "Business", module: "/static/js/pages/business.js" },
     profile: { title: "Profile", module: "/static/js/pages/profile.js" },
     settings: { title: "Settings", module: "/static/js/pages/settings.js" },
 };
