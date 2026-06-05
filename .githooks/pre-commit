@@ -1,0 +1,21 @@
+#!/bin/bash
+# Tax God - Pre-commit hook
+# Calls the dev tracking pre-commit endpoint for validation
+
+MSG=$(git log -1 --format=%B 2>/dev/null || echo "")
+DIFF=$(git diff --cached 2>/dev/null || echo "")
+
+RESPONSE=$(curl -s -X POST http://localhost:8000/api/v1/dev/hooks/pre-commit \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ${TAXGOD_TOKEN}" \
+  -d "{\"message\": $(echo "$MSG" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))'), \"diff\": $(echo "$DIFF" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')}" 2>/dev/null)
+
+EXIT_CODE=$(echo "$RESPONSE" | python3 -c "import json,sys; print(json.loads(sys.stdin.read()).get('exit_code', 0))" 2>/dev/null || echo "0")
+
+if [ "$EXIT_CODE" != "0" ]; then
+  echo "Pre-commit check failed:"
+  echo "$RESPONSE" | python3 -c "import json,sys; [print(f'  - {e}') for e in json.loads(sys.stdin.read()).get('errors', [])]" 2>/dev/null
+  exit 1
+fi
+
+exit 0
