@@ -39,6 +39,7 @@ ignore = [
     "SIM103", # return condition directly (readability preference)
     "SIM105", # contextlib.suppress (explicit try/except preferred for clarity)
     "SIM116", # dict instead of if/elif (readability preference)
+    "UP042",  # str + Enum → StrEnum (keeping str,Enum for Python 3.10 compat)
 ]
 
 [tool.ruff.lint.isort]
