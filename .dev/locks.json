@@ -1,1 +1,42 @@
-[]
+[
+  {
+    "file": "app/main.py",
+    "agent": "TestAgent",
+    "locked_at": "2026-06-05T23:50:44.268592+00:00"
+  },
+  {
+    "file": "app/core/config.py",
+    "agent": "Agent1",
+    "locked_at": "2026-06-05T23:50:44.564493+00:00"
+  },
+  {
+    "file": "test/ea689993.py",
+    "agent": "TestAgent",
+    "locked_at": "2026-06-05T23:52:48.796188+00:00"
+  },
+  {
+    "file": "test/83c60372.py",
+    "agent": "Agent1",
+    "locked_at": "2026-06-05T23:52:49.094659+00:00"
+  },
+  {
+    "file": "test/7885193a.py",
+    "agent": "TestAgent",
+    "locked_at": "2026-06-05T23:53:47.325708+00:00"
+  },
+  {
+    "file": "test/fccc2ee3.py",
+    "agent": "Agent1",
+    "locked_at": "2026-06-05T23:53:47.623214+00:00"
+  },
+  {
+    "file": "test/b2679352.py",
+    "agent": "TestAgent",
+    "locked_at": "2026-06-05T23:54:21.198145+00:00"
+  },
+  {
+    "file": "test/964d2e92.py",
+    "agent": "Agent1",
+    "locked_at": "2026-06-05T23:54:21.492394+00:00"
+  }
+]

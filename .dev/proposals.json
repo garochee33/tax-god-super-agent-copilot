@@ -1,1 +1,102 @@
-[]
+[
+  {
+    "id": "9bc33d79",
+    "description": "Add caching layer",
+    "files_affected": [
+      "app/core/cache.py"
+    ],
+    "risk_level": "low",
+    "status": "approved",
+    "created": "2026-06-05T23:50:46.810864+00:00"
+  },
+  {
+    "id": "c42a9547",
+    "description": "Refactor database layer",
+    "files_affected": [
+      "app/core/database.py"
+    ],
+    "risk_level": "high",
+    "status": "pending",
+    "created": "2026-06-05T23:50:47.334850+00:00"
+  },
+  {
+    "id": "d5d483c1",
+    "description": "Add caching layer",
+    "files_affected": [
+      "app/core/cache.py"
+    ],
+    "risk_level": "low",
+    "status": "approved",
+    "created": "2026-06-05T23:51:34.103219+00:00"
+  },
+  {
+    "id": "83697dd3",
+    "description": "Refactor database layer",
+    "files_affected": [
+      "app/core/database.py"
+    ],
+    "risk_level": "high",
+    "status": "pending",
+    "created": "2026-06-05T23:51:34.627209+00:00"
+  },
+  {
+    "id": "76fe9866",
+    "description": "Add caching layer",
+    "files_affected": [
+      "app/core/cache.py"
+    ],
+    "risk_level": "low",
+    "status": "approved",
+    "created": "2026-06-05T23:52:51.121271+00:00"
+  },
+  {
+    "id": "6312b729",
+    "description": "Refactor database layer",
+    "files_affected": [
+      "app/core/database.py"
+    ],
+    "risk_level": "high",
+    "status": "pending",
+    "created": "2026-06-05T23:52:51.646520+00:00"
+  },
+  {
+    "id": "a3f39c5f",
+    "description": "Add caching layer",
+    "files_affected": [
+      "app/core/cache.py"
+    ],
+    "risk_level": "low",
+    "status": "approved",
+    "created": "2026-06-05T23:53:49.648914+00:00"
+  },
+  {
+    "id": "a9bc3ebd",
+    "description": "Refactor database layer",
+    "files_affected": [
+      "app/core/database.py"
+    ],
+    "risk_level": "high",
+    "status": "pending",
+    "created": "2026-06-05T23:53:50.176299+00:00"
+  },
+  {
+    "id": "b48a86af",
+    "description": "Add caching layer",
+    "files_affected": [
+      "app/core/cache.py"
+    ],
+    "risk_level": "low",
+    "status": "approved",
+    "created": "2026-06-05T23:54:23.522879+00:00"
+  },
+  {
+    "id": "97342391",
+    "description": "Refactor database layer",
+    "files_affected": [
+      "app/core/database.py"
+    ],
+    "risk_level": "high",
+    "status": "pending",
+    "created": "2026-06-05T23:54:24.048937+00:00"
+  }
+]
