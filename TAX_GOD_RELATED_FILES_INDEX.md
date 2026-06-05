@@ -33,7 +33,6 @@ This index lists **all files and code** in this workspace related to **Tax God**
 | **specs/tax-god-ui-mockup-dashboard.html** | Tax God UI mockup dashboard |
 | **IMPLEMENTATION_PLAN.md** | Tax God v3.0 implementation plan: DTDA/IMRA/SHVA, Trinity, Cost Governor, copilot |
 | **LOCAL_DOCKER_SETUP.md** | Local Docker setup for the stack |
-| **REPLIT_AGENT_README.md** | Replit agent usage (Tax God context) |
 | **COMMANDS.md** | Project commands |
 | **QUICKSTART.md** | Quick start guide |
 

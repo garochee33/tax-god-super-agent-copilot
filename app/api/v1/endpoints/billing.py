@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import stripe
 from fastapi import APIRouter, HTTPException, Request, status
@@ -35,9 +35,7 @@ class CheckoutResponse(BaseModel):
 @router.get("/status", response_model=SubscriptionResponse)
 async def get_subscription_status(user: CurrentUser, db: DBSession):
     """Get current user's subscription status."""
-    result = await db.execute(
-        select(Subscription).where(Subscription.user_id == user.id)
-    )
+    result = await db.execute(select(Subscription).where(Subscription.user_id == user.id))
     sub = result.scalar_one_or_none()
 
     if not sub:
@@ -46,18 +44,14 @@ async def get_subscription_status(user: CurrentUser, db: DBSession):
             user_id=user.id,
             tier=SubscriptionTier.FREE_TRIAL.value,
             status=SubscriptionStatus.TRIALING.value,
-            trial_ends_at=datetime.now(timezone.utc) + timedelta(days=TRIAL_DAYS),
+            trial_ends_at=datetime.now(UTC) + timedelta(days=TRIAL_DAYS),
         )
         db.add(sub)
         await db.commit()
         await db.refresh(sub)
 
     # Check if trial expired
-    if (
-        sub.status == SubscriptionStatus.TRIALING.value
-        and sub.trial_ends_at
-        and sub.trial_ends_at < datetime.now(timezone.utc)
-    ):
+    if sub.status == SubscriptionStatus.TRIALING.value and sub.trial_ends_at and sub.trial_ends_at < datetime.now(UTC):
         sub.status = SubscriptionStatus.EXPIRED.value
         await db.commit()
 
@@ -79,9 +73,7 @@ async def create_checkout(user: CurrentUser, db: DBSession, request: Request):
             detail="Stripe not configured. Set STRIPE_SECRET_KEY and STRIPE_PRICE_MONTHLY in .env",
         )
 
-    result = await db.execute(
-        select(Subscription).where(Subscription.user_id == user.id)
-    )
+    result = await db.execute(select(Subscription).where(Subscription.user_id == user.id))
     sub = result.scalar_one_or_none()
 
     # Get or create Stripe customer
@@ -113,9 +105,7 @@ async def stripe_webhook(request: Request, db: DBSession):
     sig = request.headers.get("stripe-signature", "")
 
     try:
-        event = stripe.Webhook.construct_event(
-            payload, sig, settings.STRIPE_WEBHOOK_SECRET
-        )
+        event = stripe.Webhook.construct_event(payload, sig, settings.STRIPE_WEBHOOK_SECRET)
     except (ValueError, stripe.error.SignatureVerificationError):
         raise HTTPException(status_code=400, detail="Invalid signature")
 
@@ -123,9 +113,7 @@ async def stripe_webhook(request: Request, db: DBSession):
         session = event["data"]["object"]
         user_id = session.get("metadata", {}).get("user_id")
         if user_id:
-            result = await db.execute(
-                select(Subscription).where(Subscription.user_id == user_id)
-            )
+            result = await db.execute(select(Subscription).where(Subscription.user_id == user_id))
             sub = result.scalar_one_or_none()
             if sub:
                 sub.tier = SubscriptionTier.PRO.value
@@ -136,27 +124,19 @@ async def stripe_webhook(request: Request, db: DBSession):
 
     elif event["type"] == "customer.subscription.updated":
         stripe_sub = event["data"]["object"]
-        result = await db.execute(
-            select(Subscription).where(
-                Subscription.stripe_subscription_id == stripe_sub["id"]
-            )
-        )
+        result = await db.execute(select(Subscription).where(Subscription.stripe_subscription_id == stripe_sub["id"]))
         sub = result.scalar_one_or_none()
         if sub:
             sub.status = stripe_sub["status"]
             sub.cancel_at_period_end = stripe_sub.get("cancel_at_period_end", False)
             period_end = stripe_sub.get("current_period_end")
             if period_end:
-                sub.current_period_end = datetime.fromtimestamp(period_end, tz=timezone.utc)
+                sub.current_period_end = datetime.fromtimestamp(period_end, tz=UTC)
             await db.commit()
 
     elif event["type"] == "customer.subscription.deleted":
         stripe_sub = event["data"]["object"]
-        result = await db.execute(
-            select(Subscription).where(
-                Subscription.stripe_subscription_id == stripe_sub["id"]
-            )
-        )
+        result = await db.execute(select(Subscription).where(Subscription.stripe_subscription_id == stripe_sub["id"]))
         sub = result.scalar_one_or_none()
         if sub:
             sub.status = SubscriptionStatus.CANCELED.value

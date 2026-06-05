@@ -572,7 +572,7 @@ FEATURE_FLAGS = {
 - ✅ Multi-agent orchestration: Gabriel, AI Orchestrator, Citation Engine, Cost Governor, ROI Engine, Parallel Processor
 - ✅ Database: PostgreSQL + Alembic migrations (users, clients)
 - ✅ Integrations: QuickBooks, Google Services, Trinity Consortium
-- ✅ Docker + Railway deployment + GitHub Actions CI/CD
+- ✅ Docker + GitHub Actions CI/CD (local-first)
 - ✅ Comprehensive test suite: 36 tests covering auth, chat, documents, analytics, E2E pipeline
 - ✅ Advanced orchestrator with God Mode v3.0 (DTDA→IMRA→SHVA pipeline)
 - ✅ Circuit breaker, cost kill-switch, budget management

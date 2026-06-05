@@ -395,11 +395,6 @@ kompose convert -f docker-compose.yml
 kubectl apply -f tax-god-k8s/
 ```
 
-### To Replit
-```bash
-# Follow REPLIT_AGENT_README.md
-python3 scripts/setup_replit_agent.py
-./start_replit.sh
 ```
 
 ---

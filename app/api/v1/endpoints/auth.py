@@ -4,7 +4,7 @@ Tax God API - Authentication Endpoints
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, EmailStr, Field
@@ -79,12 +79,14 @@ async def register(body: RegisterRequest, db: DBSession):
 
     # Auto-create 7-day free trial subscription
     from datetime import timedelta
-    from app.models.subscription import Subscription, SubscriptionTier, SubscriptionStatus
+
+    from app.models.subscription import Subscription, SubscriptionStatus, SubscriptionTier
+
     trial = Subscription(
         user_id=user.id,
         tier=SubscriptionTier.FREE_TRIAL.value,
         status=SubscriptionStatus.TRIALING.value,
-        trial_ends_at=datetime.now(timezone.utc) + timedelta(days=7),
+        trial_ends_at=datetime.now(UTC) + timedelta(days=7),
     )
     db.add(trial)
     await db.commit()

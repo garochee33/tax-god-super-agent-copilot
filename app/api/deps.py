@@ -5,6 +5,7 @@ Authentication and authorization dependencies for FastAPI routes.
 
 from __future__ import annotations
 
+from datetime import UTC
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, status
@@ -140,16 +141,15 @@ async def require_active_subscription(
     db: Annotated[AsyncSession, Depends(get_db)],
 ) -> User:
     """Require user has an active or trialing subscription."""
-    from datetime import datetime, timezone
+    from datetime import datetime
+
     from app.models.subscription import Subscription, SubscriptionStatus
 
     # Admins bypass subscription check
     if current_user.role == UserRole.ADMIN.value:
         return current_user
 
-    result = await db.execute(
-        select(Subscription).where(Subscription.user_id == current_user.id)
-    )
+    result = await db.execute(select(Subscription).where(Subscription.user_id == current_user.id))
     sub = result.scalar_one_or_none()
 
     if not sub:
@@ -159,11 +159,13 @@ async def require_active_subscription(
         )
 
     if sub.status == SubscriptionStatus.TRIALING.value:
-        if sub.trial_ends_at and sub.trial_ends_at < datetime.now(timezone.utc):
-            raise HTTPException(
-                status_code=status.HTTP_402_PAYMENT_REQUIRED,
-                detail="Free trial expired. Please subscribe to continue.",
-            )
+        if sub.trial_ends_at:
+            trial_end = sub.trial_ends_at if sub.trial_ends_at.tzinfo else sub.trial_ends_at.replace(tzinfo=UTC)
+            if trial_end < datetime.now(UTC):
+                raise HTTPException(
+                    status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                    detail="Free trial expired. Please subscribe to continue.",
+                )
         return current_user
 
     if sub.status != SubscriptionStatus.ACTIVE.value:

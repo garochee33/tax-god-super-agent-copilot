@@ -17,7 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from prometheus_client import CONTENT_TYPE_LATEST, Counter, Gauge, Histogram, generate_latest
+from prometheus_client import CONTENT_TYPE_LATEST, REGISTRY, Counter, Gauge, Histogram, generate_latest
 
 from app.core.config import Environment, get_settings
 from app.core.database import check_database_health
@@ -39,17 +39,27 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 settings = get_settings()
 
-HTTP_REQUESTS_TOTAL = Counter(
+
+def _get_or_create_metric(cls, name, *args, **kwargs):
+    """Get existing metric or create new one (prevents duplicate registration in tests)."""
+    if name in REGISTRY._names_to_collectors:
+        return REGISTRY._names_to_collectors[name]
+    return cls(name, *args, **kwargs)
+
+
+HTTP_REQUESTS_TOTAL = _get_or_create_metric(
+    Counter,
     "taxgod_http_requests_total",
     "Total HTTP requests handled by Tax God API",
     ["method", "path", "status_code"],
 )
-HTTP_REQUEST_LATENCY_SECONDS = Histogram(
+HTTP_REQUEST_LATENCY_SECONDS = _get_or_create_metric(
+    Histogram,
     "taxgod_http_request_latency_seconds",
     "HTTP request latency in seconds",
     ["method", "path"],
 )
-SERVICE_UP = Gauge("taxgod_service_up", "Tax God service process status")
+SERVICE_UP = _get_or_create_metric(Gauge, "taxgod_service_up", "Tax God service process status")
 
 
 # ---------------------------------------------------------------------------
@@ -318,7 +328,17 @@ async def readiness_check(request: Request):
 # Register API Routers
 # ---------------------------------------------------------------------------
 
-from app.api.v1.endpoints import advanced, analytics, audit, auth, billing, chat, clients, documents, integrations  # noqa: E402
+from app.api.v1.endpoints import (  # noqa: E402
+    advanced,
+    analytics,
+    audit,
+    auth,
+    billing,
+    chat,
+    clients,
+    documents,
+    integrations,
+)
 
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
 app.include_router(billing.router, prefix="/api/v1/billing", tags=["Billing"])

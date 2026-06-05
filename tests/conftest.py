@@ -29,6 +29,7 @@ from app.core.database import Base, engine, async_session_factory
 from app.core.security import create_access_token, hash_password
 from app.models.user import User, UserRole
 from app.models.client import Client
+from app.models.subscription import Subscription, SubscriptionStatus, SubscriptionTier
 from app.api.deps import get_db
 
 
@@ -109,7 +110,7 @@ async def client():
 
 @pytest_asyncio.fixture
 async def test_user(db_session) -> User:
-    """Create a test user and return it."""
+    """Create a test user with active subscription and return it."""
     user = User(
         email="testuser@taxgod.dev",
         hashed_password=hash_password("TestPass123!"),
@@ -121,6 +122,14 @@ async def test_user(db_session) -> User:
     db_session.add(user)
     await db_session.commit()
     await db_session.refresh(user)
+    # Give user an active subscription
+    sub = Subscription(
+        user_id=user.id,
+        tier=SubscriptionTier.PRO.value,
+        status=SubscriptionStatus.ACTIVE.value,
+    )
+    db_session.add(sub)
+    await db_session.commit()
     return user
 
 
