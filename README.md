@@ -25,6 +25,7 @@ Tax God is a multi-agent AI co-pilot that combines domain expertise across tax l
 | Pantheon | Financial planning & estimation |
 | Hermes | Client communication |
 | Scrolls | Document generation & forms |
+| Agora | Client management (CRUD, search, status tracking) |
 
 ## Quick Start
 
@@ -49,17 +50,34 @@ uvicorn app.main:app --reload --port 8000
 
 ```
 app/
-├── api/v1/endpoints/   # REST endpoints (chat, documents, audit, analytics, auth)
+├── api/v1/endpoints/   # REST endpoints (auth, chat, audit, documents, analytics, integrations, advanced, clients)
 ├── core/               # Config, database, security, crypto
-├── middleware/          # Security middleware
-├── models/             # SQLAlchemy models
-├── services/           # Agent services, integrations, engines
-├── static/             # Frontend (CSS, JS)
-└── templates/          # Jinja2 templates
+├── middleware/          # Rate limiting, security headers, request ID
+├── models/             # SQLAlchemy models (User, Integration, Client)
+├── services/           # Agent services, AI orchestration, integrations, engines
+├── static/             # Frontend (CSS, JS pages: oracle, tribunal, pantheon, hermes, scrolls, archives, agora)
+└── templates/          # Jinja2 templates (Olympus Dashboard)
 alembic/                # Database migrations
-tests/                  # Test suite
+tests/                  # Comprehensive test suite (46 tests)
 specs/                  # Implementation specs & swarm runner
 docs/                   # Documentation
+```
+
+## Testing
+
+```bash
+# Run full test suite
+pytest tests/ -v
+
+# With coverage
+pytest tests/ --cov=app --cov-report=term-missing
+
+# Individual modules
+pytest tests/test_auth.py -v
+pytest tests/test_chat.py -v
+pytest tests/test_documents.py -v
+pytest tests/test_analytics.py -v
+pytest tests/test_e2e_pipeline.py -v
 ```
 
 ## License

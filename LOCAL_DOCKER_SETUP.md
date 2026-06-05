@@ -157,6 +157,9 @@ docker-compose up -d --build api
 
 ### Run Tests
 ```bash
+# Run comprehensive test suite (46 tests)
+docker-compose exec api pytest tests/ -v
+
 # Run algorithm tests
 docker-compose exec api python3 test_algorithms.py
 

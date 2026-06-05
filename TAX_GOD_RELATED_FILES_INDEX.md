@@ -1,6 +1,6 @@
 # Tax God / Tax Copilot / Tax Assistant / Agent Cost — File & Code Index
 
-This index lists **all files and code** in this workspace related to **Tax God**, **tax copilot**, **tax assistant**, **agent cost**, and **tax-god-agent**. The project root is `tax-god-copilot` (no git remote configured yet).
+This index lists **all files and code** in this workspace related to **Tax God**, **tax copilot**, **tax assistant**, **agent cost**, and **tax-god-agent**. The project root is `tax-god-super-agent-copilot` (GitHub: garochee33/tax-god-super-agent-copilot).
 
 ---
 
@@ -96,6 +96,8 @@ This index lists **all files and code** in this workspace related to **Tax God**
 | **app/api/v1/endpoints/advanced.py** | Tax God – Advanced Tax Processing API. |
 | **app/api/v1/endpoints/analytics.py** | Analytics, Cost Governance, ROI. |
 | **app/api/v1/endpoints/audit.py** | Agent Gabriel (Audit). |
+| **app/api/v1/endpoints/auth.py** | Authentication (register, login, JWT tokens, refresh, dev-token). |
+| **app/api/v1/endpoints/clients.py** | Client Management (Agora) — full CRUD, pagination, search. |
 | **app/api/v1/endpoints/chat.py** | AI Chat. |
 | **app/api/v1/endpoints/documents.py** | Tax God API – Document Processing. |
 | **app/api/v1/endpoints/integrations.py** | Tax God API – Integrations (“Tax God Integration Connected”, “return to Tax God”). |
@@ -110,6 +112,12 @@ This index lists **all files and code** in this workspace related to **Tax God**
 | **app/static/css/olympus.css** | “Tax God - Greek Mythology Theme”. |
 | **app/static/js/app.js** | `taxgod_client_id`, `taxgod_api_base`, `window.taxGodApp`. |
 | **app/static/js/pages/pantheon.js** | “Tax God control plane”. |
+| **app/static/js/pages/oracle.js** | AI Chat Interface — conversation, citations. |
+| **app/static/js/pages/tribunal.js** | Agent Gabriel audit defense UI. |
+| **app/static/js/pages/hermes.js** | Client communication interface. |
+| **app/static/js/pages/scrolls.js** | Document generation — memos, IRS responses. |
+| **app/static/js/pages/archives.js** | Tax law search & archives. |
+| **app/static/js/pages/agora.js** | Client Management — CRUD, search, pagination. |
 
 ---
 
@@ -151,16 +159,36 @@ This index lists **all files and code** in this workspace related to **Tax God**
 |------|------|
 | **app/services/roi_engine.py** | ROI calculation and projection (used by analytics endpoints). |
 | **app/services/integrations/** | Google, QuickBooks, manager, base (OAuth, encrypted credentials). |
-| **requirements.txt** | “Tax God v3.0 - Python Dependencies”. |
+| **requirements.txt** | "Tax God v3.1 - Python Dependencies" (includes aiosqlite for test support). |
 | **Dockerfile** | Backend image. |
 | **docker-compose.yml** | Full stack (API, Postgres, Redis, Neo4j, Elasticsearch, etc.). |
 | **launch_docker.sh**, **launch_simple.sh** | Launch scripts. |
 | **monitoring/prometheus.yml** | Prometheus config for metrics. |
 | **test_trinity_integration.py** | Trinity integration tests. |
+| **app/models/client.py** | Client model — owner_id, name, email, phone, company, tax_id, filing_type, status, notes. |
+| **alembic/versions/002_add_clients.py** | Clients table migration. |
 
 ---
 
-## 13. Grep-style reference (terms that appear in code)
+## 13. Test suite (46 tests)
+
+| File | Coverage |
+|------|----------|
+| **tests/conftest.py** | Fixtures: async SQLite in-memory DB, user/admin creation, auth headers, rate limiter bypass, mock services. |
+| **tests/test_auth.py** | Auth endpoints — register, login, refresh, /me, logout, dev-token, invalid inputs (14 tests). |
+| **tests/test_chat.py** | Chat/AI endpoints — query, god mode, citations search, auth enforcement (6 tests). |
+| **tests/test_documents.py** | Document processing — PDF ingest, batch, multi-state, scenario analysis (7 tests). |
+| **tests/test_analytics.py** | Analytics — circuit breaker, kill switch, usage, ROI calculate/project, RBAC (8 tests). |
+| **tests/test_e2e_pipeline.py** | Full pipeline — register → login → create client → chat → scenario → ROI → refresh (1 test). |
+| **tests/test_cost_governor.py** | Cost governor unit tests. |
+| **tests/test_roi_engine.py** | ROI engine unit tests. |
+| **tests/test_integration_manager.py** | Integration manager unit tests. |
+| **test_algorithms.py** | Standalone algorithm tests (DTDA, IMRA, SHVA). |
+| **test_trinity_integration.py** | Trinity Consortium integration tests. |
+
+---
+
+## 14. Grep-style reference (terms that appear in code)
 
 - **Tax God** – app/main.py, config.py, ai_service.py, cost_governor.py, agent_gabriel.py, tax_writer.py, citation_engine.py, security.py, database.py, advanced_orchestrator.py, parallel_processor.py, audit.py, chat.py, documents.py, advanced.py, analytics.py, integrations.py; index.html, pantheon.js, olympus.css.
 - **taxgod** – config.py (DB, S3), main.py (metrics), app.js (client id / api base).

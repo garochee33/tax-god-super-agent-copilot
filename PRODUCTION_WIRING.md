@@ -12,7 +12,7 @@ This document summarizes the production-grade backend/frontend wiring and UI imp
 | **Archives (Citations)** | Query length limit (500 chars); error message + Retry on failure. |
 | **Hermes (Integrations)** | Disconnect button when connected; in-page success/error messages (no `alert()`); `showMessage()` for connect/disconnect feedback. |
 | **Pantheon (Dashboard)** | Loading skeleton on stat cards until metrics load; **Cost estimate** tool: input + “Estimate” calls `POST /api/v1/analytics/estimate`, shows cost and model. |
-| **Agora (Clients)** | “Coming soon” banner and disabled View buttons; demo table labeled as placeholder until clients API exists. |
+| **Agora (Clients)** | Full CRUD client management. Lists, creates, edits, deletes clients via `/api/v1/clients`. Paginated list with search and status filter. Form: name, email, phone, company, tax_id, filing_type, status, notes. |
 
 ## API Client (app.js)
 

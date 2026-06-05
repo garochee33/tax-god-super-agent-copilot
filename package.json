@@ -1,15 +1,19 @@
 {
   "name": "tax-god-copilot",
-  "version": "3.0.0",
-  "description": "Tax God v3.0 - Multi-agent tax, legal & financial AI co-pilot",
+  "version": "3.1.0",
+  "description": "Tax God v3.1 - Multi-agent tax, legal & financial AI co-pilot",
   "private": true,
   "scripts": {
     "start": "uvicorn app.main:app --reload --reload-dir app --reload-dir specs --port 8000",
+    "dev:mac": "uvicorn app.main:app --reload --reload-dir app --reload-dir specs --host 127.0.0.1 --port 5050",
+    "dev:safe": "uvicorn app.main:app --reload --reload-dir app --reload-dir specs --host 127.0.0.1 --port 5050 --workers 1",
+    "test": "python -m pytest tests/ -v",
+    "test:cov": "python -m pytest tests/ --cov=app --cov-report=term-missing",
+    "lint": "python -m ruff check app/",
+    "lint:fix": "python -m ruff check app/ --fix",
     "docker:up": "docker-compose up -d --build",
     "docker:down": "docker-compose down",
-    "cleanup:ports:aggressive": "sh -c 'for p in 8000 8001 5000 5050 5001 3000 8080 5173; do pid=$(lsof -ti:$p 2>/dev/null); [ -n \"$pid\" ] && kill -9 $pid && echo Killed port $p; done; pkill -9 -f uvicorn 2>/dev/null; pkill -9 -f vite 2>/dev/null; echo Done.'",
-    "dev:mac": "uvicorn app.main:app --reload --reload-dir app --reload-dir specs --host 127.0.0.1 --port 5050",
-    "dev:safe": "uvicorn app.main:app --reload --reload-dir app --reload-dir specs --host 127.0.0.1 --port 5050 --workers 1"
+    "cleanup:ports:aggressive": "sh -c 'for p in 8000 8001 5000 5050 5001 3000 8080 5173; do pid=$(lsof -ti:$p 2>/dev/null); [ -n \"$pid\" ] && kill -9 $pid && echo Killed port $p; done; pkill -9 -f uvicorn 2>/dev/null; pkill -9 -f vite 2>/dev/null; echo Done.'"
   },
   "engines": {
     "node": ">=18"

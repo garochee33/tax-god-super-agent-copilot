@@ -22,7 +22,6 @@ Check version: `python --version` or `python3.12 --version`.
 ## 1. Configure Environment
 
 ```bash
-cd /Users/enzogaroche/tax-god-copilot
 cp .env.example .env
 ```
 
@@ -108,3 +107,18 @@ Latest checkpoints are visible under `/health/detailed` -> `checks.ops_checkpoin
 - **Kill stray dev processes:** `npm run cleanup:ports:aggressive` or `./scripts/cleanup-dev-ports.sh`
 - **If Cursor uses a lot of RAM:** see `docs/RUN_BETTER.md` and ensure `.cursorignore` exists, then restart Cursor.
 
+
+## 6. Run Tests
+
+```bash
+source .venv/bin/activate
+pytest tests/ -v              # full suite (46 tests)
+pytest tests/ --cov=app       # with coverage
+```
+
+## 7. Verify GUI
+
+After starting the server, open `http://localhost:5050` in a browser:
+- Login with dev-token (auto-created admin in dev mode)
+- Check all 7 pages: Oracle, Tribunal, Pantheon, Hermes, Scrolls, Archives, Agora (Clients)
+- Agora should allow full client CRUD (create, edit, delete, search)
