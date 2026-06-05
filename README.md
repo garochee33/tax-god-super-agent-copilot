@@ -13,7 +13,7 @@ Tax God is a multi-agent AI co-pilot that combines domain expertise across tax l
 - **Auth:** JWT-based authentication
 - **AI Agents:** Multi-agent orchestration (Gabriel, Oracle, Tribunal, Pantheon)
 - **Integrations:** QuickBooks, Google Services
-- **Deployment:** Railway, Docker, CI/CD (GitHub Actions)
+- **Deployment:** Docker, CI/CD (GitHub Actions)
 
 ## Agents
 

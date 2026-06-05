@@ -41,7 +41,7 @@ Add the project `bin` to your PATH, then run `tax-god`:
 
 ```bash
 # One-time: add to ~/.zshrc (or ~/.bashrc)
-export PATH="/Users/enzogaroche/Desktop/AI_AGENTS/tax-god-copilot/bin:$PATH"
+export PATH="./bin:$PATH"
 
 # Then from any directory:
 tax-god           # uses port 8000
@@ -51,7 +51,7 @@ tax-god 8001      # if 8000 is in use
 **Option B – manual:**
 
 ```bash
-cd /path/to/tax-god-copilot
+cd tax-god-super-agent-copilot
 # Use Python 3.10–3.13 (see Python version section above)
 python3.12 -m venv .venv
 source .venv/bin/activate

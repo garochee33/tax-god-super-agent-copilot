@@ -8,7 +8,7 @@ This index lists **all files and code** in this workspace related to **Tax God**
 
 | Item | Location / value |
 |------|------------------|
-| **Workspace** | `/Users/enzogaroche/Desktop/AI_AGENTS/tax-god-copilot` |
+| **Workspace** | `~/DSH/projects/tax-god-super-agent-copilot` |
 | **App name** | `Tax God` (see `app/core/config.py`: `APP_NAME`, `APP_VERSION = "3.0.0"`) |
 | **Database default** | `taxgod` / `taxgod123` (config.py) |
 | **Celery app name** | `tax_god` (app/tasks/celery_app.py) |
