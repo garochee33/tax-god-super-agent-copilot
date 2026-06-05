@@ -9,7 +9,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
-from app.api.deps import CurrentUser, resolve_client_id
+from app.api.deps import CurrentUser, SubscribedUser, resolve_client_id
 
 router = APIRouter()
 
@@ -49,7 +49,7 @@ class CitationSearchRequest(BaseModel):
 
 
 @router.post("/query", response_model=ChatResponse)
-async def ai_query(body: ChatQuery, request: Request, current_user: CurrentUser):
+async def ai_query(body: ChatQuery, request: Request, current_user: SubscribedUser):
     """
     Submit a tax/legal/financial question to Tax God.
     Routes to the appropriate specialist agent automatically.

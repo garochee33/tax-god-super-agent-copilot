@@ -133,3 +133,46 @@ OptionalUser = Annotated[User | None, Depends(get_current_user_optional)]
 AdminUser = Annotated[User, Depends(require_roles(UserRole.ADMIN))]
 PreparerOrAdmin = Annotated[User, Depends(require_roles(UserRole.ADMIN, UserRole.PREPARER))]
 DBSession = Annotated[AsyncSession, Depends(get_db)]
+
+
+async def require_active_subscription(
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db)],
+) -> User:
+    """Require user has an active or trialing subscription."""
+    from datetime import datetime, timezone
+    from app.models.subscription import Subscription, SubscriptionStatus
+
+    # Admins bypass subscription check
+    if current_user.role == UserRole.ADMIN.value:
+        return current_user
+
+    result = await db.execute(
+        select(Subscription).where(Subscription.user_id == current_user.id)
+    )
+    sub = result.scalar_one_or_none()
+
+    if not sub:
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail="No subscription found. Please subscribe to access this feature.",
+        )
+
+    if sub.status == SubscriptionStatus.TRIALING.value:
+        if sub.trial_ends_at and sub.trial_ends_at < datetime.now(timezone.utc):
+            raise HTTPException(
+                status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                detail="Free trial expired. Please subscribe to continue.",
+            )
+        return current_user
+
+    if sub.status != SubscriptionStatus.ACTIVE.value:
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail=f"Subscription is {sub.status}. Please renew to access this feature.",
+        )
+
+    return current_user
+
+
+SubscribedUser = Annotated[User, Depends(require_active_subscription)]

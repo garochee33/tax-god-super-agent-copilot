@@ -114,6 +114,12 @@ class Settings(BaseSettings):
     SENDGRID_API_KEY: str = ""
     APOLLO_API_KEY: str = ""
 
+    # -- Stripe (subscription billing) ----------------------------------------
+    STRIPE_SECRET_KEY: str = ""
+    STRIPE_PUBLISHABLE_KEY: str = ""
+    STRIPE_WEBHOOK_SECRET: str = ""
+    STRIPE_PRICE_MONTHLY: str = ""  # Stripe Price ID for monthly plan
+
     # -- Model Pricing (per 1M tokens, as of Feb 2026) -----------------------
     PRICING_GPT4O_INPUT: float = 2.50
     PRICING_GPT4O_OUTPUT: float = 10.00
@@ -135,6 +141,10 @@ class Settings(BaseSettings):
         "VAULT_MASTER_KEY",
         "SENDGRID_API_KEY",
         "APOLLO_API_KEY",
+        "STRIPE_SECRET_KEY",
+        "STRIPE_PUBLISHABLE_KEY",
+        "STRIPE_WEBHOOK_SECRET",
+        "STRIPE_PRICE_MONTHLY",
         mode="before",
     )
     @classmethod

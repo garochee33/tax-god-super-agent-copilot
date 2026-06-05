@@ -11,7 +11,7 @@ from typing import Any, cast
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
-from app.api.deps import AdminUser, CurrentUser, resolve_client_id
+from app.api.deps import AdminUser, CurrentUser, SubscribedUser, resolve_client_id
 from app.services.advanced_orchestrator import AdvancedTaxOrchestrator
 
 logger = logging.getLogger(__name__)
@@ -141,7 +141,7 @@ async def get_advanced_orchestrator(request: Request) -> AdvancedTaxOrchestrator
 )
 async def process_advanced_tax_query(
     request: AdvancedTaxRequest,
-    current_user: CurrentUser,
+    current_user: SubscribedUser,
     orchestrator: AdvancedTaxOrchestrator = Depends(get_advanced_orchestrator),
 ) -> AdvancedTaxResponseModel:
     """
@@ -192,7 +192,7 @@ async def process_advanced_tax_query(
 )
 async def decompose_tax_task(
     request: AdvancedTaxRequest,
-    current_user: CurrentUser,
+    current_user: SubscribedUser,
     orchestrator: AdvancedTaxOrchestrator = Depends(get_advanced_orchestrator),
 ) -> DecompositionResponse:
     """
@@ -256,7 +256,7 @@ async def decompose_tax_task(
 )
 async def retrieve_tax_memory(
     request: AdvancedTaxRequest,
-    current_user: CurrentUser,
+    current_user: SubscribedUser,
     orchestrator: AdvancedTaxOrchestrator = Depends(get_advanced_orchestrator),
 ) -> list[MemoryResultResponse]:
     """
@@ -307,7 +307,7 @@ async def retrieve_tax_memory(
 )
 async def validate_tax_response(
     body: AdvancedTaxRequest,
-    current_user: CurrentUser,
+    current_user: SubscribedUser,
     orchestrator: AdvancedTaxOrchestrator = Depends(get_advanced_orchestrator),
 ) -> ValidationResponse:
     """

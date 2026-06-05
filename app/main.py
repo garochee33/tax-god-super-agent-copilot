@@ -318,9 +318,10 @@ async def readiness_check(request: Request):
 # Register API Routers
 # ---------------------------------------------------------------------------
 
-from app.api.v1.endpoints import advanced, analytics, audit, auth, chat, clients, documents, integrations  # noqa: E402
+from app.api.v1.endpoints import advanced, analytics, audit, auth, billing, chat, clients, documents, integrations  # noqa: E402
 
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
+app.include_router(billing.router, prefix="/api/v1/billing", tags=["Billing"])
 app.include_router(chat.router, prefix="/api/v1/chat", tags=["AI Chat"])
 app.include_router(audit.router, prefix="/api/v1/audit", tags=["Agent Gabriel"])
 app.include_router(documents.router, prefix="/api/v1/documents", tags=["Documents"])

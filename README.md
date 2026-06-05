@@ -34,16 +34,33 @@ Tax God is a multi-agent AI co-pilot that combines domain expertise across tax l
 git clone https://github.com/garochee33/tax-god-super-agent-copilot.git
 cd tax-god-super-agent-copilot
 
-# Setup
-cp .env.example .env
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-
-# Database
-alembic upgrade head
+# One-command setup (installs deps, creates DB, runs migrations)
+./setup.sh
 
 # Run
+source .venv/bin/activate
 uvicorn app.main:app --reload --port 8000
+```
+
+Open http://localhost:8000, register an account, and you're in with a **7-day free trial**.
+
+## Subscription & Access
+
+| Tier | Access | Price |
+|------|--------|-------|
+| Free Trial | All features for 7 days | $0 |
+| Pro | Unlimited access | $29/month |
+
+After trial expires, subscribe via the in-app billing page (Stripe). Admins can manage users directly in the database.
+
+### Stripe Setup (for operators)
+
+To enable payments, add to `.env`:
+```
+STRIPE_SECRET_KEY=sk_live_...
+STRIPE_PUBLISHABLE_KEY=pk_live_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+STRIPE_PRICE_MONTHLY=price_...  # Create a $29/month recurring price in Stripe Dashboard
 ```
 
 ## Structure
