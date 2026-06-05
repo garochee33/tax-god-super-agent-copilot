@@ -106,10 +106,7 @@ class QuickBooksService(BaseIntegration):
             return False
 
     async def get_company_info(self, access_token: str, realm_id: str) -> dict[str, Any]:
-        url = (
-            "https://quickbooks.api.intuit.com/v3/company/"
-            f"{realm_id}/companyinfo/{realm_id}"
-        )
+        url = f"https://quickbooks.api.intuit.com/v3/company/{realm_id}/companyinfo/{realm_id}"
         async with httpx.AsyncClient(timeout=20) as client:
             response = await client.get(
                 url,
@@ -140,9 +137,7 @@ class QuickBooksService(BaseIntegration):
         response.raise_for_status()
         return response.json()
 
-    async def get_balance_sheet(
-        self, access_token: str, realm_id: str, as_of_date: str
-    ) -> dict[str, Any]:
+    async def get_balance_sheet(self, access_token: str, realm_id: str, as_of_date: str) -> dict[str, Any]:
         """Balance Sheet report as of a given date (YYYY-MM-DD)."""
         url = f"https://quickbooks.api.intuit.com/v3/company/{realm_id}/reports/BalanceSheet"
         async with httpx.AsyncClient(timeout=20) as client:
@@ -160,9 +155,7 @@ class QuickBooksService(BaseIntegration):
         response.raise_for_status()
         return response.json()
 
-    async def get_vendors(
-        self, access_token: str, realm_id: str, max_results: int = 100
-    ) -> list[dict[str, Any]]:
+    async def get_vendors(self, access_token: str, realm_id: str, max_results: int = 100) -> list[dict[str, Any]]:
         """List vendors for 1099 relevance (includes DisplayName, TaxIdentifier if present)."""
         url = f"https://quickbooks.api.intuit.com/v3/company/{realm_id}/query"
         query = f"SELECT * FROM Vendor MAXRESULTS {min(max_results, 1000)}"
@@ -180,6 +173,7 @@ class QuickBooksService(BaseIntegration):
         query_response = data.get("QueryResponse", {})
         raw = query_response.get("Vendor", [])
         vendors = raw if isinstance(raw, list) else ([raw] if raw else [])
+
         def _mask_tax_id(val: str | None) -> str | None:
             if not val:
                 return None

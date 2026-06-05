@@ -4,8 +4,6 @@ Tax God API - Analytics, Cost Governance, and ROI Endpoints
 
 from __future__ import annotations
 
-from typing import Optional
-
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field, model_validator
 
@@ -99,7 +97,7 @@ async def cost_governor_kill_switch(
 
 
 @router.get("/usage")
-async def get_usage_analytics(request: Request, current_user: CurrentUser, client_id: Optional[str] = None):
+async def get_usage_analytics(request: Request, current_user: CurrentUser, client_id: str | None = None):
     """Get usage analytics and cost breakdown. Requires authentication."""
     governor = request.app.state.cost_governor
     resolved_id = resolve_client_id(client_id, current_user)
@@ -231,7 +229,6 @@ async def project_roi(body: ROIProjectRequest, current_user: CurrentUser):
         "multiple": roi.multiple,
         "band": roi.band,
         "executive_summary": (
-            f"Projected ROI is {roi.roi_percent}% ({roi.multiple}x return) "
-            f"with a '{roi.band}' performance band."
+            f"Projected ROI is {roi.roi_percent}% ({roi.multiple}x return) with a '{roi.band}' performance band."
         ),
     }

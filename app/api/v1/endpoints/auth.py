@@ -107,6 +107,7 @@ async def login(body: LoginRequest, db: DBSession):
         )
 
     from app.core.config import get_settings
+
     settings = get_settings()
 
     access_token = create_access_token(user.id, extra={"role": user.role})
@@ -141,6 +142,7 @@ async def refresh_tokens(body: RefreshRequest, db: DBSession):
         )
 
     from app.core.config import get_settings
+
     settings = get_settings()
 
     access_token = create_access_token(user.id, extra={"role": user.role})
@@ -183,7 +185,8 @@ async def dev_token(db: DBSession):
     Development-only: auto-create a demo admin user and return tokens.
     Disabled in production.
     """
-    from app.core.config import get_settings, Environment
+    from app.core.config import Environment, get_settings
+
     settings = get_settings()
     if settings.ENVIRONMENT != Environment.DEV:
         raise HTTPException(status_code=404, detail="Not found")

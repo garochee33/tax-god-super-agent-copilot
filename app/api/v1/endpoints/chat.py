@@ -4,7 +4,7 @@ Tax God API - AI Chat Endpoints
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
@@ -16,19 +16,20 @@ router = APIRouter()
 
 # -- Request / Response Models -----------------------------------------------
 
+
 class ChatQuery(BaseModel):
     query: str = Field(..., min_length=1, max_length=10000, description="The tax/legal/financial question")
     client_id: str = Field(default="", description="Client identifier")
-    conversation_id: Optional[str] = Field(default=None, description="Continue existing conversation")
+    conversation_id: str | None = Field(default=None, description="Continue existing conversation")
     task_type: str = Field(default="", description="Task type hint (tax_compliance, legal, financial, etc.)")
     require_citations: bool = Field(default=True, description="Include tax law citations")
-    context: Optional[dict[str, Any]] = Field(default=None, description="Additional context")
+    context: dict[str, Any] | None = Field(default=None, description="Additional context")
     use_god_mode: bool = Field(default=False, description="Use God Mode v3.0 (DTDA→IMRA→SHVA pipeline)")
 
 
 class ChatResponse(BaseModel):
     content: str
-    agent: Optional[str] = None
+    agent: str | None = None
     model_used: str = ""
     confidence: float = 0.0
     confidence_level: str = ""
@@ -45,6 +46,7 @@ class CitationSearchRequest(BaseModel):
 
 
 # -- Endpoints ---------------------------------------------------------------
+
 
 @router.post("/query", response_model=ChatResponse)
 async def ai_query(body: ChatQuery, request: Request, current_user: CurrentUser):
@@ -92,7 +94,11 @@ async def ai_query(body: ChatQuery, request: Request, current_user: CurrentUser)
                 "god_mode": True,
                 "request_id": result.request_id,
                 "processing_time": result.processing_time,
-                "decomposition_task_type": result.decomposition.task_type.value if result.decomposition and hasattr(result.decomposition.task_type, "value") else str(result.decomposition.task_type) if result.decomposition else None,
+                "decomposition_task_type": result.decomposition.task_type.value
+                if result.decomposition and hasattr(result.decomposition.task_type, "value")
+                else str(result.decomposition.task_type)
+                if result.decomposition
+                else None,
                 "fallback_used": result.fallback_used,
             },
         )

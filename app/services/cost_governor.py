@@ -18,9 +18,9 @@ import json
 import logging
 import time
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 import redis.asyncio as aioredis
 
@@ -35,13 +35,14 @@ settings = get_settings()
 # Data Structures
 # ---------------------------------------------------------------------------
 
+
 class ComplexityLevel(int, Enum):
-    TRIVIAL = 1       # tax rate lookup, form instructions
-    SIMPLE = 3        # standard deduction questions, filing status
-    MODERATE = 5      # Schedule C, rental property calculations
-    COMPLEX = 7       # multi-state, entity structuring
-    EXPERT = 9        # M&A due diligence, transfer pricing, audit defense
-    STRATEGIC = 10    # multi-year planning, complex estate strategies
+    TRIVIAL = 1  # tax rate lookup, form instructions
+    SIMPLE = 3  # standard deduction questions, filing status
+    MODERATE = 5  # Schedule C, rental property calculations
+    COMPLEX = 7  # multi-state, entity structuring
+    EXPERT = 9  # M&A due diligence, transfer pricing, audit defense
+    STRATEGIC = 10  # multi-year planning, complex estate strategies
 
 
 class RoutingPath(str, Enum):
@@ -52,6 +53,7 @@ class RoutingPath(str, Enum):
 
 class CostGateCode(str, Enum):
     """Trinity-style gate codes (TRINITY_GEMS)."""
+
     ALLOW = "ALLOW"
     BUDGET_EXCEEDED_PER_TASK = "BUDGET_EXCEEDED_PER_TASK"
     BUDGET_EXCEEDED_SESSION = "BUDGET_EXCEEDED_SESSION"
@@ -64,6 +66,7 @@ class CostGateCode(str, Enum):
 @dataclass
 class CostGateResult:
     """Cost gate evaluation result (Trinity GEM)."""
+
     allowed: bool
     code: CostGateCode
     reason: str
@@ -73,19 +76,21 @@ class CostGateResult:
 @dataclass
 class ModelSpec:
     """Specification for an LLM model."""
+
     name: str
-    provider: str                    # "openai" | "anthropic"
+    provider: str  # "openai" | "anthropic"
     tier: ModelTier
-    input_cost_per_1m: float         # $ per 1M input tokens
-    output_cost_per_1m: float        # $ per 1M output tokens
-    max_context: int                 # max tokens
-    avg_latency_sec: float           # typical response time
+    input_cost_per_1m: float  # $ per 1M input tokens
+    output_cost_per_1m: float  # $ per 1M output tokens
+    max_context: int  # max tokens
+    avg_latency_sec: float  # typical response time
     strengths: list[str] = field(default_factory=list)
 
 
 @dataclass
 class CostEstimate:
     """Pre-flight cost estimate for a query."""
+
     model_name: str
     model_tier: ModelTier
     estimated_input_tokens: int
@@ -93,21 +98,22 @@ class CostEstimate:
     estimated_cost_usd: float
     estimated_latency_sec: float
     cache_hit: bool = False
-    cache_tier: Optional[str] = None
+    cache_tier: str | None = None
     budget_remaining_usd: float = 0.0
     approved: bool = True
-    rejection_reason: Optional[str] = None
+    rejection_reason: str | None = None
     routing_path: str = RoutingPath.SINGLE_AGENT.value
     estimated_swarm_agents: int = 0
     budget_mode: str = "normal"
-    downgrade_reason: Optional[str] = None
+    downgrade_reason: str | None = None
     gate_code: str = "ALLOW"
-    swarm_plan: Optional[dict[str, Any]] = None
+    swarm_plan: dict[str, Any] | None = None
 
 
 @dataclass
 class UsageRecord:
     """Tracks actual usage for a single LLM call."""
+
     request_id: str
     client_id: str
     model_name: str
@@ -117,7 +123,7 @@ class UsageRecord:
     actual_cost_usd: float
     latency_sec: float
     cache_hit: bool
-    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))
     task_type: str = ""
     complexity: int = 0
     confidence: float = 0.0
@@ -178,25 +184,59 @@ MODEL_REGISTRY: dict[str, ModelSpec] = {
 # Keywords that signal higher complexity
 _COMPLEXITY_SIGNALS: dict[str, int] = {
     # Expert / Strategic (9-10)
-    "transfer pricing": 9, "m&a": 9, "merger": 9, "acquisition": 9,
-    "estate planning": 9, "generation-skipping": 10, "subpart f": 9,
-    "gilti": 9, "controlled foreign": 9, "offer in compromise": 8,
-    "innocent spouse": 8, "audit defense": 8, "tax court": 9,
+    "transfer pricing": 9,
+    "m&a": 9,
+    "merger": 9,
+    "acquisition": 9,
+    "estate planning": 9,
+    "generation-skipping": 10,
+    "subpart f": 9,
+    "gilti": 9,
+    "controlled foreign": 9,
+    "offer in compromise": 8,
+    "innocent spouse": 8,
+    "audit defense": 8,
+    "tax court": 9,
     # Complex (7-8)
-    "multi-state": 7, "nexus": 7, "apportionment": 7,
-    "entity structuring": 8, "s-corp election": 7, "1031 exchange": 7,
-    "cost segregation": 8, "r&d credit": 7, "opportunity zone": 7,
-    "qualified business income": 7, "section 199a": 7,
+    "multi-state": 7,
+    "nexus": 7,
+    "apportionment": 7,
+    "entity structuring": 8,
+    "s-corp election": 7,
+    "1031 exchange": 7,
+    "cost segregation": 8,
+    "r&d credit": 7,
+    "opportunity zone": 7,
+    "qualified business income": 7,
+    "section 199a": 7,
     # Moderate (5-6)
-    "schedule c": 5, "self-employment": 5, "rental property": 5,
-    "schedule e": 5, "capital gains": 5, "depreciation": 5,
-    "section 179": 5, "home office": 5, "estimated tax": 5,
-    "crypto": 6, "nft": 6, "defi": 6, "staking": 6,
+    "schedule c": 5,
+    "self-employment": 5,
+    "rental property": 5,
+    "schedule e": 5,
+    "capital gains": 5,
+    "depreciation": 5,
+    "section 179": 5,
+    "home office": 5,
+    "estimated tax": 5,
+    "crypto": 6,
+    "nft": 6,
+    "defi": 6,
+    "staking": 6,
     # Simple (2-4)
-    "standard deduction": 2, "filing status": 2, "w-2": 3,
-    "1099": 3, "child tax credit": 3, "education credit": 3,
-    "hsa": 3, "ira": 4, "roth": 4, "form 1040": 3,
-    "extension": 2, "refund": 2, "withholding": 3,
+    "standard deduction": 2,
+    "filing status": 2,
+    "w-2": 3,
+    "1099": 3,
+    "child tax credit": 3,
+    "education credit": 3,
+    "hsa": 3,
+    "ira": 4,
+    "roth": 4,
+    "form 1040": 3,
+    "extension": 2,
+    "refund": 2,
+    "withholding": 3,
 }
 
 
@@ -241,6 +281,7 @@ def estimate_tokens(text: str) -> int:
 # ---------------------------------------------------------------------------
 # Cache Manager
 # ---------------------------------------------------------------------------
+
 
 class CacheManager:
     """
@@ -339,6 +380,7 @@ class CacheManager:
 # Budget Tracker
 # ---------------------------------------------------------------------------
 
+
 class BudgetTracker:
     """Per-client and system-wide budget enforcement."""
 
@@ -347,10 +389,10 @@ class BudgetTracker:
         self._fallback: dict[str, float] = {}
 
     def _daily_key(self) -> str:
-        return f"tg:budget:daily:{datetime.now(timezone.utc).strftime('%Y-%m-%d')}"
+        return f"tg:budget:daily:{datetime.now(UTC).strftime('%Y-%m-%d')}"
 
     def _client_month_key(self, client_id: str) -> str:
-        return f"tg:budget:client:{client_id}:{datetime.now(timezone.utc).strftime('%Y-%m')}"
+        return f"tg:budget:client:{client_id}:{datetime.now(UTC).strftime('%Y-%m')}"
 
     async def get_daily_spend(self) -> float:
         if self._redis:
@@ -435,6 +477,7 @@ class BudgetTracker:
 # Cost Governor (Main Class)
 # ---------------------------------------------------------------------------
 
+
 def _rejection_to_gate_code(reason: str | None) -> str:
     """Map rejection_reason to Trinity-style gate code."""
     if not reason:
@@ -478,9 +521,7 @@ class CostGovernor:
 
     @staticmethod
     def _is_high_priority_task(task_type: str, query: str = "") -> bool:
-        high_priority_signals = (
-            "audit", "audit_defense", "irs notice", "deadline", "penalty", "collections"
-        )
+        high_priority_signals = ("audit", "audit_defense", "irs notice", "deadline", "penalty", "collections")
         payload = f"{task_type.lower()} {query.lower()}".strip()
         return any(signal in payload for signal in high_priority_signals)
 
@@ -599,10 +640,7 @@ class CostGovernor:
         parallelizable_score = int(context.get("parallelizable_score", 0) or 0)
         batch_size = int(context.get("batch_size", 1) or 1)
 
-        if (
-            parallelizable_score >= settings.SWARM_PARALLEL_THRESHOLD
-            and batch_size >= settings.SWARM_MIN_BATCH_SIZE
-        ):
+        if parallelizable_score >= settings.SWARM_PARALLEL_THRESHOLD and batch_size >= settings.SWARM_MIN_BATCH_SIZE:
             # Trinity GEM: SwarmCostPlanner for non-linear swarm cost
             plan = create_swarm_cost_plan(
                 worker_count=max(1, batch_size),
@@ -659,10 +697,7 @@ class CostGovernor:
         est_input = estimate_tokens(query) + estimate_tokens(json.dumps(context))
         est_output = min(est_input * 2, 4096)  # rough: output ≈ 2x input, capped
 
-        cost = (
-            (est_input / 1_000_000) * model.input_cost_per_1m
-            + (est_output / 1_000_000) * model.output_cost_per_1m
-        )
+        cost = (est_input / 1_000_000) * model.input_cost_per_1m + (est_output / 1_000_000) * model.output_cost_per_1m
 
         # Step 7: Budget approval
         approved, reason = await self.budget.check_budget(
@@ -673,22 +708,17 @@ class CostGovernor:
         downgrade_reason = None
         if cost > settings.COST_SOFT_LIMIT_PER_QUERY and model.tier != ModelTier.BUDGET:
             cheaper = MODEL_REGISTRY[settings.MODEL_GPT4O_MINI]
-            cost = (
-                (est_input / 1_000_000) * cheaper.input_cost_per_1m
-                + (est_output / 1_000_000) * cheaper.output_cost_per_1m
-            )
+            cost = (est_input / 1_000_000) * cheaper.input_cost_per_1m + (
+                est_output / 1_000_000
+            ) * cheaper.output_cost_per_1m
             model = cheaper
             downgrade_reason = "Per-query soft limit enforced"
             logger.info("Downgraded model to %s to stay within query soft limit", cheaper.name)
 
         if complexity >= 8 and cost > settings.COST_SOFT_LIMIT_PER_COMPLEX_TASK:
-            downgrade_reason = (
-                f"Complex-task soft limit (${settings.COST_SOFT_LIMIT_PER_COMPLEX_TASK:.2f}) exceeded"
-            )
+            downgrade_reason = f"Complex-task soft limit (${settings.COST_SOFT_LIMIT_PER_COMPLEX_TASK:.2f}) exceeded"
 
-        gate_code = (
-            _rejection_to_gate_code(reason) if not approved else CostGateCode.ALLOW.value
-        )
+        gate_code = _rejection_to_gate_code(reason) if not approved else CostGateCode.ALLOW.value
         return CostEstimate(
             model_name=model.name,
             model_tier=model.tier,
@@ -744,21 +774,16 @@ class CostGovernor:
             "model_distribution": _model_distribution(records),
             "daily_spend": await self.budget.get_daily_spend(),
             "budget_mode": await self.budget.get_budget_mode(),
-            "client_month_spend": (
-                await self.budget.get_client_month_spend(client_id) if client_id else None
-            ),
+            "client_month_spend": (await self.budget.get_client_month_spend(client_id) if client_id else None),
         }
 
-    def calculate_actual_cost(
-        self, model_name: str, input_tokens: int, output_tokens: int
-    ) -> float:
+    def calculate_actual_cost(self, model_name: str, input_tokens: int, output_tokens: int) -> float:
         """Calculate actual cost from real token counts."""
         spec = MODEL_REGISTRY.get(model_name)
         if not spec:
             return 0.0
         return round(
-            (input_tokens / 1_000_000) * spec.input_cost_per_1m
-            + (output_tokens / 1_000_000) * spec.output_cost_per_1m,
+            (input_tokens / 1_000_000) * spec.input_cost_per_1m + (output_tokens / 1_000_000) * spec.output_cost_per_1m,
             6,
         )
 

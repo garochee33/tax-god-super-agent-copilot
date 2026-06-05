@@ -17,6 +17,7 @@ logger = None  # set on first use to avoid import-time logging config
 
 def _log():
     import logging
+
     global logger
     if logger is None:
         logger = logging.getLogger(__name__)
@@ -26,6 +27,7 @@ def _log():
 @dataclass
 class ExtractedTable:
     """One table extracted from text (ragflow-style pipe tables)."""
+
     headers: list[str]
     rows: list[list[str]]
     raw_text: str
@@ -34,6 +36,7 @@ class ExtractedTable:
 @dataclass
 class PdfExtractionResult:
     """Result of PDF extraction (Trinity advanced-pdf style)."""
+
     text: str
     num_pages: int
     tables: list[ExtractedTable]
@@ -56,8 +59,10 @@ def extract_tables_from_text(text: str) -> list[ExtractedTable]:
                 table_lines.append(lines[i])
                 i += 1
             if len(table_lines) >= 2:
+
                 def parse_cells(l: str) -> list[str]:
                     return [c.strip() for c in l.split("|") if c.strip() and not re.match(r"^[\s\-:]+$", c.strip())]
+
                 header_line = table_lines[0]
                 # skip separator line like |---|-----|
                 data_lines = [l for l in table_lines[1:] if not re.match(r"^\s*\|[\s\-:|]+\|\s*$", l)]

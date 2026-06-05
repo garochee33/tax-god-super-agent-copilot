@@ -40,11 +40,7 @@ def compute_roi(
     if incremental_revenue is None and incremental_gross_profit is None:
         raise ValueError("Provide incremental_revenue or incremental_gross_profit")
 
-    baseline_value = (
-        incremental_gross_profit
-        if incremental_gross_profit is not None
-        else incremental_revenue
-    )
+    baseline_value = incremental_gross_profit if incremental_gross_profit is not None else incremental_revenue
     assert baseline_value is not None
     if baseline_value < 0:
         raise ValueError("baseline value must be >= 0")

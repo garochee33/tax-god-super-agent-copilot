@@ -102,9 +102,8 @@ def require_roles(*roles: UserRole):
     Factory for role-based access control dependency.
     Usage: Depends(require_roles(UserRole.ADMIN, UserRole.PREPARER))
     """
-    async def role_checker(
-        current_user: Annotated[User, Depends(get_current_user)]
-    ) -> User:
+
+    async def role_checker(current_user: Annotated[User, Depends(get_current_user)]) -> User:
         user_role = UserRole(current_user.role)
         if user_role not in roles:
             raise HTTPException(
@@ -112,6 +111,7 @@ def require_roles(*roles: UserRole):
                 detail=f"Requires one of: {[r.value for r in roles]}",
             )
         return current_user
+
     return role_checker
 
 

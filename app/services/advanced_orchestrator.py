@@ -5,20 +5,18 @@ Combines DTDA (Dynamic Task Decomposition), IMRA (Intelligent Memory), and SHVA 
 
 from __future__ import annotations
 
-import logging
-import uuid
-from datetime import datetime, timezone
-from typing import Any, List
-
-from app.core.config import get_settings
-from app.services.ai_service import AIOrchestrator, AgentRole, AgentMessage
-from app.services.cost_governor import CostGovernor
-
 # Import the core algorithms
 import asyncio
+import logging
+import uuid
+from datetime import UTC, datetime
+from typing import Any
 
-from specs.algorithms.dtda import DynamicTaskDecompositionAlgorithm, DecompositionResult, ExecutionPlan, TaskType
-from specs.algorithms.imra import IntelligentMemoryRetrievalAlgorithm, RetrievalContext, MemoryResult
+from app.core.config import get_settings
+from app.services.ai_service import AgentMessage, AgentRole, AIOrchestrator
+from app.services.cost_governor import CostGovernor
+from specs.algorithms.dtda import DecompositionResult, DynamicTaskDecompositionAlgorithm, ExecutionPlan, TaskType
+from specs.algorithms.imra import IntelligentMemoryRetrievalAlgorithm, MemoryResult, RetrievalContext
 from specs.algorithms.shva import SelfHealingValidationAlgorithm, ValidationResult
 
 logger = logging.getLogger(__name__)
@@ -74,7 +72,7 @@ class AdvancedTaxOrchestrator:
         validation results, and final AI response.
         """
         request_id = str(uuid.uuid4())
-        start_time = datetime.now(timezone.utc)
+        start_time = datetime.now(UTC)
 
         try:
             # Step 1: DTDA - Decompose the task
@@ -93,25 +91,21 @@ class AdvancedTaxOrchestrator:
                 memory_context=memory_results,
                 client_id=client_id,
                 conversation_id=conversation_id,
-                require_citations=require_citations
+                require_citations=require_citations,
             )
 
             # Step 4: SHVA - Validate and potentially heal the response
             logger.info(f"[{request_id}] Validating response with SHVA...")
-            validation_result = await self._validate_response(
-                ai_response.content,
-                decomposition.task_type,
-                context
-            )
+            validation_result = await self._validate_response(ai_response.content, decomposition.task_type, context)
 
             # Step 5: Final quality assessment
             final_confidence = self._calculate_final_confidence(
                 ai_response.confidence,
                 validation_result.confidence_score if validation_result else 0.5,
-                decomposition.complexity
+                decomposition.complexity,
             )
 
-            processing_time = (datetime.now(timezone.utc) - start_time).total_seconds()
+            processing_time = (datetime.now(UTC) - start_time).total_seconds()
 
             return AdvancedTaxResponse(
                 query=query,
@@ -123,10 +117,8 @@ class AdvancedTaxOrchestrator:
                 processing_time=processing_time,
                 request_id=request_id,
                 requires_human_review=self._requires_human_review(
-                    final_confidence,
-                    validation_result,
-                    decomposition.complexity
-                )
+                    final_confidence, validation_result, decomposition.complexity
+                ),
             )
 
         except Exception as exc:
@@ -138,7 +130,7 @@ class AdvancedTaxOrchestrator:
                     client_id=client_id,
                     conversation_id=conversation_id,
                     context=context,
-                    require_citations=require_citations
+                    require_citations=require_citations,
                 )
                 return AdvancedTaxResponse(
                     query=query,
@@ -147,11 +139,11 @@ class AdvancedTaxOrchestrator:
                     memory_context=[],
                     validation=None,
                     final_confidence=basic_response.confidence,
-                    processing_time=(datetime.now(timezone.utc) - start_time).total_seconds(),
+                    processing_time=(datetime.now(UTC) - start_time).total_seconds(),
                     request_id=request_id,
                     requires_human_review=basic_response.confidence < 0.7,
                     fallback_used=True,
-                    error_message=str(exc)
+                    error_message=str(exc),
                 )
             except Exception as fallback_exc:
                 logger.error(f"[{request_id}] Fallback also failed: {fallback_exc}")
@@ -172,9 +164,11 @@ class AdvancedTaxOrchestrator:
             result = await asyncio.to_thread(self.dtda.decompose_task, query, dtda_context)
 
             # Log decomposition results
-            logger.info(f"DTDA Result: Plan={result.execution_plan.value}, "
-                       f"Complexity={result.complexity:.2f}, "
-                       f"Tasks={len(result.subtasks) if result.subtasks else 0}")
+            logger.info(
+                f"DTDA Result: Plan={result.execution_plan.value}, "
+                f"Complexity={result.complexity:.2f}, "
+                f"Tasks={len(result.subtasks) if result.subtasks else 0}"
+            )
 
             return result
 
@@ -188,17 +182,13 @@ class AdvancedTaxOrchestrator:
                 subtasks=[],
                 dependency_graph={},
                 estimated_cost=0.10,
-                estimated_time=60
+                estimated_time=60,
             )
 
-    async def _retrieve_context(self, query: str, client_id: str) -> List[MemoryResult]:
+    async def _retrieve_context(self, query: str, client_id: str) -> list[MemoryResult]:
         """Use IMRA to retrieve relevant context from the 5-tier memory system."""
         try:
-            retrieval_context = RetrievalContext(
-                query=query,
-                client_id=client_id,
-                max_results=10
-            )
+            retrieval_context = RetrievalContext(query=query, client_id=client_id, max_results=10)
 
             results = await asyncio.to_thread(self.imra.retrieve_context, retrieval_context)
 
@@ -219,23 +209,21 @@ class AdvancedTaxOrchestrator:
         self,
         query: str,
         decomposition: DecompositionResult,
-        memory_context: List[MemoryResult],
+        memory_context: list[MemoryResult],
         client_id: str,
         conversation_id: str | None,
-        require_citations: bool
+        require_citations: bool,
     ) -> AgentMessage:
         """Execute AI processing using the enhanced context and routing."""
 
         # Determine the best agent based on DTDA task type
         agent_role = self.task_type_agent_mapping.get(
             decomposition.task_type,
-            AgentRole.MASTER  # Default fallback
+            AgentRole.MASTER,  # Default fallback
         )
 
         # Enhance query with decomposition insights and memory context
-        enhanced_query = self._enhance_query_with_context(
-            query, decomposition, memory_context
-        )
+        enhanced_query = self._enhance_query_with_context(query, decomposition, memory_context)
 
         # Build enhanced context for the AI orchestrator
         enhanced_context = {
@@ -263,7 +251,7 @@ class AdvancedTaxOrchestrator:
             client_id=client_id,
             conversation_id=conversation_id,
             context=enhanced_context,
-            require_citations=require_citations
+            require_citations=require_citations,
         )
 
         # Override the agent role to reflect our intelligent routing
@@ -272,10 +260,7 @@ class AdvancedTaxOrchestrator:
         return response
 
     async def _validate_response(
-        self,
-        response_content: str,
-        task_type: str,
-        context: dict[str, Any] | None
+        self, response_content: str, task_type: str, context: dict[str, Any] | None
     ) -> ValidationResult | None:
         """Use SHVA to validate the AI response."""
         try:
@@ -291,11 +276,15 @@ class AdvancedTaxOrchestrator:
             if task_type_str in ("tax_preparation", "tax_planning", "financial_analysis"):
                 validation_result = await asyncio.to_thread(self.shva.validate_output, response_data, "tax_analysis")
             else:
-                validation_result = await asyncio.to_thread(self.shva.validate_output, response_data, "general_response")
+                validation_result = await asyncio.to_thread(
+                    self.shva.validate_output, response_data, "general_response"
+                )
 
-            logger.info(f"SHVA validation: valid={validation_result.is_valid}, "
-                       f"confidence={validation_result.confidence_score:.3f}, "
-                       f"auto_healings={len(validation_result.healing_log)}")
+            logger.info(
+                f"SHVA validation: valid={validation_result.is_valid}, "
+                f"confidence={validation_result.confidence_score:.3f}, "
+                f"auto_healings={len(validation_result.healing_log)}"
+            )
 
             return validation_result
 
@@ -304,10 +293,7 @@ class AdvancedTaxOrchestrator:
             return None
 
     def _enhance_query_with_context(
-        self,
-        original_query: str,
-        decomposition: DecompositionResult,
-        memory_context: List[MemoryResult]
+        self, original_query: str, decomposition: DecompositionResult, memory_context: list[MemoryResult]
     ) -> str:
         """Enhance the original query with insights from decomposition and memory."""
 
@@ -339,10 +325,7 @@ class AdvancedTaxOrchestrator:
         return enhanced_query
 
     def _calculate_final_confidence(
-        self,
-        ai_confidence: float,
-        validation_confidence: float,
-        complexity: float
+        self, ai_confidence: float, validation_confidence: float, complexity: float
     ) -> float:
         """Calculate final confidence score combining all factors."""
 
@@ -355,18 +338,15 @@ class AdvancedTaxOrchestrator:
         complexity_factor = min(1.0, complexity / 10.0)
 
         final_score = (
-            ai_confidence * ai_weight +
-            validation_confidence * validation_weight +
-            complexity_factor * complexity_weight
+            ai_confidence * ai_weight
+            + validation_confidence * validation_weight
+            + complexity_factor * complexity_weight
         )
 
         return round(final_score, 3)
 
     def _requires_human_review(
-        self,
-        final_confidence: float,
-        validation_result: ValidationResult | None,
-        complexity: float
+        self, final_confidence: float, validation_result: ValidationResult | None, complexity: float
     ) -> bool:
         """Determine if human review is required."""
 
@@ -395,7 +375,7 @@ class AdvancedTaxResponse:
         query: str,
         response: AgentMessage,
         decomposition: DecompositionResult | None,
-        memory_context: List[MemoryResult],
+        memory_context: list[MemoryResult],
         validation: ValidationResult | None,
         final_confidence: float,
         processing_time: float,
@@ -434,12 +414,16 @@ class AdvancedTaxResponse:
             },
             "decomposition": {
                 "execution_plan": self.decomposition.execution_plan.value if self.decomposition else None,
-                "task_type": self.decomposition.task_type.value if self.decomposition and hasattr(self.decomposition.task_type, "value") else (str(self.decomposition.task_type) if self.decomposition else None),
+                "task_type": self.decomposition.task_type.value
+                if self.decomposition and hasattr(self.decomposition.task_type, "value")
+                else (str(self.decomposition.task_type) if self.decomposition else None),
                 "complexity": self.decomposition.complexity if self.decomposition else None,
                 "subtasks": [vars(task) for task in (self.decomposition.subtasks or [])] if self.decomposition else [],
                 "estimated_cost": self.decomposition.estimated_cost if self.decomposition else None,
                 "estimated_time": self.decomposition.estimated_time if self.decomposition else None,
-            } if self.decomposition else None,
+            }
+            if self.decomposition
+            else None,
             "memory_context": [
                 {
                     "tier": mem.tier,
@@ -455,7 +439,9 @@ class AdvancedTaxResponse:
                 "errors": [vars(err) for err in (self.validation.errors or [])] if self.validation else [],
                 "healing_log": self.validation.healing_log if self.validation else [],
                 "requires_human_review": self.validation.requires_human_review if self.validation else None,
-            } if self.validation else None,
+            }
+            if self.validation
+            else None,
             "final_confidence": self.final_confidence,
             "processing_time": self.processing_time,
             "requires_human_review": self.requires_human_review,

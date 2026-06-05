@@ -9,7 +9,7 @@ from __future__ import annotations
 import hmac
 import logging
 import re
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import httpx
@@ -68,9 +68,7 @@ def _verify_oauth_state(state: str) -> str | None:
     return user_id
 
 
-def _integration_catalog(
-    status_map: dict[str, bool], configured_map: dict[str, bool]
-) -> list[dict[str, Any]]:
+def _integration_catalog(status_map: dict[str, bool], configured_map: dict[str, bool]) -> list[dict[str, Any]]:
     return [
         {
             "id": "google",
@@ -101,13 +99,9 @@ async def list_integrations(
     user_id = _resolve_user_id(current_user, user_id)
     manager = request.app.state.integration_manager
     configured_map = {
-        provider: bool(manager.get_provider(provider).is_configured)
-        for provider in manager.list_provider_names()
+        provider: bool(manager.get_provider(provider).is_configured) for provider in manager.list_provider_names()
     }
-    status_map = {
-        provider: await manager.is_connected(user_id, provider)
-        for provider in manager.list_provider_names()
-    }
+    status_map = {provider: await manager.is_connected(user_id, provider) for provider in manager.list_provider_names()}
     return {
         "user_id": user_id,
         "integrations": _integration_catalog(status_map, configured_map),
@@ -202,7 +196,9 @@ async def disconnect_integration(body: DisconnectRequest, request: Request, curr
 
 
 @router.get("/status/{provider}")
-async def integration_status(provider: str, request: Request, current_user: CurrentUser, user_id: str = Query(default=None)):
+async def integration_status(
+    provider: str, request: Request, current_user: CurrentUser, user_id: str = Query(default=None)
+):
     """Get integration status. Requires authentication."""
     user_id = _resolve_user_id(current_user, user_id)
     manager = request.app.state.integration_manager
@@ -356,7 +352,7 @@ async def quickbooks_balance_sheet(
     _quickbooks_circuit_check(request)
     cb = getattr(request.app.state, "circuit_breaker", None)
     if not as_of:
-        today = datetime.now(timezone.utc).date()
+        today = datetime.now(UTC).date()
         first = today.replace(day=1)
         end_prior = first - timedelta(days=1)
         as_of = end_prior.isoformat()
@@ -389,9 +385,7 @@ async def quickbooks_vendors(
     _quickbooks_circuit_check(request)
     cb = getattr(request.app.state, "circuit_breaker", None)
     try:
-        vendors = await provider.get_vendors(
-            access_token=access_token, realm_id=realm_id, max_results=max_results
-        )
+        vendors = await provider.get_vendors(access_token=access_token, realm_id=realm_id, max_results=max_results)
         if cb:
             cb.record_success(QB_AGENT_ID)
         return {"user_id": user_id, "provider": "quickbooks", "count": len(vendors), "vendors": vendors}

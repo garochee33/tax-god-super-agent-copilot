@@ -116,9 +116,7 @@ async def create_client(body: ClientCreate, current_user: CurrentUser, db: DBSes
 @router.get("/{client_id}", response_model=ClientResponse)
 async def get_client(client_id: str, current_user: CurrentUser, db: DBSession):
     """Get a single client by ID."""
-    result = await db.execute(
-        select(Client).where(Client.id == client_id, Client.owner_id == current_user.id)
-    )
+    result = await db.execute(select(Client).where(Client.id == client_id, Client.owner_id == current_user.id))
     client = result.scalar_one_or_none()
     if not client:
         raise HTTPException(status_code=404, detail="Client not found")
@@ -126,13 +124,9 @@ async def get_client(client_id: str, current_user: CurrentUser, db: DBSession):
 
 
 @router.patch("/{client_id}", response_model=ClientResponse)
-async def update_client(
-    client_id: str, body: ClientUpdate, current_user: CurrentUser, db: DBSession
-):
+async def update_client(client_id: str, body: ClientUpdate, current_user: CurrentUser, db: DBSession):
     """Update an existing client."""
-    result = await db.execute(
-        select(Client).where(Client.id == client_id, Client.owner_id == current_user.id)
-    )
+    result = await db.execute(select(Client).where(Client.id == client_id, Client.owner_id == current_user.id))
     client = result.scalar_one_or_none()
     if not client:
         raise HTTPException(status_code=404, detail="Client not found")
@@ -151,9 +145,7 @@ async def update_client(
 @router.delete("/{client_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_client(client_id: str, current_user: CurrentUser, db: DBSession):
     """Delete a client."""
-    result = await db.execute(
-        select(Client).where(Client.id == client_id, Client.owner_id == current_user.id)
-    )
+    result = await db.execute(select(Client).where(Client.id == client_id, Client.owner_id == current_user.id))
     client = result.scalar_one_or_none()
     if not client:
         raise HTTPException(status_code=404, detail="Client not found")

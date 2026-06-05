@@ -23,19 +23,13 @@ class ClientStatus(str, Enum):
 class Client(Base):
     __tablename__ = "clients"
 
-    id: Mapped[str] = mapped_column(
-        String(36), primary_key=True, default=lambda: str(uuid4())
-    )
-    owner_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("users.id"), nullable=False, index=True
-    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
+    owner_id: Mapped[str] = mapped_column(String(36), ForeignKey("users.id"), nullable=False, index=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     email: Mapped[str | None] = mapped_column(String(255), nullable=True)
     phone: Mapped[str | None] = mapped_column(String(50), nullable=True)
     company: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    status: Mapped[str] = mapped_column(
-        String(50), default=ClientStatus.ACTIVE.value, nullable=False
-    )
+    status: Mapped[str] = mapped_column(String(50), default=ClientStatus.ACTIVE.value, nullable=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     tax_id: Mapped[str | None] = mapped_column(String(50), nullable=True)
     filing_type: Mapped[str | None] = mapped_column(String(50), nullable=True)

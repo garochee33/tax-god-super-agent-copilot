@@ -14,8 +14,9 @@ from __future__ import annotations
 
 import logging
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +24,7 @@ logger = logging.getLogger(__name__)
 @dataclass
 class CircuitBreakerConfig:
     """Configuration for the circuit breaker."""
+
     error_threshold_percent: float = 50.0
     window_sec: float = 300.0  # 5 min
     pause_duration_sec: float = 300.0  # 5 min
@@ -33,6 +35,7 @@ class CircuitBreakerConfig:
 @dataclass
 class CircuitState:
     """State for one agent's circuit."""
+
     agent_id: str
     state: str  # "closed" | "open" | "half-open"
     total_calls: int = 0
@@ -52,6 +55,7 @@ class CircuitState:
 @dataclass
 class CanExecuteResult:
     """Result of can_execute check."""
+
     allowed: bool
     state: str
     reason: str | None = None

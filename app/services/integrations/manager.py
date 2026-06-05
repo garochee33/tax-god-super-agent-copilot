@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import json
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from sqlalchemy import text
@@ -91,9 +91,7 @@ class IntegrationManager:
         raw = self._fernet.decrypt(payload_encrypted.encode())
         return json.loads(raw.decode())
 
-    async def save_credentials(
-        self, user_id: str, provider: str, credentials: dict[str, Any]
-    ) -> None:
+    async def save_credentials(self, user_id: str, provider: str, credentials: dict[str, Any]) -> None:
         creds = OAuthCredentials.from_token_response(credentials)
         payload = creds.to_dict()
         key = self._token_key(user_id, provider)
@@ -228,7 +226,7 @@ class IntegrationManager:
             "expires_at": token.expires_at.isoformat() if token.expires_at else None,
             "is_expired": token.is_expired(),
             "has_refresh_token": bool(token.refresh_token),
-            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(UTC).isoformat(),
         }
 
     async def _load_all_credentials(self) -> list[tuple[str, str, OAuthCredentials]]:
@@ -265,7 +263,7 @@ class IntegrationManager:
         scanned = 0
         failed = 0
 
-        deadline = datetime.now(timezone.utc) + timedelta(minutes=refresh_within_minutes)
+        deadline = datetime.now(UTC) + timedelta(minutes=refresh_within_minutes)
         records = await self._load_all_credentials()
 
         for user_id, provider_name, creds in records:
@@ -278,9 +276,7 @@ class IntegrationManager:
                 continue
 
             try:
-                refreshed_payload = await provider.refresh_token(
-                    creds.refresh_token, metadata=creds.metadata
-                )
+                refreshed_payload = await provider.refresh_token(creds.refresh_token, metadata=creds.metadata)
                 merged = {**refreshed_payload}
                 if "refresh_token" not in merged:
                     merged["refresh_token"] = creds.refresh_token

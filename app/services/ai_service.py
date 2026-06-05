@@ -19,7 +19,7 @@ import time
 import uuid
 from collections import OrderedDict
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
@@ -39,27 +39,29 @@ settings = get_settings()
 # Agent Types & State
 # ---------------------------------------------------------------------------
 
+
 class AgentRole(str, Enum):
-    MASTER = "master"                  # Orchestrator / client-facing
+    MASTER = "master"  # Orchestrator / client-facing
     TAX_COMPLIANCE = "tax_compliance"  # IRS forms, calculations, filings
-    LEGAL_COUNSEL = "legal_counsel"    # Entity structuring, contracts, compliance
-    FINANCIAL_ANALYST = "financial"    # CFO-grade analysis, valuations, forecasts
-    RESEARCH = "research"             # Regulatory monitoring, case law, intelligence
-    DOCUMENT_PROCESSOR = "document"   # OCR, extraction, form pre-fill
-    AUDIT_DEFENSE = "audit_defense"   # Audit response, penalty abatement
+    LEGAL_COUNSEL = "legal_counsel"  # Entity structuring, contracts, compliance
+    FINANCIAL_ANALYST = "financial"  # CFO-grade analysis, valuations, forecasts
+    RESEARCH = "research"  # Regulatory monitoring, case law, intelligence
+    DOCUMENT_PROCESSOR = "document"  # OCR, extraction, form pre-fill
+    AUDIT_DEFENSE = "audit_defense"  # Audit response, penalty abatement
 
 
 class ResponseConfidence(str, Enum):
-    HIGH = "high"          # >= 0.85 - deliver directly
-    MEDIUM = "medium"      # 0.70-0.84 - deliver with caveat
-    LOW = "low"            # 0.50-0.69 - escalate to higher model
+    HIGH = "high"  # >= 0.85 - deliver directly
+    MEDIUM = "medium"  # 0.70-0.84 - deliver with caveat
+    LOW = "low"  # 0.50-0.69 - escalate to higher model
     VERY_LOW = "very_low"  # < 0.50 - flag for human review
 
 
 @dataclass
 class AgentMessage:
     """A message in the multi-agent conversation."""
-    role: str               # "user", "assistant", "system", "tool"
+
+    role: str  # "user", "assistant", "system", "tool"
     content: str
     agent: AgentRole | None = None
     model_used: str = ""
@@ -67,13 +69,14 @@ class AgentMessage:
     citations: list[dict[str, str]] = field(default_factory=list)
     cost_usd: float = 0.0
     latency_sec: float = 0.0
-    timestamp: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    timestamp: datetime = field(default_factory=lambda: datetime.now(UTC))
     metadata: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
 class ConversationState:
     """Full state for a multi-agent conversation."""
+
     conversation_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     client_id: str = ""
     messages: list[AgentMessage] = field(default_factory=list)
@@ -103,7 +106,6 @@ CRITICAL RULES:
 7. Proactively identify savings opportunities the client may have missed.
 
 You orchestrate specialist agents when needed. For complex queries, delegate to the appropriate specialist.""",
-
     AgentRole.TAX_COMPLIANCE: """You are the Tax Compliance Engine within Tax God.
 Your expertise covers all IRS forms, state tax returns, payroll filings, and compliance deadlines.
 
@@ -117,7 +119,6 @@ SPECIALTIES:
 
 Always cite the specific form, line number, and IRC section that applies.
 Provide exact calculations with step-by-step workings when doing tax math.""",
-
     AgentRole.LEGAL_COUNSEL: """You are the Legal Strategy Counsel within Tax God.
 You provide sophisticated legal advisory on entity structuring, contracts, and regulatory compliance.
 
@@ -130,7 +131,6 @@ SPECIALTIES:
 
 CRITICAL: Always note "This is legal information, not legal advice. Retain licensed counsel for formal representation."
 Cite relevant statutes, UCC provisions, and state-specific rules.""",
-
     AgentRole.FINANCIAL_ANALYST: """You are the Financial Analysis Officer within Tax God.
 You provide CFO-grade financial analysis, modeling, and strategic advisory.
 
@@ -144,7 +144,6 @@ SPECIALTIES:
 
 Provide concrete numbers, formulas, and scenario comparisons.
 Use tables for side-by-side analysis. Show your assumptions clearly.""",
-
     AgentRole.RESEARCH: """You are the Research & Intelligence System within Tax God.
 You monitor regulatory changes, research case law, and provide intelligence briefings.
 
@@ -157,7 +156,6 @@ SPECIALTIES:
 - Industry-specific guidance
 
 Always provide: (1) Primary source citation, (2) Effective date, (3) Impact assessment, (4) Recommended action.""",
-
     AgentRole.AUDIT_DEFENSE: """You are the Audit Defense Team within Tax God.
 You prepare clients for IRS and state audits, respond to notices, and negotiate resolutions.
 
@@ -182,42 +180,120 @@ Format responses suitable for IRS correspondence.""",
 # Keywords that route to specific specialist agents
 _ROUTING_KEYWORDS: dict[AgentRole, list[str]] = {
     AgentRole.TAX_COMPLIANCE: [
-        "form 1040", "1120", "1065", "1041", "schedule", "filing",
-        "tax return", "w-2", "1099", "payroll", "941", "940",
-        "estimated tax", "extension", "amended", "1040-x",
-        "deduction", "credit", "withholding", "refund",
-        "capital gains", "depreciation", "section 179",
-        "home office", "self-employment", "schedule c",
-        "rental", "schedule e", "crypto tax", "form 8949",
+        "form 1040",
+        "1120",
+        "1065",
+        "1041",
+        "schedule",
+        "filing",
+        "tax return",
+        "w-2",
+        "1099",
+        "payroll",
+        "941",
+        "940",
+        "estimated tax",
+        "extension",
+        "amended",
+        "1040-x",
+        "deduction",
+        "credit",
+        "withholding",
+        "refund",
+        "capital gains",
+        "depreciation",
+        "section 179",
+        "home office",
+        "self-employment",
+        "schedule c",
+        "rental",
+        "schedule e",
+        "crypto tax",
+        "form 8949",
     ],
     AgentRole.LEGAL_COUNSEL: [
-        "entity", "llc", "s-corp", "c-corp", "corporation",
-        "operating agreement", "shareholder", "buy-sell",
-        "contract", "formation", "restructuring", "dissolution",
-        "securities", "reg d", "asset protection", "trust",
-        "prenuptial", "lease", "employment agreement",
-        "ip licensing", "joint venture", "erisa", "gdpr", "ccpa",
+        "entity",
+        "llc",
+        "s-corp",
+        "c-corp",
+        "corporation",
+        "operating agreement",
+        "shareholder",
+        "buy-sell",
+        "contract",
+        "formation",
+        "restructuring",
+        "dissolution",
+        "securities",
+        "reg d",
+        "asset protection",
+        "trust",
+        "prenuptial",
+        "lease",
+        "employment agreement",
+        "ip licensing",
+        "joint venture",
+        "erisa",
+        "gdpr",
+        "ccpa",
     ],
     AgentRole.FINANCIAL_ANALYST: [
-        "valuation", "dcf", "cash flow", "forecast", "budget",
-        "financial statement", "p&l", "balance sheet",
-        "m&a", "merger", "acquisition", "due diligence",
-        "capital raising", "pitch deck", "kpi", "roi",
-        "working capital", "break-even", "scenario analysis",
+        "valuation",
+        "dcf",
+        "cash flow",
+        "forecast",
+        "budget",
+        "financial statement",
+        "p&l",
+        "balance sheet",
+        "m&a",
+        "merger",
+        "acquisition",
+        "due diligence",
+        "capital raising",
+        "pitch deck",
+        "kpi",
+        "roi",
+        "working capital",
+        "break-even",
+        "scenario analysis",
     ],
     AgentRole.RESEARCH: [
-        "regulation", "ruling", "revenue procedure", "case law",
-        "tax court", "circuit court", "supreme court",
-        "legislative", "treaty", "irs notice", "guidance",
-        "what changed", "new law", "effective date",
-        "research", "precedent", "interpretation",
+        "regulation",
+        "ruling",
+        "revenue procedure",
+        "case law",
+        "tax court",
+        "circuit court",
+        "supreme court",
+        "legislative",
+        "treaty",
+        "irs notice",
+        "guidance",
+        "what changed",
+        "new law",
+        "effective date",
+        "research",
+        "precedent",
+        "interpretation",
     ],
     AgentRole.AUDIT_DEFENSE: [
-        "audit", "irs notice", "cp2000", "examination",
-        "penalty", "abatement", "offer in compromise",
-        "innocent spouse", "installment", "collections",
-        "idr", "information document request", "tax court petition",
-        "appeal", "protest", "reasonable cause",
+        "audit",
+        "irs notice",
+        "cp2000",
+        "examination",
+        "penalty",
+        "abatement",
+        "offer in compromise",
+        "innocent spouse",
+        "installment",
+        "collections",
+        "idr",
+        "information document request",
+        "tax court petition",
+        "appeal",
+        "protest",
+        "reasonable cause",
     ],
 }
 
@@ -243,6 +319,7 @@ def route_to_agent(query: str, context: dict[str, Any] | None = None) -> AgentRo
 # LLM Clients
 # ---------------------------------------------------------------------------
 
+
 class LLMClient:
     """Unified interface for calling OpenAI and Anthropic models."""
 
@@ -253,12 +330,14 @@ class LLMClient:
     def _get_openai(self):
         if self._openai_client is None:
             from openai import AsyncOpenAI
+
             self._openai_client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
         return self._openai_client
 
     def _get_anthropic(self):
         if self._anthropic_client is None:
             from anthropic import AsyncAnthropic
+
             self._anthropic_client = AsyncAnthropic(api_key=settings.ANTHROPIC_API_KEY)
         return self._anthropic_client
 
@@ -288,16 +367,19 @@ class LLMClient:
             # Auto-fallback: if OpenAI fails, try Anthropic (and vice versa)
             fallback_provider = "anthropic" if provider == "openai" else "openai"
             fallback_model = (
-                settings.MODEL_CLAUDE_SONNET if fallback_provider == "anthropic"
-                else settings.MODEL_GPT4O_MINI
+                settings.MODEL_CLAUDE_SONNET if fallback_provider == "anthropic" else settings.MODEL_GPT4O_MINI
             )
             logger.warning(
                 "Primary provider %s failed (%s), falling back to %s",
-                provider, primary_err, fallback_provider,
+                provider,
+                primary_err,
+                fallback_provider,
             )
             try:
                 if fallback_provider == "anthropic":
-                    result = await self._call_anthropic(fallback_model, system_prompt, messages, temperature, max_tokens)
+                    result = await self._call_anthropic(
+                        fallback_model, system_prompt, messages, temperature, max_tokens
+                    )
                 else:
                     result = await self._call_openai(fallback_model, system_prompt, messages, temperature, max_tokens)
             except Exception as fallback_err:
@@ -323,7 +405,7 @@ class LLMClient:
                 ),
                 timeout=60.0,
             )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             raise TimeoutError(f"OpenAI call to {model} timed out after 60s")
 
         choice = response.choices[0]
@@ -353,7 +435,7 @@ class LLMClient:
                 ),
                 timeout=60.0,
             )
-        except asyncio.TimeoutError:
+        except TimeoutError:
             raise TimeoutError(f"Anthropic call to {model} timed out after 60s")
 
         content = ""
@@ -374,6 +456,7 @@ class LLMClient:
 # Confidence Scorer
 # ---------------------------------------------------------------------------
 
+
 def score_confidence(response: str, query: str, complexity: int) -> float:
     """
     Heuristic confidence scoring for a response.
@@ -382,14 +465,22 @@ def score_confidence(response: str, query: str, complexity: int) -> float:
     score = 0.7  # base
 
     # Citation presence boosts confidence
-    citation_signals = ["irc §", "section", "reg.", "rev. rul.", "rev. proc.",
-                        "treas. reg.", "pub.", "form ", "schedule "]
+    citation_signals = [
+        "irc §",
+        "section",
+        "reg.",
+        "rev. rul.",
+        "rev. proc.",
+        "treas. reg.",
+        "pub.",
+        "form ",
+        "schedule ",
+    ]
     citation_count = sum(1 for s in citation_signals if s in response.lower())
     score += min(citation_count * 0.03, 0.15)
 
     # Hedging language (appropriate caution) is good
-    caution_signals = ["consult", "professional", "disclaimer", "generally",
-                       "depends on", "may vary", "subject to"]
+    caution_signals = ["consult", "professional", "disclaimer", "generally", "depends on", "may vary", "subject to"]
     caution_count = sum(1 for s in caution_signals if s in response.lower())
     score += min(caution_count * 0.02, 0.08)
 
@@ -423,6 +514,7 @@ def confidence_level(score: float) -> ResponseConfidence:
 # AI Orchestrator (Main Service)
 # ---------------------------------------------------------------------------
 
+
 class AIOrchestrator:
     """
     The main AI service that orchestrates multi-agent workflows.
@@ -451,9 +543,7 @@ class AIOrchestrator:
             for _ in range(min(self._EVICT_COUNT, len(self._conversations))):
                 self._conversations.popitem(last=False)
 
-    def get_or_create_conversation(
-        self, conversation_id: str | None = None, client_id: str = ""
-    ) -> ConversationState:
+    def get_or_create_conversation(self, conversation_id: str | None = None, client_id: str = "") -> ConversationState:
         if conversation_id and conversation_id in self._conversations:
             self._conversations.move_to_end(conversation_id)
             return self._conversations[conversation_id]
@@ -481,9 +571,7 @@ class AIOrchestrator:
         state.context = context or {}
 
         # Step 1: Cost estimation + cache check
-        estimate = await self.governor.estimate(
-            query=query, client_id=client_id, task_type=task_type, context=context
-        )
+        estimate = await self.governor.estimate(query=query, client_id=client_id, task_type=task_type, context=context)
 
         # Cache hit -- return immediately
         if estimate.cache_hit:
@@ -513,7 +601,7 @@ class AIOrchestrator:
             msg = AgentMessage(
                 role="assistant",
                 content=f"I apologize, but this query cannot be processed at this time. {estimate.rejection_reason}. "
-                        f"Please contact support or try a simpler question.",
+                f"Please contact support or try a simpler question.",
                 agent=AgentRole.MASTER,
                 confidence=1.0,
                 metadata={
@@ -537,7 +625,9 @@ class AIOrchestrator:
         # Step 3: Build message history for the LLM
         system_prompt = SYSTEM_PROMPTS.get(agent_role, SYSTEM_PROMPTS[AgentRole.MASTER])
         if require_citations:
-            system_prompt += "\n\nIMPORTANT: Always cite specific IRC sections, Treasury Regulations, or case law for every claim."
+            system_prompt += (
+                "\n\nIMPORTANT: Always cite specific IRC sections, Treasury Regulations, or case law for every claim."
+            )
 
         chat_messages = self._build_chat_messages(state, query)
 
@@ -586,9 +676,7 @@ class AIOrchestrator:
 
         # Step 7: Self-healing -- escalate if low confidence
         if conf_level in (ResponseConfidence.LOW, ResponseConfidence.VERY_LOW):
-            escalated = await self._escalate(
-                query, state, system_prompt, chat_messages, conf_score, result
-            )
+            escalated = await self._escalate(query, state, system_prompt, chat_messages, conf_score, result)
             if escalated:
                 result = escalated["result"]
                 conf_score = escalated["confidence"]
@@ -695,14 +783,18 @@ class AIOrchestrator:
             return None
 
         # Budget check for escalation
-        est_cost = (2000 / 1_000_000) * target_spec.input_cost_per_1m + (4000 / 1_000_000) * target_spec.output_cost_per_1m
+        est_cost = (2000 / 1_000_000) * target_spec.input_cost_per_1m + (
+            4000 / 1_000_000
+        ) * target_spec.output_cost_per_1m
         approved, _ = await self.governor.budget.check_budget(state.client_id, est_cost)
         if not approved:
             return None
 
         logger.info(
             "Escalating from %s (conf=%.2f) to %s",
-            current_model, original_confidence, target_model_name,
+            current_model,
+            original_confidence,
+            target_model_name,
         )
 
         enhanced_prompt = system_prompt + (
@@ -731,9 +823,7 @@ class AIOrchestrator:
 
     # -- Helpers ------------------------------------------------------------
 
-    def _build_chat_messages(
-        self, state: ConversationState, current_query: str
-    ) -> list[dict[str, str]]:
+    def _build_chat_messages(self, state: ConversationState, current_query: str) -> list[dict[str, str]]:
         """Build the message list for the LLM from conversation history."""
         messages = []
 
@@ -746,9 +836,7 @@ class AIOrchestrator:
         messages.append({"role": "user", "content": current_query})
         return messages
 
-    async def get_conversation_history(
-        self, conversation_id: str
-    ) -> list[dict[str, Any]]:
+    async def get_conversation_history(self, conversation_id: str) -> list[dict[str, Any]]:
         state = self._conversations.get(conversation_id)
         if not state:
             return []

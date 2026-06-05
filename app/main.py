@@ -5,8 +5,8 @@ Multi-agent tax, legal & financial AI co-pilot.
 
 from __future__ import annotations
 
-import logging
 import json
+import logging
 import time
 from contextlib import asynccontextmanager
 from typing import Any
@@ -14,26 +14,26 @@ from typing import Any
 import redis.asyncio as aioredis
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from fastapi.responses import Response
+from fastapi.responses import JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Gauge, Histogram, generate_latest
 
 from app.core.config import Environment, get_settings
-from app.core.database import check_database_health, engine as db_engine
-from app.middleware.security import RequestIdMiddleware, SecurityHeadersMiddleware, RateLimitMiddleware
-from app.services.ai_service import AIOrchestrator
+from app.core.database import check_database_health
+from app.core.database import engine as db_engine
+from app.middleware.security import RateLimitMiddleware, RequestIdMiddleware, SecurityHeadersMiddleware
 from app.services.advanced_orchestrator import AdvancedTaxOrchestrator
 from app.services.agent_gabriel import AgentGabriel
-from app.services.citation_engine import CitationEngine
+from app.services.ai_service import AIOrchestrator
 from app.services.circuit_breaker import CircuitBreaker, CircuitBreakerConfig
+from app.services.citation_engine import CitationEngine
 from app.services.cost_governor import CostGovernor
+from app.services.integrations.google_service import GoogleService
+from app.services.integrations.manager import IntegrationManager
+from app.services.integrations.quickbooks_service import QuickBooksService
 from app.services.parallel_processor import ParallelProcessor
 from app.services.tax_writer import TaxWriter
-from app.services.integrations.manager import IntegrationManager
-from app.services.integrations.google_service import GoogleService
-from app.services.integrations.quickbooks_service import QuickBooksService
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -55,6 +55,7 @@ SERVICE_UP = Gauge("taxgod_service_up", "Tax God service process status")
 # ---------------------------------------------------------------------------
 # Application Lifespan (startup / shutdown)
 # ---------------------------------------------------------------------------
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -84,25 +85,31 @@ async def lifespan(app: FastAPI):
     # Initialize Integrations
     integration_manager = IntegrationManager(db_engine=db_engine)
     await integration_manager.initialize_storage()
-    integration_manager.register(GoogleService(
-        client_id=settings.GOOGLE_CLIENT_ID,
-        client_secret=settings.GOOGLE_CLIENT_SECRET,
-        redirect_uri=settings.GOOGLE_REDIRECT_URI
-    ))
-    integration_manager.register(QuickBooksService(
-        client_id=settings.QUICKBOOKS_CLIENT_ID,
-        client_secret=settings.QUICKBOOKS_CLIENT_SECRET,
-        redirect_uri=settings.QUICKBOOKS_REDIRECT_URI
-    ))
+    integration_manager.register(
+        GoogleService(
+            client_id=settings.GOOGLE_CLIENT_ID,
+            client_secret=settings.GOOGLE_CLIENT_SECRET,
+            redirect_uri=settings.GOOGLE_REDIRECT_URI,
+        )
+    )
+    integration_manager.register(
+        QuickBooksService(
+            client_id=settings.QUICKBOOKS_CLIENT_ID,
+            client_secret=settings.QUICKBOOKS_CLIENT_SECRET,
+            redirect_uri=settings.QUICKBOOKS_REDIRECT_URI,
+        )
+    )
 
     # Circuit breaker for external APIs (Trinity GEM)
-    circuit_breaker = CircuitBreaker(CircuitBreakerConfig(
-        error_threshold_percent=50.0,
-        window_sec=300.0,
-        pause_duration_sec=300.0,
-        min_calls_before_trip=4,
-        half_open_max_probes=2,
-    ))
+    circuit_breaker = CircuitBreaker(
+        CircuitBreakerConfig(
+            error_threshold_percent=50.0,
+            window_sec=300.0,
+            pause_duration_sec=300.0,
+            min_calls_before_trip=4,
+            half_open_max_probes=2,
+        )
+    )
 
     # Attach services to app state for dependency injection
     app.state.redis = redis_client
@@ -150,7 +157,9 @@ app.add_middleware(
 )
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=list(settings.ALLOWED_ORIGINS) if settings.is_production else list(
+    allow_origins=list(settings.ALLOWED_ORIGINS)
+    if settings.is_production
+    else list(
         {
             *settings.ALLOWED_ORIGINS,
             "http://127.0.0.1:3000",
@@ -190,6 +199,7 @@ async def metrics_middleware(request: Request, call_next):
 # ---------------------------------------------------------------------------
 # Health Check
 # ---------------------------------------------------------------------------
+
 
 @app.get("/health")
 async def health_check():
@@ -239,7 +249,8 @@ async def health_detailed(request: Request):
 
     db_ok = await check_database_health(db_engine)
     configured_providers = [
-        p for p in integration_manager.list_provider_names()
+        p
+        for p in integration_manager.list_provider_names()
         if integration_manager.get_provider(p) and integration_manager.get_provider(p).is_configured
     ]
     status = "healthy" if (db_ok and redis_ok) else "degraded"
@@ -307,7 +318,7 @@ async def readiness_check(request: Request):
 # Register API Routers
 # ---------------------------------------------------------------------------
 
-from app.api.v1.endpoints import auth, chat, audit, documents, analytics, integrations, advanced, clients  # noqa: E402
+from app.api.v1.endpoints import advanced, analytics, audit, auth, chat, clients, documents, integrations  # noqa: E402
 
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
 app.include_router(chat.router, prefix="/api/v1/chat", tags=["AI Chat"])
@@ -325,6 +336,7 @@ app.include_router(clients.router, prefix="/api/v1/clients", tags=["Clients (Ago
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 templates = Jinja2Templates(directory="app/templates")
+
 
 @app.get("/")
 async def serve_spa(request: Request):

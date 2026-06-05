@@ -21,7 +21,6 @@ import math
 from dataclasses import dataclass
 from typing import Literal
 
-
 # Weights (match Trinity server/ai/swarm-cost-planner.ts)
 FANOUT_WEIGHT = 0.3
 DEPTH_WEIGHT = 0.4
@@ -46,6 +45,7 @@ RETRY_RESERVE_PCT = 0.15
 @dataclass
 class SwarmCostFactors:
     """Factors that influence the swarm cost multiplier."""
+
     worker_count: int
     delegation_depth: int
     expected_tool_calls: int
@@ -55,6 +55,7 @@ class SwarmCostFactors:
 @dataclass
 class SwarmCostPlan:
     """Full cost breakdown for a swarm dispatch plan."""
+
     planner_cost: float
     worker_count: int
     worker_cost_estimate: float

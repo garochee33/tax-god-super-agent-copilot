@@ -19,10 +19,11 @@ from __future__ import annotations
 import asyncio
 import logging
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, Callable, Optional
+from typing import Any
 
 from app.core.config import get_settings
 
@@ -33,6 +34,7 @@ settings = get_settings()
 # ---------------------------------------------------------------------------
 # Job Types & Data Structures
 # ---------------------------------------------------------------------------
+
 
 class JobType(str, Enum):
     DOCUMENT_BATCH = "document_batch"
@@ -47,20 +49,21 @@ class JobStatus(str, Enum):
     RUNNING = "running"
     COMPLETED = "completed"
     FAILED = "failed"
-    PARTIAL = "partial"    # some sub-tasks succeeded, some failed
+    PARTIAL = "partial"  # some sub-tasks succeeded, some failed
 
 
 @dataclass
 class SubTask:
     """A single unit of work within a parallel job."""
+
     task_id: str
-    label: str               # e.g., "California", "W-2 #3"
+    label: str  # e.g., "California", "W-2 #3"
     input_data: dict[str, Any]
     status: JobStatus = JobStatus.PENDING
     result: Any = None
     error: str = ""
-    started_at: Optional[datetime] = None
-    completed_at: Optional[datetime] = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
     retry_count: int = 0
     max_retries: int = 2
 
@@ -74,13 +77,14 @@ class SubTask:
 @dataclass
 class ParallelJob:
     """A parallel processing job with multiple sub-tasks."""
+
     job_id: str
     job_type: JobType
     client_id: str
     sub_tasks: list[SubTask]
     status: JobStatus = JobStatus.PENDING
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
-    completed_at: Optional[datetime] = None
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    completed_at: datetime | None = None
     total_cost_usd: float = 0.0
     max_concurrency: int = 10
 
@@ -111,11 +115,56 @@ class ParallelJob:
 # ---------------------------------------------------------------------------
 
 US_STATES = [
-    "AL", "AK", "AZ", "AR", "CA", "CO", "CT", "DE", "FL", "GA",
-    "HI", "ID", "IL", "IN", "IA", "KS", "KY", "LA", "ME", "MD",
-    "MA", "MI", "MN", "MS", "MO", "MT", "NE", "NV", "NH", "NJ",
-    "NM", "NY", "NC", "ND", "OH", "OK", "OR", "PA", "RI", "SC",
-    "SD", "TN", "TX", "UT", "VT", "VA", "WA", "WV", "WI", "WY",
+    "AL",
+    "AK",
+    "AZ",
+    "AR",
+    "CA",
+    "CO",
+    "CT",
+    "DE",
+    "FL",
+    "GA",
+    "HI",
+    "ID",
+    "IL",
+    "IN",
+    "IA",
+    "KS",
+    "KY",
+    "LA",
+    "ME",
+    "MD",
+    "MA",
+    "MI",
+    "MN",
+    "MS",
+    "MO",
+    "MT",
+    "NE",
+    "NV",
+    "NH",
+    "NJ",
+    "NM",
+    "NY",
+    "NC",
+    "ND",
+    "OH",
+    "OK",
+    "OR",
+    "PA",
+    "RI",
+    "SC",
+    "SD",
+    "TN",
+    "TX",
+    "UT",
+    "VT",
+    "VA",
+    "WA",
+    "WV",
+    "WI",
+    "WY",
 ]
 
 NO_INCOME_TAX_STATES = {"AK", "FL", "NV", "NH", "SD", "TN", "TX", "WA", "WY"}
@@ -124,6 +173,7 @@ NO_INCOME_TAX_STATES = {"AK", "FL", "NV", "NH", "SD", "TN", "TX", "WA", "WY"}
 # ---------------------------------------------------------------------------
 # Task Executors (the actual work functions)
 # ---------------------------------------------------------------------------
+
 
 async def _extract_document_data(task: SubTask) -> dict[str, Any]:
     """Extract data from a single document (W-2, 1099, receipt)."""
@@ -181,8 +231,7 @@ async def _research_state_tax(task: SubTask) -> dict[str, Any]:
         # Simplified state tax estimate (5% average rate for illustration)
         result["estimated_tax"] = round(income * 0.05, 2)
         result["nexus_analysis"] = (
-            f"Filing likely required in {state} for {entity_type} "
-            f"with ${income:,.0f} income sourced to this state."
+            f"Filing likely required in {state} for {entity_type} with ${income:,.0f} income sourced to this state."
         )
 
     return result
@@ -200,8 +249,12 @@ async def _run_scenario(task: SubTask) -> dict[str, Any]:
 
     # Simplified tax calculation (2024 brackets, single filer)
     brackets = [
-        (11600, 0.10), (47150, 0.12), (100525, 0.22),
-        (191950, 0.24), (243725, 0.32), (609350, 0.35),
+        (11600, 0.10),
+        (47150, 0.12),
+        (100525, 0.22),
+        (191950, 0.24),
+        (243725, 0.32),
+        (609350, 0.35),
         (float("inf"), 0.37),
     ]
 
@@ -229,8 +282,12 @@ async def _run_scenario(task: SubTask) -> dict[str, Any]:
 
 def _marginal_rate(taxable_income: float) -> float:
     brackets = [
-        (11600, 10), (47150, 12), (100525, 22),
-        (191950, 24), (243725, 32), (609350, 35),
+        (11600, 10),
+        (47150, 12),
+        (100525, 22),
+        (191950, 24),
+        (243725, 32),
+        (609350, 35),
     ]
     for limit, rate in brackets:
         if taxable_income <= limit:
@@ -248,9 +305,7 @@ async def _validate_form(task: SubTask) -> dict[str, Any]:
         computed_total = sum(item.get("amount", 0) for item in form_data["line_items"])
         reported_total = form_data.get("total", 0)
         if abs(computed_total - reported_total) > 0.01:
-            issues.append(
-                f"Total mismatch: computed ${computed_total:,.2f} vs reported ${reported_total:,.2f}"
-            )
+            issues.append(f"Total mismatch: computed ${computed_total:,.2f} vs reported ${reported_total:,.2f}")
 
     return {
         "form": form_data.get("form_type", "unknown"),
@@ -272,6 +327,7 @@ TASK_EXECUTORS: dict[JobType, Callable] = {
 # ---------------------------------------------------------------------------
 # Parallel Processor Service
 # ---------------------------------------------------------------------------
+
 
 class ParallelProcessor:
     """
@@ -308,7 +364,10 @@ class ParallelProcessor:
         self._jobs[job.job_id] = job
         logger.info(
             "Parallel job %s (%s): %d sub-tasks, concurrency=%d",
-            job.job_id, job_type.value, len(job.sub_tasks), max_concurrency,
+            job.job_id,
+            job_type.value,
+            len(job.sub_tasks),
+            max_concurrency,
         )
 
         await self._execute_job(job)
@@ -335,7 +394,7 @@ class ParallelProcessor:
             return_exceptions=True,
         )
 
-        job.completed_at = datetime.now(timezone.utc)
+        job.completed_at = datetime.now(UTC)
         if job.failed == 0:
             job.status = JobStatus.COMPLETED
         elif job.succeeded == 0:
@@ -345,31 +404,34 @@ class ParallelProcessor:
 
         logger.info(
             "Parallel job %s completed: %d/%d succeeded in %.1fs",
-            job.job_id, job.succeeded, len(job.sub_tasks), job.duration_sec,
+            job.job_id,
+            job.succeeded,
+            len(job.sub_tasks),
+            job.duration_sec,
         )
 
-    async def _execute_subtask(
-        self, task: SubTask, executor: Callable
-    ) -> None:
+    async def _execute_subtask(self, task: SubTask, executor: Callable) -> None:
         """Execute a single sub-task with retry logic."""
         task.status = JobStatus.RUNNING
-        task.started_at = datetime.now(timezone.utc)
+        task.started_at = datetime.now(UTC)
 
         while task.retry_count <= task.max_retries:
             try:
                 task.result = await executor(task)
                 task.status = JobStatus.COMPLETED
-                task.completed_at = datetime.now(timezone.utc)
+                task.completed_at = datetime.now(UTC)
                 return
             except Exception as exc:
                 task.retry_count += 1
                 if task.retry_count > task.max_retries:
                     task.status = JobStatus.FAILED
                     task.error = str(exc)
-                    task.completed_at = datetime.now(timezone.utc)
+                    task.completed_at = datetime.now(UTC)
                     logger.warning(
                         "Sub-task %s failed after %d retries: %s",
-                        task.task_id, task.max_retries, exc,
+                        task.task_id,
+                        task.max_retries,
+                        exc,
                     )
                 else:
                     await asyncio.sleep(0.5 * task.retry_count)
@@ -405,13 +467,14 @@ class ParallelProcessor:
 
     # -- Convenience Methods for Common Workflows -----------------------------
 
-    async def batch_process_documents(
-        self, client_id: str, documents: list[dict[str, Any]]
-    ) -> ParallelJob:
+    async def batch_process_documents(self, client_id: str, documents: list[dict[str, Any]]) -> ParallelJob:
         """Process a batch of uploaded documents (W-2s, 1099s, receipts)."""
         items = [{"label": f"doc-{i}", **doc} for i, doc in enumerate(documents)]
         return await self.submit_job(
-            JobType.DOCUMENT_BATCH, client_id, items, max_concurrency=20,
+            JobType.DOCUMENT_BATCH,
+            client_id,
+            items,
+            max_concurrency=20,
         )
 
     async def multi_state_research(
@@ -431,7 +494,10 @@ class ParallelProcessor:
             for state in US_STATES
         ]
         return await self.submit_job(
-            JobType.MULTI_STATE_RESEARCH, client_id, items, max_concurrency=50,
+            JobType.MULTI_STATE_RESEARCH,
+            client_id,
+            items,
+            max_concurrency=50,
         )
 
     async def run_scenario_analysis(
@@ -452,17 +518,18 @@ class ParallelProcessor:
             for i, s in enumerate(scenarios)
         ]
         return await self.submit_job(
-            JobType.SCENARIO_ANALYSIS, client_id, items, max_concurrency=50,
+            JobType.SCENARIO_ANALYSIS,
+            client_id,
+            items,
+            max_concurrency=50,
         )
 
-    async def validate_return_forms(
-        self, client_id: str, forms: list[dict[str, Any]]
-    ) -> ParallelJob:
+    async def validate_return_forms(self, client_id: str, forms: list[dict[str, Any]]) -> ParallelJob:
         """Cross-validate multiple tax forms for consistency."""
-        items = [
-            {"label": f.get("form_type", f"form-{i}"), **f}
-            for i, f in enumerate(forms)
-        ]
+        items = [{"label": f.get("form_type", f"form-{i}"), **f} for i, f in enumerate(forms)]
         return await self.submit_job(
-            JobType.FORM_VALIDATION, client_id, items, max_concurrency=10,
+            JobType.FORM_VALIDATION,
+            client_id,
+            items,
+            max_concurrency=10,
         )

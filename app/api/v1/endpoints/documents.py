@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
-from typing import Any, Optional
+from typing import Any
 
 from fastapi import APIRouter, File, HTTPException, Request, UploadFile
 from pydantic import BaseModel, Field
@@ -32,7 +32,7 @@ class BatchDocumentRequest(BaseModel):
 class MultiStateRequest(BaseModel):
     client_id: str = Field(...)
     entity_type: str = Field(default="individual")
-    income_by_state: Optional[dict[str, float]] = Field(default=None)
+    income_by_state: dict[str, float] | None = Field(default=None)
 
 
 class ScenarioRequest(BaseModel):
@@ -44,15 +44,19 @@ class ScenarioRequest(BaseModel):
 
 class IngestPdfResponse(BaseModel):
     """Response for PDF ingest (Trinity GEM: advanced PDF + document intelligence)."""
+
     text: str = Field(..., description="Extracted full text")
     num_pages: int = Field(..., description="Number of pages")
     tables: list[dict[str, Any]] = Field(default_factory=list, description="Extracted tables (headers, rows, raw_text)")
     metadata: dict[str, Any] = Field(default_factory=dict, description="PDF metadata and any error hint")
-    entities: list[dict[str, str]] = Field(default_factory=list, description="Tax-doc entity hints (SSN/EIN/year patterns)")
+    entities: list[dict[str, str]] = Field(
+        default_factory=list, description="Tax-doc entity hints (SSN/EIN/year patterns)"
+    )
 
 
 class IngestPdfBody(BaseModel):
     """Optional body for POST /documents/ingest (when not using file upload)."""
+
     content_base64: str | None = Field(None, description="PDF content as base64")
     extract_entities: bool = Field(True, description="Run tax-doc entity extraction on text")
 
@@ -86,17 +90,14 @@ async def ingest_pdf(
     else:
         raise HTTPException(status_code=400, detail="Provide either 'file' (upload) or body.content_base64")
     if len(raw) > MAX_PDF_SIZE_BYTES:
-        raise HTTPException(status_code=400, detail=f"PDF too large (max {MAX_PDF_SIZE_BYTES // (1024*1024)} MB)")
+        raise HTTPException(status_code=400, detail=f"PDF too large (max {MAX_PDF_SIZE_BYTES // (1024 * 1024)} MB)")
     if len(raw) == 0:
         raise HTTPException(status_code=400, detail="Empty PDF")
     result = await asyncio.to_thread(extract_text_from_pdf, raw)
     entities: list[dict[str, str]] = []
     if extract_entities and result.text:
         entities = await asyncio.to_thread(extract_entities_tax_doc, result.text)
-    tables_dict = [
-        {"headers": t.headers, "rows": t.rows, "raw_text": t.raw_text}
-        for t in result.tables
-    ]
+    tables_dict = [{"headers": t.headers, "rows": t.rows, "raw_text": t.raw_text} for t in result.tables]
     return IngestPdfResponse(
         text=result.text,
         num_pages=result.num_pages,

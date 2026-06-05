@@ -30,9 +30,15 @@ select = [
 ]
 ignore = [
     "E501",   # line too long (handled by formatter)
+    "E741",   # ambiguous variable name (intentional in parser code)
     "B008",   # do not perform function calls in argument defaults (FastAPI Depends)
     "B904",   # raise without from (sometimes intentional)
     "ARG001", # unused function argument (FastAPI deps)
+    "ARG002", # unused method argument (interface stubs, **kwargs for extensibility)
+    "SIM102", # nested if (readability preference)
+    "SIM103", # return condition directly (readability preference)
+    "SIM105", # contextlib.suppress (explicit try/except preferred for clarity)
+    "SIM116", # dict instead of if/elif (readability preference)
 ]
 
 [tool.ruff.lint.isort]

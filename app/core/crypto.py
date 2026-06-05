@@ -32,9 +32,7 @@ def get_fernet() -> Fernet:
         try:
             return Fernet(raw_key.encode())
         except (ValueError, Exception) as exc:
-            logger.warning(
-                "Invalid Fernet key from config (%s); falling back to derived key", exc
-            )
+            logger.warning("Invalid Fernet key from config (%s); falling back to derived key", exc)
             return Fernet(derived)
 
     return Fernet(derived)

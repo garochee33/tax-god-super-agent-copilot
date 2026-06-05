@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
@@ -30,11 +30,12 @@ logger = logging.getLogger(__name__)
 # Flag System
 # ---------------------------------------------------------------------------
 
+
 class FlagSeverity(str, Enum):
-    RED = "red"            # Critical issue, DO NOT file until resolved
-    YELLOW = "yellow"      # Warning, should review before filing
-    GREEN = "green"        # Opportunity or positive finding
-    INFO = "info"          # Informational note
+    RED = "red"  # Critical issue, DO NOT file until resolved
+    YELLOW = "yellow"  # Warning, should review before filing
+    GREEN = "green"  # Opportunity or positive finding
+    INFO = "info"  # Informational note
 
 
 class FlagCategory(str, Enum):
@@ -53,13 +54,14 @@ class FlagCategory(str, Enum):
 @dataclass
 class AuditFlag:
     """A single finding from Agent Gabriel's review."""
+
     severity: FlagSeverity
     category: FlagCategory
     title: str
     description: str
     recommendation: str
-    form_reference: str = ""       # e.g., "Form 1040, Line 7"
-    irc_reference: str = ""        # e.g., "IRC § 162(a)"
+    form_reference: str = ""  # e.g., "Form 1040, Line 7"
+    irc_reference: str = ""  # e.g., "IRC § 162(a)"
     estimated_impact_usd: float = 0.0
     confidence: float = 0.9
 
@@ -67,17 +69,18 @@ class AuditFlag:
 @dataclass
 class AuditReport:
     """Complete audit report from Agent Gabriel."""
+
     report_id: str
     client_id: str
     tax_year: int
-    form_type: str                 # "1040", "1120", "1065", etc.
+    form_type: str  # "1040", "1120", "1065", etc.
     flags: list[AuditFlag] = field(default_factory=list)
-    overall_score: float = 0.0     # 0-100 quality score
-    risk_level: str = "low"        # "low", "medium", "high", "critical"
+    overall_score: float = 0.0  # 0-100 quality score
+    risk_level: str = "low"  # "low", "medium", "high", "critical"
     total_savings_found: float = 0.0
     total_errors_found: int = 0
     ai_summary: str = ""
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     reviewed_by_human: bool = False
 
     @property
@@ -97,9 +100,11 @@ class AuditReport:
 # Built-in Audit Rules (Rule Engine)
 # ---------------------------------------------------------------------------
 
+
 @dataclass
 class AuditRule:
     """A single deterministic audit check."""
+
     rule_id: str
     title: str
     category: FlagCategory
@@ -109,52 +114,149 @@ class AuditRule:
 
 # Individual 1040 audit rules
 INDIVIDUAL_RULES: list[AuditRule] = [
-    AuditRule("IND-001", "W-2/1099 Income Reconciliation", FlagCategory.MISSING_INCOME,
-              "check_income_reconciliation", "Verify reported income matches W-2s and 1099s"),
-    AuditRule("IND-002", "Standard vs Itemized Deduction", FlagCategory.SAVINGS_OPPORTUNITY,
-              "check_deduction_optimization", "Compare standard deduction to itemized to ensure optimal choice"),
-    AuditRule("IND-003", "Estimated Tax Payments", FlagCategory.PENALTY_RISK,
-              "check_estimated_payments", "Check if underpayment penalty applies (safe harbor rules)"),
-    AuditRule("IND-004", "HSA Contribution Limits", FlagCategory.COMPLIANCE,
-              "check_hsa_limits", "Verify HSA contributions don't exceed annual limits"),
-    AuditRule("IND-005", "Retirement Contribution Limits", FlagCategory.COMPLIANCE,
-              "check_retirement_limits", "Verify 401k/IRA contributions within limits"),
-    AuditRule("IND-006", "Child Tax Credit Eligibility", FlagCategory.SAVINGS_OPPORTUNITY,
-              "check_child_credit", "Verify all qualifying children claimed"),
-    AuditRule("IND-007", "EITC Eligibility", FlagCategory.SAVINGS_OPPORTUNITY,
-              "check_eitc", "Check if client qualifies for Earned Income Tax Credit"),
-    AuditRule("IND-008", "QBI Deduction (199A)", FlagCategory.SAVINGS_OPPORTUNITY,
-              "check_qbi_deduction", "Verify Section 199A deduction claimed if eligible"),
-    AuditRule("IND-009", "Home Office Deduction", FlagCategory.SAVINGS_OPPORTUNITY,
-              "check_home_office", "Check if home office deduction applies (regular & exclusive use)"),
-    AuditRule("IND-010", "Capital Loss Carryforward", FlagCategory.SAVINGS_OPPORTUNITY,
-              "check_loss_carryforward", "Verify prior year capital loss carryforwards applied"),
-    AuditRule("IND-011", "SALT Deduction Cap", FlagCategory.COMPLIANCE,
-              "check_salt_cap", "Ensure SALT deduction doesn't exceed $10,000 cap"),
-    AuditRule("IND-012", "Charitable Contribution Limits", FlagCategory.COMPLIANCE,
-              "check_charitable_limits", "Verify charitable deductions within AGI percentage limits"),
-    AuditRule("IND-013", "Self-Employment Tax", FlagCategory.MATH_ERROR,
-              "check_se_tax", "Verify SE tax calculation (15.3% with proper deductions)"),
-    AuditRule("IND-014", "AMT Exposure", FlagCategory.AUDIT_RISK,
-              "check_amt", "Check for Alternative Minimum Tax exposure"),
-    AuditRule("IND-015", "FBAR/FATCA Reporting", FlagCategory.COMPLIANCE,
-              "check_foreign_reporting", "Check if foreign account reporting requirements triggered"),
-    AuditRule("IND-016", "Crypto Transaction Reporting", FlagCategory.COMPLIANCE,
-              "check_crypto_reporting", "Verify digital asset question answered and transactions reported"),
-    AuditRule("IND-017", "Education Credits", FlagCategory.SAVINGS_OPPORTUNITY,
-              "check_education_credits", "Check eligibility for AOTC or LLC"),
-    AuditRule("IND-018", "Energy Credits", FlagCategory.SAVINGS_OPPORTUNITY,
-              "check_energy_credits", "Check for residential clean energy credit eligibility"),
-    AuditRule("IND-019", "Filing Status Optimization", FlagCategory.SAVINGS_OPPORTUNITY,
-              "check_filing_status", "Verify optimal filing status selected"),
-    AuditRule("IND-020", "Multi-State Filing Required", FlagCategory.MISSING_FORM,
-              "check_multi_state", "Check if income earned in other states requires additional filings"),
+    AuditRule(
+        "IND-001",
+        "W-2/1099 Income Reconciliation",
+        FlagCategory.MISSING_INCOME,
+        "check_income_reconciliation",
+        "Verify reported income matches W-2s and 1099s",
+    ),
+    AuditRule(
+        "IND-002",
+        "Standard vs Itemized Deduction",
+        FlagCategory.SAVINGS_OPPORTUNITY,
+        "check_deduction_optimization",
+        "Compare standard deduction to itemized to ensure optimal choice",
+    ),
+    AuditRule(
+        "IND-003",
+        "Estimated Tax Payments",
+        FlagCategory.PENALTY_RISK,
+        "check_estimated_payments",
+        "Check if underpayment penalty applies (safe harbor rules)",
+    ),
+    AuditRule(
+        "IND-004",
+        "HSA Contribution Limits",
+        FlagCategory.COMPLIANCE,
+        "check_hsa_limits",
+        "Verify HSA contributions don't exceed annual limits",
+    ),
+    AuditRule(
+        "IND-005",
+        "Retirement Contribution Limits",
+        FlagCategory.COMPLIANCE,
+        "check_retirement_limits",
+        "Verify 401k/IRA contributions within limits",
+    ),
+    AuditRule(
+        "IND-006",
+        "Child Tax Credit Eligibility",
+        FlagCategory.SAVINGS_OPPORTUNITY,
+        "check_child_credit",
+        "Verify all qualifying children claimed",
+    ),
+    AuditRule(
+        "IND-007",
+        "EITC Eligibility",
+        FlagCategory.SAVINGS_OPPORTUNITY,
+        "check_eitc",
+        "Check if client qualifies for Earned Income Tax Credit",
+    ),
+    AuditRule(
+        "IND-008",
+        "QBI Deduction (199A)",
+        FlagCategory.SAVINGS_OPPORTUNITY,
+        "check_qbi_deduction",
+        "Verify Section 199A deduction claimed if eligible",
+    ),
+    AuditRule(
+        "IND-009",
+        "Home Office Deduction",
+        FlagCategory.SAVINGS_OPPORTUNITY,
+        "check_home_office",
+        "Check if home office deduction applies (regular & exclusive use)",
+    ),
+    AuditRule(
+        "IND-010",
+        "Capital Loss Carryforward",
+        FlagCategory.SAVINGS_OPPORTUNITY,
+        "check_loss_carryforward",
+        "Verify prior year capital loss carryforwards applied",
+    ),
+    AuditRule(
+        "IND-011",
+        "SALT Deduction Cap",
+        FlagCategory.COMPLIANCE,
+        "check_salt_cap",
+        "Ensure SALT deduction doesn't exceed $10,000 cap",
+    ),
+    AuditRule(
+        "IND-012",
+        "Charitable Contribution Limits",
+        FlagCategory.COMPLIANCE,
+        "check_charitable_limits",
+        "Verify charitable deductions within AGI percentage limits",
+    ),
+    AuditRule(
+        "IND-013",
+        "Self-Employment Tax",
+        FlagCategory.MATH_ERROR,
+        "check_se_tax",
+        "Verify SE tax calculation (15.3% with proper deductions)",
+    ),
+    AuditRule(
+        "IND-014", "AMT Exposure", FlagCategory.AUDIT_RISK, "check_amt", "Check for Alternative Minimum Tax exposure"
+    ),
+    AuditRule(
+        "IND-015",
+        "FBAR/FATCA Reporting",
+        FlagCategory.COMPLIANCE,
+        "check_foreign_reporting",
+        "Check if foreign account reporting requirements triggered",
+    ),
+    AuditRule(
+        "IND-016",
+        "Crypto Transaction Reporting",
+        FlagCategory.COMPLIANCE,
+        "check_crypto_reporting",
+        "Verify digital asset question answered and transactions reported",
+    ),
+    AuditRule(
+        "IND-017",
+        "Education Credits",
+        FlagCategory.SAVINGS_OPPORTUNITY,
+        "check_education_credits",
+        "Check eligibility for AOTC or LLC",
+    ),
+    AuditRule(
+        "IND-018",
+        "Energy Credits",
+        FlagCategory.SAVINGS_OPPORTUNITY,
+        "check_energy_credits",
+        "Check for residential clean energy credit eligibility",
+    ),
+    AuditRule(
+        "IND-019",
+        "Filing Status Optimization",
+        FlagCategory.SAVINGS_OPPORTUNITY,
+        "check_filing_status",
+        "Verify optimal filing status selected",
+    ),
+    AuditRule(
+        "IND-020",
+        "Multi-State Filing Required",
+        FlagCategory.MISSING_FORM,
+        "check_multi_state",
+        "Check if income earned in other states requires additional filings",
+    ),
 ]
 
 
 # ---------------------------------------------------------------------------
 # Agent Gabriel Service
 # ---------------------------------------------------------------------------
+
 
 class AgentGabriel:
     """
@@ -202,9 +304,7 @@ class AgentGabriel:
 
         # Calculate summary metrics
         report.total_errors_found = len(report.red_flags) + len(report.yellow_flags)
-        report.total_savings_found = sum(
-            f.estimated_impact_usd for f in report.green_flags
-        )
+        report.total_savings_found = sum(f.estimated_impact_usd for f in report.green_flags)
         report.overall_score = self._calculate_score(report)
         report.risk_level = self._assess_risk_level(report)
         report.ai_summary = self._generate_summary(report)
@@ -213,9 +313,7 @@ class AgentGabriel:
 
     # -- Rule Engine ----------------------------------------------------------
 
-    def _run_rule_checks(
-        self, return_data: dict[str, Any], rules: list[AuditRule]
-    ) -> list[AuditFlag]:
+    def _run_rule_checks(self, return_data: dict[str, Any], rules: list[AuditRule]) -> list[AuditFlag]:
         """Execute all deterministic audit rules against return data."""
         flags: list[AuditFlag] = []
 
@@ -254,8 +352,11 @@ class AgentGabriel:
     def _rule_check_deduction_optimization(self, data: dict) -> AuditFlag | None:
         filing_status = data.get("filing_status", "single")
         standard_amounts = {
-            "single": 14600, "mfj": 29200, "mfs": 14600,
-            "hoh": 21900, "widow": 29200,
+            "single": 14600,
+            "mfj": 29200,
+            "mfs": 14600,
+            "hoh": 21900,
+            "widow": 29200,
         }
         standard = standard_amounts.get(filing_status, 14600)
         itemized = data.get("total_itemized", 0)
@@ -416,7 +517,7 @@ class AgentGabriel:
     def _rule_check_crypto_reporting(self, data: dict) -> AuditFlag | None:
         has_crypto = data.get("has_crypto_transactions", False)
         crypto_reported = data.get("crypto_gains_reported", False)
-        digital_asset_question = data.get("digital_asset_question_answered", None)
+        digital_asset_question = data.get("digital_asset_question_answered")
 
         if has_crypto and not crypto_reported:
             return AuditFlag(
@@ -440,23 +541,42 @@ class AgentGabriel:
         return None
 
     # Stub implementations for remaining rules
-    def _rule_check_child_credit(self, data: dict) -> AuditFlag | None: return None
-    def _rule_check_eitc(self, data: dict) -> AuditFlag | None: return None
-    def _rule_check_loss_carryforward(self, data: dict) -> AuditFlag | None: return None
-    def _rule_check_charitable_limits(self, data: dict) -> AuditFlag | None: return None
-    def _rule_check_se_tax(self, data: dict) -> AuditFlag | None: return None
-    def _rule_check_amt(self, data: dict) -> AuditFlag | None: return None
-    def _rule_check_foreign_reporting(self, data: dict) -> AuditFlag | None: return None
-    def _rule_check_education_credits(self, data: dict) -> AuditFlag | None: return None
-    def _rule_check_energy_credits(self, data: dict) -> AuditFlag | None: return None
-    def _rule_check_filing_status(self, data: dict) -> AuditFlag | None: return None
-    def _rule_check_multi_state(self, data: dict) -> AuditFlag | None: return None
+    def _rule_check_child_credit(self, data: dict) -> AuditFlag | None:
+        return None
+
+    def _rule_check_eitc(self, data: dict) -> AuditFlag | None:
+        return None
+
+    def _rule_check_loss_carryforward(self, data: dict) -> AuditFlag | None:
+        return None
+
+    def _rule_check_charitable_limits(self, data: dict) -> AuditFlag | None:
+        return None
+
+    def _rule_check_se_tax(self, data: dict) -> AuditFlag | None:
+        return None
+
+    def _rule_check_amt(self, data: dict) -> AuditFlag | None:
+        return None
+
+    def _rule_check_foreign_reporting(self, data: dict) -> AuditFlag | None:
+        return None
+
+    def _rule_check_education_credits(self, data: dict) -> AuditFlag | None:
+        return None
+
+    def _rule_check_energy_credits(self, data: dict) -> AuditFlag | None:
+        return None
+
+    def _rule_check_filing_status(self, data: dict) -> AuditFlag | None:
+        return None
+
+    def _rule_check_multi_state(self, data: dict) -> AuditFlag | None:
+        return None
 
     # -- AI-Powered Analysis --------------------------------------------------
 
-    async def _run_ai_analysis(
-        self, client_id: str, tax_year: int, return_data: dict
-    ) -> list[AuditFlag]:
+    async def _run_ai_analysis(self, client_id: str, tax_year: int, return_data: dict) -> list[AuditFlag]:
         """Use AI to find nuanced issues rule engine can't detect."""
         if not self.ai:
             return []
@@ -482,14 +602,16 @@ class AgentGabriel:
             # The AI response is natural language; in production this would be
             # parsed into structured AuditFlags. For now return as single info flag.
             if response.content:
-                return [AuditFlag(
-                    severity=FlagSeverity.INFO,
-                    category=FlagCategory.COMPLIANCE,
-                    title="AI Deep Analysis",
-                    description=response.content[:2000],
-                    recommendation="Review the AI analysis above for additional insights.",
-                    confidence=response.confidence,
-                )]
+                return [
+                    AuditFlag(
+                        severity=FlagSeverity.INFO,
+                        category=FlagCategory.COMPLIANCE,
+                        title="AI Deep Analysis",
+                        description=response.content[:2000],
+                        recommendation="Review the AI analysis above for additional insights.",
+                        confidence=response.confidence,
+                    )
+                ]
         except Exception as exc:
             logger.warning("AI audit analysis failed: %s", exc)
 
@@ -517,7 +639,9 @@ class AgentGabriel:
     def _generate_summary(self, report: AuditReport) -> str:
         parts = [f"Agent Gabriel Review - Tax Year {report.tax_year} ({report.form_type})"]
         parts.append(f"Score: {report.overall_score}/100 | Risk: {report.risk_level.upper()}")
-        parts.append(f"Red: {len(report.red_flags)} | Yellow: {len(report.yellow_flags)} | Green: {len(report.green_flags)}")
+        parts.append(
+            f"Red: {len(report.red_flags)} | Yellow: {len(report.yellow_flags)} | Green: {len(report.green_flags)}"
+        )
 
         if report.total_savings_found > 0:
             parts.append(f"Potential savings identified: ${report.total_savings_found:,.0f}")
@@ -533,10 +657,19 @@ def _summarize_return(data: dict) -> str:
     """Create a text summary of return data for AI analysis."""
     lines = []
     key_fields = [
-        "filing_status", "agi", "total_income", "wages_reported",
-        "schedule_c_income", "rental_income", "capital_gains",
-        "total_itemized", "deduction_type", "total_tax",
-        "total_withholding", "estimated_payments", "refund_or_due",
+        "filing_status",
+        "agi",
+        "total_income",
+        "wages_reported",
+        "schedule_c_income",
+        "rental_income",
+        "capital_gains",
+        "total_itemized",
+        "deduction_type",
+        "total_tax",
+        "total_withholding",
+        "estimated_payments",
+        "refund_or_due",
     ]
     for k in key_fields:
         if k in data:

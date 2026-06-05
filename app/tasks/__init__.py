@@ -1,4 +1,3 @@
 """
 Tax God task package.
 """
-

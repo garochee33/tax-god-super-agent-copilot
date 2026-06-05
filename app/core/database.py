@@ -21,6 +21,7 @@ settings = get_settings()
 _engine_kwargs: dict = {"echo": settings.DEBUG}
 if "sqlite" in settings.DATABASE_URL:
     from sqlalchemy.pool import StaticPool
+
     _engine_kwargs["poolclass"] = StaticPool
     _engine_kwargs["connect_args"] = {"check_same_thread": False}
 else:
@@ -38,6 +39,7 @@ async_session_factory = async_sessionmaker(
 
 class Base(DeclarativeBase):
     """Declarative base for all ORM models."""
+
     pass
 
 

@@ -7,7 +7,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import redis.asyncio as aioredis
@@ -68,7 +68,7 @@ def refresh_integration_tokens() -> dict[str, Any]:
         result = await manager.refresh_expiring_tokens(refresh_within_minutes=30)
         payload = {
             "task": "refresh_integration_tokens",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             **result,
             "storage_mode": manager.storage_mode,
         }
@@ -97,12 +97,10 @@ def budget_guard_watchdog() -> dict[str, Any]:
             governor = CostGovernor(redis_client)
             daily_spend = await governor.budget.get_daily_spend()
             budget_mode = await governor.budget.get_budget_mode()
-            reserve_trigger = (
-                settings.COST_HARD_LIMIT_DAILY - settings.COST_EMERGENCY_RESERVE
-            )
+            reserve_trigger = settings.COST_HARD_LIMIT_DAILY - settings.COST_EMERGENCY_RESERVE
             payload = {
                 "task": "budget_guard_watchdog",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
                 "daily_spend": round(daily_spend, 6),
                 "hard_limit": settings.COST_HARD_LIMIT_DAILY,
                 "reserve_trigger": reserve_trigger,
@@ -127,7 +125,7 @@ def regulatory_scan_heartbeat() -> dict[str, Any]:
     async def _run() -> dict[str, Any]:
         payload = {
             "task": "regulatory_scan_heartbeat",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "status": "ok",
             "note": "Heartbeat active. Plug IRS/state scan workers into this lane.",
         }

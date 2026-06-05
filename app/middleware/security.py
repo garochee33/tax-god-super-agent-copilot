@@ -5,11 +5,11 @@ Rate limiting, request IDs, CSP headers, and /metrics protection.
 
 from __future__ import annotations
 
+import logging
 import time
 import uuid
-import logging
 from collections import defaultdict
-from typing import Callable
+from collections.abc import Callable
 
 from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware

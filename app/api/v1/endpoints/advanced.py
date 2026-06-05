@@ -6,12 +6,12 @@ Provides access to the complete DTDA → IMRA → SHVA pipeline
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, cast
+from typing import Any, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
-from app.api.deps import CurrentUser, AdminUser, resolve_client_id
+from app.api.deps import AdminUser, CurrentUser, resolve_client_id
 from app.services.advanced_orchestrator import AdvancedTaxOrchestrator
 
 logger = logging.getLogger(__name__)
@@ -21,10 +21,11 @@ router = APIRouter()
 # Request/Response Models
 class AdvancedTaxRequest(BaseModel):
     """Request model for advanced tax processing."""
+
     query: str = Field(..., description="The tax query to process")
     client_id: str = Field("", description="Client identifier for personalization")
     conversation_id: str | None = Field(None, description="Conversation thread ID")
-    context: Dict[str, Any] = Field(default_factory=dict, description="Additional context")
+    context: dict[str, Any] = Field(default_factory=dict, description="Additional context")
     require_citations: bool = Field(True, description="Whether to require citations in responses")
 
     class Config:
@@ -36,20 +37,21 @@ class AdvancedTaxRequest(BaseModel):
                     "multi_state": True,
                     "entity_type": "s-corp",
                     "deadline_pressure": False,
-                    "audit_concerns": False
+                    "audit_concerns": False,
                 },
-                "require_citations": True
+                "require_citations": True,
             }
         }
 
 
 class DecompositionResponse(BaseModel):
     """Response model for task decomposition results."""
+
     execution_plan: str
     task_type: str
     complexity: float
-    subtasks: list[Dict[str, Any]]
-    dependency_graph: Dict[int, list[int]]
+    subtasks: list[dict[str, Any]]
+    dependency_graph: dict[int, list[int]]
     swarm_size: int | None = None
     agents_needed: list[str] | None = None
     estimated_cost: float
@@ -59,36 +61,40 @@ class DecompositionResponse(BaseModel):
 
 class MemoryResultResponse(BaseModel):
     """Response model for memory retrieval results."""
+
     tier: str
     content: str
     final_score: float
-    metadata: Dict[str, Any] = Field(default_factory=dict)
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class ValidationResponse(BaseModel):
     """Response model for validation results."""
+
     is_valid: bool | None = None
     confidence_score: float | None = None
-    errors: list[Dict[str, Any]] = []
+    errors: list[dict[str, Any]] = []
     healing_log: list[str] = []
     requires_human_review: bool | None = None
 
 
 class AgentMessageResponse(BaseModel):
     """Response model for AI agent messages."""
+
     role: str
     content: str
     agent: str | None = None
     model_used: str
     confidence: float
-    citations: list[Dict[str, str]]
+    citations: list[dict[str, str]]
     cost_usd: float
     latency_sec: float
-    metadata: Dict[str, Any]
+    metadata: dict[str, Any]
 
 
 class AdvancedTaxResponseModel(BaseModel):
     """Complete response model for advanced tax processing."""
+
     request_id: str
     query: str
     response: AgentMessageResponse
@@ -105,14 +111,9 @@ class AdvancedTaxResponseModel(BaseModel):
 # Dependency injection functions
 async def get_advanced_orchestrator(request: Request) -> AdvancedTaxOrchestrator:
     """Get the advanced tax orchestrator from app state."""
-    orchestrator: AdvancedTaxOrchestrator | None = getattr(
-        request.app.state, "advanced_orchestrator", None
-    )
+    orchestrator: AdvancedTaxOrchestrator | None = getattr(request.app.state, "advanced_orchestrator", None)
     if not orchestrator:
-        raise HTTPException(
-            status_code=503,
-            detail="Advanced tax orchestrator service is not available"
-        )
+        raise HTTPException(status_code=503, detail="Advanced tax orchestrator service is not available")
     return cast(AdvancedTaxOrchestrator, orchestrator)
 
 
@@ -136,7 +137,7 @@ async def get_advanced_orchestrator(request: Request) -> AdvancedTaxOrchestrator
     - Audit defense strategies
     - Advanced tax planning scenarios
     """,
-    tags=["Advanced Tax Processing"]
+    tags=["Advanced Tax Processing"],
 )
 async def process_advanced_tax_query(
     request: AdvancedTaxRequest,
@@ -187,7 +188,7 @@ async def process_advanced_tax_query(
     - Subtask breakdown with dependencies
     - Cost and time estimates
     """,
-    tags=["Task Analysis"]
+    tags=["Task Analysis"],
 )
 async def decompose_tax_task(
     request: AdvancedTaxRequest,
@@ -200,14 +201,13 @@ async def decompose_tax_task(
     Useful for understanding query complexity and planning before execution.
     """
     try:
-        decomposition = await orchestrator._decompose_task(
-            request.query,
-            request.context
-        )
+        decomposition = await orchestrator._decompose_task(request.query, request.context)
 
         return DecompositionResponse(
             execution_plan=decomposition.execution_plan.value,
-            task_type=decomposition.task_type.value if hasattr(decomposition.task_type, "value") else str(decomposition.task_type),
+            task_type=decomposition.task_type.value
+            if hasattr(decomposition.task_type, "value")
+            else str(decomposition.task_type),
             complexity=decomposition.complexity,
             subtasks=[
                 {
@@ -219,13 +219,15 @@ async def decompose_tax_task(
                     "estimated_time": subtask.estimated_time,
                 }
                 for subtask in decomposition.subtasks
-            ] if decomposition.subtasks else [],
+            ]
+            if decomposition.subtasks
+            else [],
             dependency_graph=decomposition.dependency_graph,
             swarm_size=decomposition.swarm_size,
             agents_needed=decomposition.agents_needed,
             estimated_cost=decomposition.estimated_cost,
             estimated_time=decomposition.estimated_time,
-            parallelization_score=getattr(decomposition, 'parallelization_score', 0.0)
+            parallelization_score=getattr(decomposition, "parallelization_score", 0.0),
         )
 
     except Exception as exc:
@@ -250,7 +252,7 @@ async def decompose_tax_task(
     - **Knowledge**: Tax law and regulations
     - **Collective**: Anonymized patterns across all clients
     """,
-    tags=["Memory & Context"]
+    tags=["Memory & Context"],
 )
 async def retrieve_tax_memory(
     request: AdvancedTaxRequest,
@@ -262,16 +264,17 @@ async def retrieve_tax_memory(
     """
     try:
         memory_results = await orchestrator._retrieve_context(
-            request.query,
-            resolve_client_id(request.client_id, current_user)
+            request.query, resolve_client_id(request.client_id, current_user)
         )
 
         return [
             MemoryResultResponse(
-                tier=result.tier.value if result.tier and hasattr(result.tier, "value") else (str(result.tier) if result.tier else "unknown"),
+                tier=result.tier.value
+                if result.tier and hasattr(result.tier, "value")
+                else (str(result.tier) if result.tier else "unknown"),
                 content=result.content,
                 final_score=result.final_score,
-                metadata=result.metadata
+                metadata=result.metadata,
             )
             for result in memory_results
         ]
@@ -300,7 +303,7 @@ async def retrieve_tax_memory(
 
     Auto-heals detected issues where possible.
     """,
-    tags=["Validation & Quality"]
+    tags=["Validation & Quality"],
 )
 async def validate_tax_response(
     body: AdvancedTaxRequest,
@@ -315,9 +318,7 @@ async def validate_tax_response(
         task_type = body.context.get("task_type", "general") if body.context else "general"
         context = body.context or {}
 
-        validation_result = await orchestrator._validate_response(
-            content, task_type, context
-        )
+        validation_result = await orchestrator._validate_response(content, task_type, context)
 
         if validation_result:
             return ValidationResponse(
@@ -325,27 +326,20 @@ async def validate_tax_response(
                 confidence_score=validation_result.confidence_score,
                 errors=[
                     {
-                        "stage": err.stage.value if hasattr(err, 'stage') else str(err),
-                        "severity": err.severity.value if hasattr(err, 'severity') else "unknown",
-                        "field": getattr(err, 'field', 'unknown'),
-                        "error_type": getattr(err, 'error_type', 'unknown'),
-                        "message": getattr(err, 'message', str(err)),
+                        "stage": err.stage.value if hasattr(err, "stage") else str(err),
+                        "severity": err.severity.value if hasattr(err, "severity") else "unknown",
+                        "field": getattr(err, "field", "unknown"),
+                        "error_type": getattr(err, "error_type", "unknown"),
+                        "message": getattr(err, "message", str(err)),
                     }
                     for err in (validation_result.errors or [])
                 ],
-                healing_log=[
-                    str(h) if not isinstance(h, str) else h
-                    for h in (validation_result.healing_log or [])
-                ],
-                requires_human_review=validation_result.requires_human_review
+                healing_log=[str(h) if not isinstance(h, str) else h for h in (validation_result.healing_log or [])],
+                requires_human_review=validation_result.requires_human_review,
             )
         else:
             return ValidationResponse(
-                is_valid=None,
-                confidence_score=None,
-                errors=[],
-                healing_log=[],
-                requires_human_review=None
+                is_valid=None, confidence_score=None, errors=[], healing_log=[], requires_human_review=None
             )
 
     except Exception as exc:
@@ -360,9 +354,9 @@ async def validate_tax_response(
     "/status",
     summary="God Mode v3.0 Availability",
     description="Check if the advanced pipeline (God Mode v3.0) is available. No admin required.",
-    tags=["Health & Monitoring"]
+    tags=["Health & Monitoring"],
 )
-async def advanced_status(request: Request, current_user: CurrentUser) -> Dict[str, Any]:
+async def advanced_status(request: Request, current_user: CurrentUser) -> dict[str, Any]:
     """Return whether advanced orchestrator is available (for UI)."""
     available = getattr(request.app.state, "advanced_orchestrator", None) is not None
     return {"available": available, "label": "God Mode v3.0"}
@@ -372,18 +366,16 @@ async def advanced_status(request: Request, current_user: CurrentUser) -> Dict[s
     "/health",
     summary="Advanced Services Health Check",
     description="Check the health and availability of advanced AI services (DTDA, IMRA, SHVA).",
-    tags=["Health & Monitoring"]
+    tags=["Health & Monitoring"],
 )
 async def advanced_services_health(
     current_user: AdminUser,
     orchestrator: AdvancedTaxOrchestrator = Depends(get_advanced_orchestrator),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Check health of advanced AI services."""
     try:
         # Test basic functionality
-        test_decomposition = await orchestrator._decompose_task(
-            "Test tax query", {}
-        )
+        test_decomposition = await orchestrator._decompose_task("Test tax query", {})
 
         return {
             "status": "healthy",
@@ -391,22 +383,17 @@ async def advanced_services_health(
                 "dtda": "operational",
                 "imra": "operational",
                 "shva": "operational",
-                "advanced_orchestrator": "operational"
+                "advanced_orchestrator": "operational",
             },
             "test_results": {
                 "decomposition_complexity": test_decomposition.complexity,
                 "decomposition_plan": test_decomposition.execution_plan.value,
-            }
+            },
         }
     except Exception as exc:
         logger.error(f"Advanced services health check failed: {exc}")
         return {
             "status": "degraded",
-            "services": {
-                "dtda": "error",
-                "imra": "error",
-                "shva": "error",
-                "advanced_orchestrator": "error"
-            },
-            "error": str(exc)
+            "services": {"dtda": "error", "imra": "error", "shva": "error", "advanced_orchestrator": "error"},
+            "error": str(exc),
         }

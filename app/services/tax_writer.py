@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 
 from app.services.ai_service import AIOrchestrator
@@ -31,6 +31,7 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 # Document Types & Templates
 # ---------------------------------------------------------------------------
+
 
 class DocumentType(str, Enum):
     TAX_MEMO = "tax_research_memo"
@@ -44,15 +45,16 @@ class DocumentType(str, Enum):
 @dataclass
 class GeneratedDocument:
     """A document produced by Tax Writer."""
+
     document_id: str
     document_type: DocumentType
     title: str
-    content: str                           # Full formatted text
-    sections: list[dict[str, str]]         # structured sections
-    citations: list[dict[str, str]]        # cited authorities
+    content: str  # Full formatted text
+    sections: list[dict[str, str]]  # structured sections
+    citations: list[dict[str, str]]  # cited authorities
     client_id: str = ""
     tax_year: int = 2024
-    created_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    created_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     model_used: str = ""
     confidence: float = 0.0
     word_count: int = 0
@@ -178,6 +180,7 @@ Enclosures: {enclosure_count}
 # Tax Writer Service
 # ---------------------------------------------------------------------------
 
+
 class TaxWriter:
     """
     Generates professional tax documents using AI + citation engine.
@@ -210,8 +213,7 @@ class TaxWriter:
         citation_results = self.citations.search(subject + " " + facts, max_results=8)
 
         authorities_text = "\n".join(
-            f"  - {self.citations.format_citation(c, style='full')}"
-            for c in citation_results.citations
+            f"  - {self.citations.format_citation(c, style='full')}" for c in citation_results.citations
         )
 
         # Build the AI prompt for memo generation
@@ -264,7 +266,7 @@ class TaxWriter:
 
         # Format the final memo
         formatted = MEMO_TEMPLATE.format(
-            date=datetime.now(timezone.utc).strftime("%B %d, %Y"),
+            date=datetime.now(UTC).strftime("%B %d, %Y"),
             client_name=client_name,
             subject=subject,
             tax_year=tax_year,
@@ -318,7 +320,9 @@ class TaxWriter:
 
         if self.ai:
             response = await self.ai.query(
-                query=prompt, client_id=client_id, task_type="memo_writing",
+                query=prompt,
+                client_id=client_id,
+                task_type="memo_writing",
             )
             content = response.content
             model_used = response.model_used
@@ -326,7 +330,7 @@ class TaxWriter:
 
         formatted = CLIENT_LETTER_TEMPLATE.format(
             firm_name="Tax God AI Advisory",
-            date=datetime.now(timezone.utc).strftime("%B %d, %Y"),
+            date=datetime.now(UTC).strftime("%B %d, %Y"),
             client_name=client_name,
             client_address="[Address on file]",
             client_salutation=client_name.split()[0] if client_name else "Client",
@@ -363,7 +367,7 @@ class TaxWriter:
         """Generate an IRS audit response letter."""
         import uuid
 
-        issues_text = "\n".join(f"  {i+1}. {issue}" for i, issue in enumerate(issues))
+        issues_text = "\n".join(f"  {i + 1}. {issue}" for i, issue in enumerate(issues))
 
         prompt = (
             f"Write a professional IRS audit response letter.\n\n"
@@ -384,7 +388,9 @@ class TaxWriter:
 
         if self.ai:
             response = await self.ai.query(
-                query=prompt, client_id=client_id, task_type="audit_response",
+                query=prompt,
+                client_id=client_id,
+                task_type="audit_response",
             )
             content = response.content
             model_used = response.model_used
@@ -392,12 +398,11 @@ class TaxWriter:
 
         citation_results = self.citations.search(" ".join(issues), max_results=5)
         authorities_text = "\n".join(
-            f"  - {self.citations.format_citation(c, style='full')}"
-            for c in citation_results.citations
+            f"  - {self.citations.format_citation(c, style='full')}" for c in citation_results.citations
         )
 
         formatted = AUDIT_RESPONSE_TEMPLATE.format(
-            date=datetime.now(timezone.utc).strftime("%B %d, %Y"),
+            date=datetime.now(UTC).strftime("%B %d, %Y"),
             irs_office="[IRS Office]",
             irs_address="[Address per notice]",
             taxpayer_name=taxpayer_name,

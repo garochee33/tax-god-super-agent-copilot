@@ -20,11 +20,12 @@ class Environment(str, Enum):
 
 class ModelTier(str, Enum):
     """LLM model tiers ordered by cost (lowest first)."""
+
     CACHE = "cache"
-    BUDGET = "budget"          # GPT-4o-mini / Haiku
-    STANDARD = "standard"      # Claude 3.5 Sonnet
-    PREMIUM = "premium"        # GPT-4o
-    HEAVY = "heavy"            # GPT-4o (extended context / complex reasoning)
+    BUDGET = "budget"  # GPT-4o-mini / Haiku
+    STANDARD = "standard"  # Claude 3.5 Sonnet
+    PREMIUM = "premium"  # GPT-4o
+    HEAVY = "heavy"  # GPT-4o (extended context / complex reasoning)
 
 
 class Settings(BaseSettings):
@@ -148,9 +149,7 @@ class Settings(BaseSettings):
     @classmethod
     def _check_secret_key(cls, v: str, info) -> str:
         env = info.data.get("ENVIRONMENT")
-        if env == Environment.PRODUCTION and (
-            not v or v == "CHANGE-ME-IN-PRODUCTION" or len(v) < 32
-        ):
+        if env == Environment.PRODUCTION and (not v or v == "CHANGE-ME-IN-PRODUCTION" or len(v) < 32):
             raise ValueError(
                 "SECRET_KEY must be a strong random string (>=32 chars) in production. "
                 "Generate with: openssl rand -hex 32"
