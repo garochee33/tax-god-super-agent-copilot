@@ -19,16 +19,16 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-import pytest_asyncio
 from unittest.mock import AsyncMock, MagicMock
 
+import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 
-from app.core.database import Base, engine, async_session_factory
-from app.core.security import create_access_token, hash_password
-from app.models.user import User, UserRole
-from app.models.subscription import Subscription, SubscriptionStatus, SubscriptionTier
 from app.api.deps import get_db
+from app.core.database import Base, async_session_factory, engine
+from app.core.security import create_access_token, hash_password
+from app.models.subscription import Subscription, SubscriptionStatus, SubscriptionTier
+from app.models.user import User, UserRole
 
 
 @pytest_asyncio.fixture(autouse=True)
@@ -62,7 +62,7 @@ async def client():
     # Disable rate limiting for tests
     from app.middleware.security import RateLimitMiddleware
     _orig_is_rate_limited = RateLimitMiddleware._is_rate_limited
-    RateLimitMiddleware._is_rate_limited = lambda self, key, limit: False
+    RateLimitMiddleware._is_rate_limited = lambda _self, _key, _limit: False
 
     # Mock external services on app.state
     app.state.ai_orchestrator = MagicMock()

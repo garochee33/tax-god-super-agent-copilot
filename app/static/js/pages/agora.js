@@ -38,8 +38,7 @@ async function deleteClient(id) {
 }
 
 function statusBadge(status) {
-  const colors = { active: '#4ade80', inactive: '#94a3b8', prospect: '#facc15' };
-  return `<span class="badge" style="background:${colors[status] || '#94a3b8'};color:#000;padding:2px 8px;border-radius:4px;font-size:0.75rem;">${status}</span>`;
+  return `<span class="status-badge status-${status || 'inactive'}">${status}</span>`;
 }
 
 function renderList(data) {

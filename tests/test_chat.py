@@ -2,8 +2,9 @@
 Tax God — Chat/AI Endpoint Tests
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 from httpx import AsyncClient
 
 

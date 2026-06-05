@@ -43,13 +43,13 @@ function renderTab() {
 
 function getTable() {
     const items = data[activeTab];
-    if (!items.length) return '<p style="color:#999;">No items yet.</p>';
+    if (!items.length) return '<p class="text-muted">No items yet.</p>';
     const cols = { accounts: ['name','account_type','provider','balance','status'], invoices: ['invoice_number','client','total_amount','status','due_date'], projects: ['name','client','status','budget','spent'], spreadsheets: ['name','sheet_type','created_at'], notes: ['title','tags','client_id','project_id'] };
     const headers = cols[activeTab];
-    return `<table style="width:100%;border-collapse:collapse;"><thead><tr>${headers.map(h => `<th style="text-align:left;padding:8px;border-bottom:1px solid #333;">${h.replace(/_/g,' ')}</th>`).join('')}<th style="padding:8px;border-bottom:1px solid #333;">Actions</th></tr></thead><tbody>${items.map(item => `<tr>${headers.map(h => `<td style="padding:8px;border-bottom:1px solid #222;">${fmt(item[h])}</td>`).join('')}<td style="padding:8px;border-bottom:1px solid #222;">
-        <button class="btn" data-edit="${item.id}">Edit</button> <button class="btn" data-del="${item.id}">Del</button>
-        ${activeTab === 'invoices' && item.status !== 'paid' ? `<button class="btn" data-paid="${item.id}">Mark Paid</button>` : ''}
-        ${activeTab === 'spreadsheets' ? `<button class="btn" data-view="${item.id}">View</button>` : ''}
+    return `<table class="data-table"><thead><tr>${headers.map(h => `<th>${h.replace(/_/g,' ')}</th>`).join('')}<th>Actions</th></tr></thead><tbody>${items.map(item => `<tr>${headers.map(h => `<td>${fmt(item[h])}</td>`).join('')}<td>
+        <button class="btn btn-sm" data-edit="${item.id}">Edit</button> <button class="btn btn-sm" data-del="${item.id}">Del</button>
+        ${activeTab === 'invoices' && item.status !== 'paid' ? `<button class="btn btn-sm" data-paid="${item.id}">Mark Paid</button>` : ''}
+        ${activeTab === 'spreadsheets' ? `<button class="btn btn-sm" data-view="${item.id}">View</button>` : ''}
     </td></tr>`).join('')}</tbody></table>`;
 }
 

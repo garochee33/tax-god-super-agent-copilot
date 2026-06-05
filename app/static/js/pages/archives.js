@@ -26,7 +26,7 @@ export default {
 
                 <div id="search-results" class="grid grid-2">
                     <!-- Results will appear here -->
-                    <div class="empty-state" style="grid-column: span 2; text-align: center; color: #999; margin-top: 40px;">
+                    <div class="empty-state" style="grid-column: span 2; text-align: center; color: #7f8c8d; margin-top: 40px;">
                         <div style="font-size: 40px; margin-bottom: 10px;">📚</div>
                         <p>Enter a query to search the archives.</p>
                         <p style="font-size: 12px; margin-top: 8px;">Try searching for an IRC section (e.g. "IRC 179"), a topic (e.g. "home office deduction"), or a publication number.</p>
@@ -90,8 +90,8 @@ export default {
                     <span class="badge badge-gold">${escapeHtml(cit.type)}</span>
                 </div>
                 <div class="citation-title" style="font-weight: 600; margin-bottom: 8px;">${escapeHtml(cit.title)}</div>
-                <div class="citation-summary" style="font-size: 13px; color: #555;">${escapeHtml(cit.summary)}</div>
-                <div class="citation-meta" style="margin-top: 10px; font-size: 11px; color: #999;">Year: ${escapeHtml(cit.year)}</div>
+                <div class="citation-summary" style="font-size: 13px; color: #7f8c8d;">${escapeHtml(cit.summary)}</div>
+                <div class="citation-meta" style="margin-top: 10px; font-size: 11px; color: #95a5a6;">Year: ${escapeHtml(cit.year)}</div>
             `;
             container.appendChild(card);
         });

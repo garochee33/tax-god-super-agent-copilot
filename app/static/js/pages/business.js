@@ -26,7 +26,7 @@ function renderContent() {
         </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;">
             ${businesses.map(b => `<div class="card" style="padding:16px;${b.is_default ? 'border:2px solid var(--accent, #4ade80);' : ''}">
-                <h3>${b.name} ${b.is_default ? '<span style="font-size:0.75rem;color:#4ade80;">DEFAULT</span>' : ''}</h3>
+                <h3>${b.name} ${b.is_default ? '<span class="status-badge status-active">DEFAULT</span>' : ''}</h3>
                 <p style="opacity:0.7;font-size:0.85rem;">${(b.business_type||'').replace(/_/g,' ')} ${b.ein ? '• EIN: '+b.ein : ''}</p>
                 <p style="opacity:0.7;font-size:0.85rem;">${b.address || ''} ${b.currency ? '• '+b.currency : ''}</p>
                 <div style="margin-top:8px;display:flex;gap:8px;">

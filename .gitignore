@@ -44,3 +44,5 @@ exports/
 
 # Node (if any)
 node_modules/
+uploads/receipts/*
+!uploads/.gitkeep

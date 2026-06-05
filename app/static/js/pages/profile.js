@@ -104,7 +104,7 @@ export default {
             document.getElementById('profile-name').value = profile.full_name || '';
             document.getElementById('profile-email').value = profile.email || '';
         } catch (err) {
-            document.getElementById('profile-info').innerHTML = `<p style="color: red;">${err.message}</p>`;
+            document.getElementById('profile-info').innerHTML = `<p class="text-danger">${err.message}</p>`;
         }
     }
 };

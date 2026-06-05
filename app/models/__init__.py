@@ -5,6 +5,7 @@ Tax God - SQLAlchemy Models
 from app.models.account import Account
 from app.models.activity import ActivityLog, BuildLog, KnowledgeEntry
 from app.models.business import Business
+from app.models.chart_of_accounts import ChartOfAccount, JournalEntry, JournalLine
 from app.models.client import Client
 from app.models.expense import Expense
 from app.models.integration import IntegrationCredential
@@ -25,10 +26,13 @@ __all__ = [
     "ActivityLog",
     "BuildLog",
     "Business",
+    "ChartOfAccount",
     "Client",
     "Expense",
     "IntegrationCredential",
     "Invoice",
+    "JournalEntry",
+    "JournalLine",
     "KnowledgeEntry",
     "Note",
     "Project",

@@ -3,8 +3,9 @@ Tax God — End-to-End Integration Test
 Full pipeline: register → login → create client → chat query → document processing
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 from httpx import AsyncClient
 
 

@@ -48,8 +48,8 @@ export default {
         const txns = await api.get(url).catch(() => []);
         const arr = Array.isArray(txns) ? txns : [];
         document.getElementById("txn-table").querySelector("tbody").innerHTML = arr.map(t => {
-            const color = (t.amount || 0) >= 0 ? "color:green" : "color:red";
-            return `<tr><td>${t.date||""}</td><td>${t.description||""}</td><td style="${color}">$${Math.abs(t.amount||0).toFixed(2)}</td><td>${t.category||""}</td><td>${t.reconciled?"✓":""}</td><td>${!t.reconciled?`<button class="btn btn-outline btn-sm" onclick="window._reconcile('${t.id}')">Reconcile</button>`:""}</td></tr>`;
+            const color = (t.amount || 0) >= 0 ? "text-success" : "text-danger";
+            return `<tr><td>${t.date||""}</td><td>${t.description||""}</td><td class="${color}">$${Math.abs(t.amount||0).toFixed(2)}</td><td>${t.category||""}</td><td>${t.reconciled?"✓":""}</td><td>${!t.reconciled?`<button class="btn btn-outline btn-sm" onclick="window._reconcile('${t.id}')">Reconcile</button>`:""}</td></tr>`;
         }).join("") || "<tr><td colspan=6>No transactions</td></tr>";
 
         window._reconcile = async (id) => {

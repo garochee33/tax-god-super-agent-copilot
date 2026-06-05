@@ -166,7 +166,7 @@ export default {
                 ? `
             <div class="quickbooks-data-panel" style="margin-top: var(--spacing-md); padding-top: var(--spacing-md); border-top: 1px solid #eee;">
                 <div class="card-title" style="font-size: 13px; margin-bottom: 8px;">QuickBooks Data</div>
-                <div id="qb-company-name" style="font-size: 12px; color: #666; margin-bottom: 10px;">Loading company...</div>
+                <div id="qb-company-name" style="font-size: 12px; color: #7f8c8d; margin-bottom: 10px;">Loading company...</div>
                 <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
                     <span>P&L:</span>
                     <select id="qb-pl-year" class="form-control" style="width: 80px; display: inline-block;">
@@ -188,7 +188,7 @@ export default {
                 <div class="provider-icon">${icon}</div>
                 <div class="int-name">${escapeHtml(integration.name)}</div>
                 <div class="int-desc">${escapeHtml(integration.description || "Integration connector")}</div>
-                ${isConfigured ? "" : '<div class="int-desc" style="color:#b05a00;">OAuth credentials missing</div>'}
+                ${isConfigured ? "" : '<div class="int-desc" style="color:var(--color-warning);">OAuth credentials missing</div>'}
                 <div class="int-status">${statusBadge(integration.status)}</div>
                 <div class="int-actions" style="display: flex; gap: 8px; margin-top: 8px;">
                     <button class="btn ${isConnected ? "btn-outline" : "btn-primary"} btn-sm" data-connect-provider="${escapeHtml(integration.id)}" ${!isConfigured ? "disabled" : ""}>${escapeHtml(connectText)}</button>
@@ -335,13 +335,13 @@ export default {
 
     renderVendorsTable(vendors) {
         if (!vendors.length) return "<p>No vendors in QuickBooks.</p>";
-        let table = '<p style="margin-bottom: 6px;">Use for 1099 prep. Missing TIN = may need W-9.</p><table style="width: 100%; border-collapse: collapse; font-size: 12px;"><thead><tr style="text-align: left; border-bottom: 1px solid #ddd;"><th style="padding: 6px;">Name</th><th style="padding: 6px;">Company</th><th style="padding: 6px;">TIN</th></tr></thead><tbody>';
+        let table = '<p style="margin-bottom: 6px;">Use for 1099 prep. Missing TIN = may need W-9.</p><table class="data-table"><thead><tr><th>Name</th><th>Company</th><th>TIN</th></tr></thead><tbody>';
         vendors.forEach((v) => {
             const name = escapeHtml(v.DisplayName || v.CompanyName || "—");
             const company = escapeHtml(v.CompanyName || "—");
             const tin = escapeHtml(v.TaxIdentifier || "—");
             const missing = !v.TaxIdentifier ? ' <span class="badge badge-warning">Missing TIN</span>' : "";
-            table += `<tr style="border-bottom: 1px solid #eee;"><td style="padding: 6px;">${name}${missing}</td><td style="padding: 6px;">${company}</td><td style="padding: 6px;">${tin}</td></tr>`;
+            table += `<tr><td>${name}${missing}</td><td>${company}</td><td>${tin}</td></tr>`;
         });
         table += "</tbody></table>";
         return table;

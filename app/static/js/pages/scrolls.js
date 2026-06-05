@@ -88,8 +88,8 @@ export default {
                         <button class="btn btn-sm btn-outline" onclick="navigator.clipboard.writeText(document.getElementById('doc-content').innerText)">Copy</button>
                     </div>
                     
-                    <div id="doc-preview" class="scroll-content" style="padding: 20px; font-family: 'Georgia', serif; line-height: 1.8; color: #333; height: 600px; overflow-y: auto;">
-                        <div class="empty-state" style="text-align: center; color: #999; margin-top: 100px;">
+                    <div id="doc-preview" class="scroll-content" style="padding: 20px; font-family: var(--font-body); line-height: 1.8; color: var(--color-text-dark); height: 600px; overflow-y: auto;">
+                        <div class="empty-state" style="text-align: center; color: #7f8c8d; margin-top: 100px;">
                             <div style="font-size: 40px; margin-bottom: 10px;">✍️</div>
                             <p>Instruct the scribe to begin.</p>
                             <p style="font-size: 12px; margin-top: 8px;">Fill out the form on the left and submit — the AI will generate a formatted document here.</p>

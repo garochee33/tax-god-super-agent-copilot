@@ -45,7 +45,7 @@ export default {
 
         const items = Array.isArray(transactions) ? transactions.slice(0, 5) : [];
         document.getElementById("recent-activity").innerHTML = items.length
-            ? `<ul style="list-style:none;padding:0;margin:0">${items.map(t => `<li style="padding:6px var(--spacing-md);border-bottom:1px solid #eee">${t.date || ""} — ${t.description || "Transaction"} <strong>${fmt(t.amount)}</strong></li>`).join("")}</ul>`
-            : "<p style='padding:var(--spacing-md);color:#666'>No recent activity</p>";
+            ? `<ul style="list-style:none;padding:0;margin:0">${items.map(t => `<li class="activity-item" style="padding:6px var(--spacing-md);border-bottom:1px solid var(--color-parchment-dark)">${t.date || ""} — ${t.description || "Transaction"} <strong>${fmt(t.amount)}</strong></li>`).join("")}</ul>`
+            : '<p class="text-muted" style="padding:var(--spacing-md)">No recent activity</p>';
     }
 };

@@ -29,18 +29,17 @@ function renderContent() {
             ${projects.map(p => {
                 const spent = p.spent || 0, budget = p.budget || 1;
                 const pct = Math.min(100, (spent / budget) * 100);
-                const colors = { active:'#4ade80', completed:'#60a5fa', on_hold:'#facc15', cancelled:'#f87171' };
                 return `<div class="card" style="padding:16px;">
                     <div style="display:flex;justify-content:space-between;align-items:center;">
                         <h3 style="margin:0;">${p.name}</h3>
-                        <span class="badge" style="background:${colors[p.status]||'#94a3b8'};color:#000;padding:2px 8px;border-radius:4px;font-size:0.75rem;">${p.status}</span>
+                        <span class="status-badge status-${p.status || 'inactive'}">${p.status}</span>
                     </div>
-                    <p style="opacity:0.7;font-size:0.85rem;margin:4px 0;">${p.client_name || p.client_id || '—'} • ${p.start_date || '?'} → ${p.end_date || '?'}</p>
-                    <div style="background:#333;border-radius:4px;height:8px;margin:8px 0;"><div style="width:${pct}%;height:100%;background:${pct>90?'#f87171':'#4ade80'};border-radius:4px;"></div></div>
-                    <p style="font-size:0.8rem;opacity:0.7;">$${spent.toFixed(2)} / $${(p.budget||0).toFixed(2)}</p>
+                    <p class="text-muted text-sm" style="margin:4px 0;">${p.client_name || p.client_id || '—'} • ${p.start_date || '?'} → ${p.end_date || '?'}</p>
+                    <div class="progress-bar"><div class="progress-bar-fill${pct>90?' danger':''}" style="width:${pct}%;"></div></div>
+                    <p class="text-muted text-xs">$${spent.toFixed(2)} / $${(p.budget||0).toFixed(2)}</p>
                     <button class="btn-sm btn-danger btn-del" data-id="${p.id}">Delete</button>
                 </div>`;
-            }).join('') || '<p style="opacity:0.6">No projects yet.</p>'}
+            }).join('') || '<p class="text-muted">No projects yet.</p>'}
         </div>`;
     bindEvents();
 }

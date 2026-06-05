@@ -31,6 +31,8 @@ class Invoice(Base):
     recurring: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     recurring_frequency: Mapped[str | None] = mapped_column(String(20), nullable=True)
     recurring_next_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    stripe_payment_intent_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    payment_link: Mapped[str | None] = mapped_column(String(500), nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
     )

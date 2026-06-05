@@ -55,7 +55,7 @@ export default {
                                 Consult
                             </button>
                         </form>
-                        <div class="input-options" style="margin-top: var(--spacing-sm); display: flex; gap: var(--spacing-md); font-size: 12px; color: #666; flex-wrap: wrap; align-items: center;">
+                        <div class="input-options" style="margin-top: var(--spacing-sm); display: flex; gap: var(--spacing-md); font-size: 12px; color: #7f8c8d; flex-wrap: wrap; align-items: center;">
                             <label><input type="checkbox" id="req-citations" checked> Require Citations</label>
                             <label title="DTDA → IMRA → SHVA pipeline"><input type="checkbox" id="use-god-mode"> God Mode v3.0</label>
                             <span id="model-badge" class="badge badge-gold" style="margin-left: auto;">Model: GPT-4o</span>
@@ -71,7 +71,7 @@ export default {
                         <span class="badge badge-warning" id="citation-count">0 Sources</span>
                     </div>
                     <div id="citations-list" style="flex: 1; overflow-y: auto; padding-right: var(--spacing-sm);">
-                        <div class="empty-state" style="text-align: center; color: #999; margin-top: 40px;">
+                        <div class="empty-state" style="text-align: center; color: #7f8c8d; margin-top: 40px;">
                             <div style="font-size: 40px; margin-bottom: 10px;">📜</div>
                             <p>No scrolls consulted yet.</p>
                             <p style="font-size: 12px; margin-top: 8px;">Citations from IRC, IRS publications, and case law will appear here as you ask questions.</p>
@@ -197,7 +197,7 @@ export default {
         div.innerHTML = `
             <div class="message-avatar">🦉</div>
             <div class="message-content">
-                <div class="message-bubble" style="font-style: italic; color: #666;">
+                <div class="message-bubble" style="font-style: italic; color: #7f8c8d;">
                     Consulting the archives...
                 </div>
             </div>

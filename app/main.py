@@ -341,6 +341,7 @@ from app.api.v1.endpoints import (  # noqa: E402
     auth,
     billing,
     businesses,
+    chart_of_accounts,
     chat,
     clients,
     dev_tracking,
@@ -349,16 +350,18 @@ from app.api.v1.endpoints import (  # noqa: E402
     integrations,
     invoices,
     notes,
+    payments,
     profile,
     projects,
+    receipts,
     spreadsheets,
     time_entries,
     transactions,
     vendors,
 )
+from app.api.v1.endpoints import logs as logs_ep  # noqa: E402
 from app.api.v1.endpoints import settings as settings_ep  # noqa: E402
 from app.api.v1.endpoints import settings_advanced as settings_adv  # noqa: E402
-from app.api.v1.endpoints import logs as logs_ep  # noqa: E402
 
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
 app.include_router(dev_tracking.router, prefix="/api/v1/dev", tags=["Dev Tracking"])
@@ -376,14 +379,17 @@ app.include_router(settings_ep.router, prefix="/api/v1/settings", tags=["Setting
 app.include_router(settings_adv.router, prefix="/api/v1/settings", tags=["Settings Advanced"])
 app.include_router(accounts.router, prefix="/api/v1/accounts", tags=["Accounts"])
 app.include_router(invoices.router, prefix="/api/v1/invoices", tags=["Invoices"])
+app.include_router(payments.router, prefix="/api/v1/payments", tags=["Stripe Payments"])
 app.include_router(projects.router, prefix="/api/v1/projects", tags=["Projects"])
 app.include_router(spreadsheets.router, prefix="/api/v1/spreadsheets", tags=["Spreadsheets"])
 app.include_router(notes.router, prefix="/api/v1/notes", tags=["Notes"])
 app.include_router(businesses.router, prefix="/api/v1/businesses", tags=["Businesses"])
 app.include_router(expenses.router, prefix="/api/v1/expenses", tags=["Expenses"])
+app.include_router(receipts.router, prefix="/api/v1/receipts", tags=["Receipt Scanning"])
 app.include_router(time_entries.router, prefix="/api/v1/time-entries", tags=["Time Entries"])
 app.include_router(vendors.router, prefix="/api/v1/vendors", tags=["Vendors"])
 app.include_router(transactions.router, prefix="/api/v1/transactions", tags=["Transactions"])
+app.include_router(chart_of_accounts.router, prefix="/api/v1/ledger", tags=["Chart of Accounts"])
 
 
 # ---------------------------------------------------------------------------
@@ -391,6 +397,7 @@ app.include_router(transactions.router, prefix="/api/v1/transactions", tags=["Tr
 # ---------------------------------------------------------------------------
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 templates = Jinja2Templates(directory="app/templates")
 
 

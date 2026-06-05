@@ -20,20 +20,20 @@ function renderContent() {
         const revenue = invoices.reduce((a, i) => a + (i.amount || i.total || 0), 0);
         const totalExp = expenses.reduce((a, e) => a + (e.amount || 0), 0);
         const profit = revenue - totalExp;
-        body = `<div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:16px;">
-            <div class="card" style="padding:16px;min-width:150px;"><h3 style="color:#4ade80;">Revenue</h3><p style="font-size:1.5rem;">$${revenue.toFixed(2)}</p></div>
-            <div class="card" style="padding:16px;min-width:150px;"><h3 style="color:#f87171;">Expenses</h3><p style="font-size:1.5rem;">$${totalExp.toFixed(2)}</p></div>
-            <div class="card" style="padding:16px;min-width:150px;"><h3 style="color:${profit>=0?'#4ade80':'#f87171'};">Profit</h3><p style="font-size:1.5rem;">$${profit.toFixed(2)}</p></div>
+        body = `<div class="grid grid-3" style="margin-top:16px;">
+            <div class="card kpi-card" style="padding:16px;"><h3>Revenue</h3><p class="kpi-value positive">$${revenue.toFixed(2)}</p></div>
+            <div class="card kpi-card" style="padding:16px;"><h3>Expenses</h3><p class="kpi-value negative">$${totalExp.toFixed(2)}</p></div>
+            <div class="card kpi-card" style="padding:16px;"><h3>Profit</h3><p class="kpi-value ${profit>=0?'positive':'negative'}">$${profit.toFixed(2)}</p></div>
         </div>`;
     } else if (activeTab === 'expenses') {
         const cats = Object.entries(summary).sort((a, b) => b[1] - a[1]);
         const max = cats[0]?.[1] || 1;
         body = `<div style="margin-top:16px;">${cats.map(([cat, amt]) => `
             <div style="margin:8px 0;display:flex;align-items:center;gap:8px;">
-                <span style="width:140px;font-size:0.85rem;">${cat.replace(/_/g,' ')}</span>
-                <div style="flex:1;background:#333;border-radius:4px;height:20px;"><div style="width:${(amt/max*100).toFixed(1)}%;height:100%;background:#60a5fa;border-radius:4px;"></div></div>
-                <span style="font-size:0.85rem;">$${amt.toFixed(2)}</span>
-            </div>`).join('') || '<p style="opacity:0.6">No data.</p>'}</div>`;
+                <span class="text-sm" style="width:140px;">${cat.replace(/_/g,' ')}</span>
+                <div class="progress-bar" style="flex:1;height:20px;"><div class="progress-bar-fill" style="width:${(amt/max*100).toFixed(1)}%;background:var(--color-gold);"></div></div>
+                <span class="text-sm">$${amt.toFixed(2)}</span>
+            </div>`).join('') || '<p class="text-muted">No data.</p>'}</div>`;
     } else {
         const deductible = expenses.filter(e => e.tax_deductible);
         const grouped = {};

@@ -7,11 +7,12 @@ sys.path.insert(0, ".")
 os.environ.setdefault("DATABASE_URL", "sqlite+aiosqlite:///db/taxgod.db")
 
 async def main():
-    from app.core.database import Base, engine, async_session_factory
-    from app.core.security import hash_password
-    from app.models.user import User, UserRole
-    from app.models.subscription import Subscription, SubscriptionTier, SubscriptionStatus
     from sqlalchemy import select
+
+    from app.core.database import Base, async_session_factory, engine
+    from app.core.security import hash_password
+    from app.models.subscription import Subscription, SubscriptionStatus, SubscriptionTier
+    from app.models.user import User, UserRole
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -44,11 +45,11 @@ async def main():
         db.add(sub)
         await db.commit()
 
-        print(f"✅ Admin user created:")
+        print("✅ Admin user created:")
         print(f"   Email:    {email}")
         print(f"   Password: {password}")
-        print(f"   Role:     admin (full access)")
-        print(f"   Sub:      PRO (active)")
-        print(f"\n   ⚠️  Change your password after first login.")
+        print("   Role:     admin (full access)")
+        print("   Sub:      PRO (active)")
+        print("\n   ⚠️  Change your password after first login.")
 
 asyncio.run(main())

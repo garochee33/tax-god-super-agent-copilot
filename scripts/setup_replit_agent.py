@@ -4,11 +4,12 @@ Tax God - Replit Agent Setup Script
 Sets up Tax God as Trinity Agent #56 in Replit environment
 """
 
-import os
-import sys
 import json
+import os
 import subprocess
+import sys
 from pathlib import Path
+
 
 def setup_replit_environment():
     """Set up the Replit environment for Tax God"""

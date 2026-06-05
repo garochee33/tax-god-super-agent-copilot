@@ -86,7 +86,7 @@ export default {
                         <button type="button" id="god-mode-deep-analysis" class="btn btn-outline btn-sm" style="display: none;" title="Run DTDA→IMRA→SHVA on this audit">AI Deep Analysis (God Mode)</button>
                     </div>
                     
-                    <div id="results-content" style="text-align: center; padding: 40px; color: #666;">
+                    <div id="results-content" style="text-align: center; padding: 40px; color: #7f8c8d;">
                         <div style="font-size: 48px; margin-bottom: 20px; opacity: 0.5;">⚖️</div>
                         <p>Submit a plea to receive judgment.</p>
                         <p style="font-size: 12px; margin-top: 8px;">The AI audit agent will score your return, flag risks, and recommend savings.</p>
@@ -197,8 +197,8 @@ export default {
                         <span style="font-weight: 600; display: flex; align-items: center; gap: 8px;">${icon} ${escapeHtml(flag.title)}</span>
                         <span class="badge ${colorClass}">${escapeHtml(flag.category)}</span>
                     </div>
-                    <div style="font-size: 13px; color: #444; margin-bottom: 8px;">${escapeHtml(flag.description)}</div>
-                    <div style="font-size: 12px; font-style: italic; color: #666;">Recommendation: ${escapeHtml(flag.recommendation)}</div>
+                    <div style="font-size: 13px; color: var(--color-text-dark); margin-bottom: 8px;">${escapeHtml(flag.description)}</div>
+                    <div style="font-size: 12px; font-style: italic; color: #7f8c8d;">Recommendation: ${escapeHtml(flag.recommendation)}</div>
                 </div>
             `;
         });
@@ -240,7 +240,7 @@ export default {
             block.innerHTML = `
                 <div class="card-title" style="font-size: 14px; margin-bottom: 8px;">God Mode v3.0 — AI Deep Analysis</div>
                 <div class="message-bubble" style="background: rgba(26,26,46,0.06); padding: var(--spacing-md); border-radius: var(--border-radius-md); white-space: pre-wrap;">${safeMarkdown(content)}</div>
-                <div style="font-size: 11px; color: #666; margin-top: 8px;">Confidence: ${Math.round((confidence || 0) * 100)}%</div>
+                <div style="font-size: 11px; color: #7f8c8d; margin-top: 8px;">Confidence: ${Math.round((confidence || 0) * 100)}%</div>
             `;
         } catch (err) {
             block.innerHTML = `<div style="color: var(--color-danger);">${escapeHtml(err.message || 'God Mode analysis failed.')}</div>`;
