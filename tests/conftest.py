@@ -19,7 +19,6 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-import pytest
 import pytest_asyncio
 from unittest.mock import AsyncMock, MagicMock
 
@@ -28,7 +27,6 @@ from httpx import ASGITransport, AsyncClient
 from app.core.database import Base, engine, async_session_factory
 from app.core.security import create_access_token, hash_password
 from app.models.user import User, UserRole
-from app.models.client import Client
 from app.models.subscription import Subscription, SubscriptionStatus, SubscriptionTier
 from app.api.deps import get_db
 

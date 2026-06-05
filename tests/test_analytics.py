@@ -3,7 +3,7 @@ Tax God — Analytics Endpoint Tests
 """
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 from httpx import AsyncClient
 
 

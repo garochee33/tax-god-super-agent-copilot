@@ -23,7 +23,7 @@ run_check() {
 }
 
 # 1. Lint
-run_check "ruff lint" ruff check app/ tests/ --ignore E402,E501
+run_check "ruff lint" ruff check app/ tests/ --select E,F,W --ignore E402,E501,E741
 
 # 2. Tests
 run_check "pytest" pytest tests/ -q --tb=no
