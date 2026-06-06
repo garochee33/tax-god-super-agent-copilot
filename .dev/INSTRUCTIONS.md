@@ -60,3 +60,27 @@ All significant features, fixes, and refactors should be logged:
 | Verify integrity | `GET /dev/integrity/verify` |
 | Deploy gate | `GET /dev/deploy/gate` |
 | Run checks | `./scripts/run-all-checks.sh` |
+
+## Current State (2026-06-05)
+
+- **Tests:** 246 passing (30 test files)
+- **Lint:** 0 errors (ruff E,F,W --ignore E402,E501,E741)
+- **Gate:** GO 4/4 (run `bash scripts/run-all-checks.sh`)
+- **Integrity:** 76 files hashed (POST /api/v1/dev/integrity/snapshot to refresh)
+- **Commit:** 8ad71ec on main
+- **Python:** Use 3.11 via `.venv` (system python3 is 3.14, incompatible)
+- **DB:** PostgreSQL (user enzogaroche, db taxgod, no password, localhost)
+- **Other agent:** Another Kiro agent may work in parallel — always rebase before push
+
+## Cross-Repo Architecture
+
+| Repo | Purpose | Relationship |
+|------|---------|-------------|
+| tax-god-super-agent-copilot | Main app (this repo) | Canonical |
+| DSH | Public monorepo | Contains dsh-console (generated) |
+| dome-console | Private console | Source for dsh-console via build-public.sh |
+| dome-brain | Knowledge/Obsidian vault | Independent |
+| DOME-HUB | Private infrastructure | Shared DB paths |
+| trinity-unified-ai | AI framework | Reference |
+| sacred-geometry-agents | Agent architecture | Reference |
+| resonance-coordination-layer | Multi-agent coordination | Reference |

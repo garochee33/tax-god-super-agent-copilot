@@ -1,6 +1,30 @@
 # Tax God — Build Log
 
-## 2026-06-05 — Full Build Session (30+ commits)
+## 2026-06-05 Session 2 — Testing & Hardening (20:00 EDT)
+
+### Kiro Agent (Session 2)
+
+| SHA | Message |
+|-----|---------|
+| 8ad71ec | fix: remove unused import in monitoring.py |
+| 1fbbda9 | docs: CTO Build Framework Validation v2 — 246 tests |
+| 15215a8 | test: comprehensive test suite for ALL endpoints |
+| 5eb6f19 | fix: reset .dev/ after pytest in run-all-checks |
+| 08decb5 | test: expand coverage 46→106 tests (+60) |
+| 0bfbe10 | feat: integrity snapshot + subscription paywall UI |
+| 16b1f14 | fix: run-all-checks activates venv + sets env vars |
+| 77206c4 | fix: lint cleanup + update run-all-checks to project standard |
+
+**Key metrics:**
+- Tests: 46 → 246 (5.3× increase)
+- Endpoint coverage: ~20% → ~95%
+- Vulnerabilities fixed: 9 (DSH dependabot)
+- dome-console → dsh-console unified with build-public.sh
+- Integrity snapshot: 76 files hashed
+
+---
+
+## 2026-06-05 Session 1 — Full Build (30+ commits)
 
 ### Kiro Agent (iMac Terminal)
 

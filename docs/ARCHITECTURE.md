@@ -110,3 +110,45 @@ Page modules:
 - Settings (admin config)
 - Profile (user preferences)
 - Onboarding (first-run wizard)
+
+## Testing & Quality
+
+| Metric | Value |
+|--------|-------|
+| Total tests | 246 |
+| Test files | 30 |
+| Endpoint groups covered | 28/28 |
+| Lint errors | 0 (ruff E,F,W) |
+| Pre-deploy gate | GO 4/4 (lint, pytest, git clean, integrity) |
+
+### Test Categories
+
+- **Auth & Security**: 29 tests (JWT, RBAC, rate limiting, headers, injection)
+- **CRUD Endpoints**: 72 tests (clients, businesses, expenses, invoices, vendors, accounts, transactions, time, notes, projects, spreadsheets)
+- **AI & Agents**: 15 tests (chat, advanced orchestration, subscription gating)
+- **Finance**: 19 tests (payments, receipts, audit, billing)
+- **Infrastructure**: 28 tests (settings, dev tracking, logs, integrity)
+- **Feature Tiers**: 40 tests (tier 1 + tier 2 feature packs)
+- **E2E**: 2 tests (full pipeline, workflow)
+
+### Pre-Deploy Gate
+
+```bash
+bash scripts/run-all-checks.sh
+# [ruff lint]    ✅ PASS
+# [pytest]       ✅ PASS (246 tests)
+# [git clean]    ✅ PASS
+# [integrity]    ✅ PASS (76 files hashed)
+# Result: ✅ GO (4/4)
+```
+
+## Security Middleware Stack
+
+| Layer | File | Purpose |
+|-------|------|---------|
+| Rate Limiter | `security.py` | Per-IP + per-user request throttling |
+| Security Headers | `security_headers.py` | CSP, X-Frame-Options, HSTS, XSS protection |
+| Audit Logger | `audit_middleware.py` | Request/response audit trail |
+| Request ID | `request_id.py` | Correlation ID for distributed tracing |
+| Error Handler | `error_handler.py` | Safe error responses (no stack traces) |
+| Timeout | `timeout.py` | Request timeout enforcement |

@@ -93,6 +93,8 @@ tests/                  # Test suite
 pytest tests/ -v
 ```
 
+246 tests covering all 28 endpoint groups. Pre-deploy gate: `bash scripts/run-all-checks.sh`
+
 ## License
 
 Private — Trinity Consortium / Enzo Garoche (EGD33)
