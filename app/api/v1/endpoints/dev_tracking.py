@@ -12,7 +12,7 @@ import re
 import subprocess
 import time
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -88,7 +88,7 @@ async def post_commit_hook(body: PostCommitRequest, _user: AdminUser):
         "message": body.message,
         "author": body.author,
         "files_changed": body.files_changed,
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
     }
     logs = _read_json(DEV_DIR / "build_logs.json")
     if not isinstance(logs, list):
@@ -121,12 +121,12 @@ async def register_agent(body: AgentRegister, _user: AdminUser):
     existing = next((a for a in agents if a["name"] == body.name), None)
     if existing:
         existing["capabilities"] = body.capabilities
-        existing["last_active"] = datetime.now(timezone.utc).isoformat()
+        existing["last_active"] = datetime.now(UTC).isoformat()
     else:
         agents.append({
             "name": body.name,
             "capabilities": body.capabilities,
-            "last_active": datetime.now(timezone.utc).isoformat(),
+            "last_active": datetime.now(UTC).isoformat(),
             "commits_count": 0,
         })
     _write_json(AGENTS_FILE, agents)
@@ -160,7 +160,7 @@ async def propose_change(body: Proposal, _user: AdminUser):
         "files_affected": body.files_affected,
         "risk_level": body.risk_level,
         "status": "approved" if body.risk_level == "low" else "pending",
-        "created": datetime.now(timezone.utc).isoformat(),
+        "created": datetime.now(UTC).isoformat(),
     }
     proposals.append(entry)
     _write_json(PROPOSALS_FILE, proposals)
@@ -230,7 +230,7 @@ async def lock_file(body: LockRequest, _user: AdminUser):
     locks.append({
         "file": body.file,
         "agent": body.agent,
-        "locked_at": datetime.now(timezone.utc).isoformat(),
+        "locked_at": datetime.now(UTC).isoformat(),
     })
     _write_json(LOCKS_FILE, locks)
     return {"locked": body.file}
@@ -368,7 +368,7 @@ def _hash_py_files() -> dict[str, str]:
 @router.post("/integrity/snapshot")
 async def integrity_snapshot(_user: AdminUser):
     hashes = _hash_py_files()
-    _write_json(INTEGRITY_FILE, {"snapshot_at": datetime.now(timezone.utc).isoformat(), "files": hashes})
+    _write_json(INTEGRITY_FILE, {"snapshot_at": datetime.now(UTC).isoformat(), "files": hashes})
     return {"files_hashed": len(hashes)}
 
 

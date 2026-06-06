@@ -18,8 +18,8 @@ import base64
 import hashlib
 import json
 import os
-import signal
 import shutil
+import signal
 import subprocess
 from datetime import UTC, datetime
 from pathlib import Path
@@ -169,6 +169,7 @@ async def test_connection(body: ConnectionTestRequest, user: AdminUser):
 
         elif key == "DATABASE_URL":
             from sqlalchemy import text
+
             from app.core.database import engine
             async with engine.connect() as conn:
                 await conn.execute(text("SELECT 1"))
@@ -246,10 +247,7 @@ async def get_settings_rbac(user: CurrentUser):
     sensitive_prefixes = ("sk_", "sk-", "pk_", "whsec_", "price_")
     sensitive_keys = {"SECRET_KEY", "INTEGRATION_ENCRYPTION_KEY", "DATABASE_URL", "REDIS_URL"}
 
-    if user.role == UserRole.PREPARER.value:
-        visible_sections = {"app", "integrations"}
-    else:
-        visible_sections = set(MANAGED_KEYS.keys())
+    visible_sections = {"app", "integrations"} if user.role == UserRole.PREPARER.value else set(MANAGED_KEYS.keys())
 
     sections: dict[str, dict[str, str]] = {}
     for section, keys in MANAGED_KEYS.items():

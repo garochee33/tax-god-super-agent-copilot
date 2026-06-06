@@ -28,7 +28,7 @@ run_check() {
 }
 
 # 1. Lint
-run_check "ruff lint" ruff check app/ tests/ --select E,F,W --ignore E402,E501,E741
+run_check "ruff lint" ruff check app/ tests/
 
 # 2. Tests
 export DATABASE_URL="${DATABASE_URL:-postgresql+asyncpg://$(whoami)@localhost:5432/taxgod}"

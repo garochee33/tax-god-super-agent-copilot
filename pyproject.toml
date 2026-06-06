@@ -47,10 +47,7 @@ known-first-party = ["app"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/conftest.py" = ["E402"]
-"app/main.py" = ["E402"]
-"app/services/totp_service.py" = ["SIM110"]
-"app/api/v1/endpoints/settings_advanced.py" = ["I001", "SIM108"]
-"app/api/v1/endpoints/dev_tracking.py" = ["UP017"]
+"app/main.py" = ["E402", "I001"]
 
 [tool.ruff.format]
 quote-style = "double"

@@ -42,7 +42,4 @@ def _compute_totp(secret: str, time_step: int) -> str:
 def verify_totp(secret: str, code: str) -> bool:
     """Verify a TOTP code with ±1 window."""
     current_step = int(time.time()) // 30
-    for offset in (-1, 0, 1):
-        if hmac.compare_digest(_compute_totp(secret, current_step + offset), code):
-            return True
-    return False
+    return any(hmac.compare_digest(_compute_totp(secret, current_step + offset), code) for offset in (-1, 0, 1))
