@@ -96,21 +96,24 @@ a {
     padding: var(--spacing-xl);
     text-align: center;
     border-bottom: 1px solid rgba(212, 165, 116, 0.3);
+    background: radial-gradient(ellipse at center, rgba(212, 165, 116, 0.08) 0%, transparent 70%);
 }
 
 .logo-text {
     font-family: var(--font-heading);
-    font-size: 24px;
+    font-size: 28px;
     color: var(--color-gold);
-    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    text-shadow: 0 0 20px rgba(212, 165, 116, 0.4), 0 2px 4px rgba(0,0,0,0.5);
     margin-bottom: var(--spacing-xs);
+    letter-spacing: 3px;
 }
 
 .logo-subtext {
-    font-size: 12px;
+    font-size: 11px;
     opacity: 0.7;
-    letter-spacing: 2px;
+    letter-spacing: 3px;
     text-transform: uppercase;
+    color: var(--color-gold-light);
 }
 
 /* Business Switcher */
@@ -156,9 +159,9 @@ a {
 }
 
 .nav-item {
-    padding: 10px var(--spacing-lg);
+    padding: 11px var(--spacing-lg);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.25s ease;
     border-left: 3px solid transparent;
     display: flex;
     align-items: center;
@@ -166,28 +169,45 @@ a {
     font-family: var(--font-body);
     font-size: 13px;
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(255, 255, 255, 0.75);
+    position: relative;
 }
 
 .nav-item:hover {
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(212, 165, 116, 0.08);
     color: var(--color-gold-light);
 }
 
+.nav-item:hover .nav-icon {
+    filter: drop-shadow(0 0 4px rgba(212, 165, 116, 0.6));
+    transform: scale(1.1);
+}
+
 .nav-item.active {
-    background: rgba(212, 165, 116, 0.12);
+    background: linear-gradient(90deg, rgba(212, 165, 116, 0.15) 0%, transparent 100%);
     border-left-color: var(--color-gold);
     color: var(--color-gold);
 }
 
+.nav-item.active .nav-icon {
+    filter: drop-shadow(0 0 6px rgba(212, 165, 116, 0.8));
+}
+
 .nav-icon {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     font-size: 18px;
     line-height: 1;
     flex-shrink: 0;
     text-align: center;
     fill: currentColor;
+    transition: all 0.25s ease;
+}
+
+.nav-divider {
+    height: 1px;
+    margin: var(--spacing-sm) var(--spacing-lg);
+    background: linear-gradient(90deg, transparent, rgba(212, 165, 116, 0.4), transparent);
 }
 
 .nav-divider {
@@ -208,7 +228,7 @@ a {
 .topbar {
     height: 80px;
     background: white;
-    border-bottom: var(--border-gold-thin);
+    border-bottom: 2px solid var(--color-gold);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -217,11 +237,21 @@ a {
     top: 0;
     z-index: 90;
     background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h40v40H0V0zm20 20h20v20H20V20zM0 20h20v20H0V20z' fill='%23f5f0e8' fill-opacity='0.4'/%3E%3C/svg%3E");
+    box-shadow: 0 2px 10px rgba(212, 165, 116, 0.1);
 }
 
 .page-title {
     font-size: 24px;
     color: var(--color-primary-dark);
+    position: relative;
+}
+
+.page-title::after {
+    content: '✦';
+    margin-left: 12px;
+    font-size: 12px;
+    color: var(--color-gold);
+    vertical-align: middle;
 }
 
 .user-profile {
@@ -314,13 +344,19 @@ a {
 
 .btn-primary {
     background: linear-gradient(135deg, var(--color-gold) 0%, var(--color-gold-dark) 100%);
-    color: white;
-    box-shadow: var(--shadow-sm);
+    color: var(--color-primary-dark);
+    box-shadow: 0 4px 15px rgba(212, 165, 116, 0.3);
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    font-family: var(--font-heading);
+    font-size: 13px;
 }
 
 .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: var(--shadow-gold);
+    box-shadow: 0 6px 20px rgba(212, 165, 116, 0.5);
+    background: linear-gradient(135deg, var(--color-gold-light) 0%, var(--color-gold) 100%);
 }
 
 .btn-outline {
@@ -815,6 +851,20 @@ a {
     background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary-light) 50%, #0f3460 100%);
     color: var(--color-text-light);
     padding: var(--spacing-xl);
+    position: relative;
+    overflow: hidden;
+}
+
+.gate-container::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(ellipse at 30% 20%, rgba(212, 165, 116, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 70% 80%, rgba(212, 165, 116, 0.04) 0%, transparent 40%);
+    pointer-events: none;
 }
 
 .gate-content {
@@ -828,10 +878,11 @@ a {
 
 .gate-home .gate-logo {
     font-family: var(--font-heading);
-    font-size: 42px;
+    font-size: 48px;
     color: var(--color-gold);
-    text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    text-shadow: 0 0 30px rgba(212, 165, 116, 0.5), 0 2px 8px rgba(0,0,0,0.4);
     margin-bottom: var(--spacing-xs);
+    letter-spacing: 4px;
 }
 
 .gate-home .gate-tagline {
@@ -859,19 +910,34 @@ a {
 }
 
 .gate-form-card {
-    background: rgba(255,255,255,0.06);
+    background: rgba(26, 26, 46, 0.85);
     border: 1px solid rgba(212, 165, 116, 0.4);
     border-radius: var(--border-radius-lg);
-    padding: var(--spacing-xl);
-    box-shadow: var(--shadow-lg);
+    padding: var(--spacing-xl) var(--spacing-xl) var(--spacing-lg);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 60px rgba(212, 165, 116, 0.08);
+    backdrop-filter: blur(10px);
+    position: relative;
+}
+
+.gate-form-card::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 20%;
+    right: 20%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--color-gold), transparent);
+    border-radius: 2px;
 }
 
 .gate-form-card h2 {
     font-family: var(--font-heading);
-    font-size: 22px;
+    font-size: 24px;
     color: var(--color-gold);
     margin-bottom: var(--spacing-lg);
     text-align: center;
+    letter-spacing: 3px;
+    text-shadow: 0 0 10px rgba(212, 165, 116, 0.3);
 }
 
 .gate-form-card .form-control {
@@ -1074,3 +1140,102 @@ select.settings-input { appearance: auto; }
 .paywall-btn-primary:hover { background: var(--color-gold-dark); color: #fff; }
 .paywall-btn-secondary { background: transparent; color: var(--color-text-dark); border: 1px solid var(--color-parchment-dark); }
 .paywall-btn-secondary:hover { background: var(--color-parchment-dark); }
+
+/* ========== Olympian Premium Accents ========== */
+
+/* Gold ornamental dividers */
+.section-divider, hr {
+    border: none;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--color-gold), transparent);
+    margin: var(--spacing-lg) 0;
+}
+
+/* Card gold top-accent */
+.card::before, .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 10%;
+    right: 10%;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--color-gold), transparent);
+    border-radius: 2px;
+}
+
+.card, .stat-card {
+    position: relative;
+}
+
+/* Greek key scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--color-primary-dark);
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--color-gold), var(--color-gold-dark));
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-gold-light);
+}
+
+/* Gold focus ring for all interactive elements */
+input:focus, select:focus, textarea:focus, button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(212, 165, 116, 0.4);
+}
+
+/* Section headers in pages */
+.page-content h2, .page-content h3 {
+    position: relative;
+    padding-bottom: var(--spacing-sm);
+}
+
+.page-content h2::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 60px;
+    height: 2px;
+    background: var(--color-gold);
+}
+
+/* Notification badge gold */
+.badge, .notification-badge {
+    background: var(--color-gold);
+    color: var(--color-primary-dark);
+    font-weight: 700;
+}
+
+/* Table header gold accent */
+.data-table th {
+    border-bottom: 2px solid var(--color-gold);
+    font-family: var(--font-heading);
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--color-primary-dark);
+}
+
+/* Empty state styling */
+.empty-state {
+    text-align: center;
+    padding: var(--spacing-xxl);
+    color: var(--color-gold-dark);
+    font-style: italic;
+}
+
+.empty-state::before {
+    content: '🏛️';
+    display: block;
+    font-size: 48px;
+    margin-bottom: var(--spacing-md);
+    filter: grayscale(30%);
+}
