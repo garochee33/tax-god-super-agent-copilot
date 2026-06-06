@@ -38,5 +38,35 @@
     "file": "test/964d2e92.py",
     "agent": "Agent1",
     "locked_at": "2026-06-05T23:54:21.492394+00:00"
+  },
+  {
+    "file": "test/2085d3ed.py",
+    "agent": "TestAgent",
+    "locked_at": "2026-06-06T00:03:32.130173+00:00"
+  },
+  {
+    "file": "test/8c139ad2.py",
+    "agent": "Agent1",
+    "locked_at": "2026-06-06T00:03:32.436329+00:00"
+  },
+  {
+    "file": "test/c1f3930c.py",
+    "agent": "TestAgent",
+    "locked_at": "2026-06-06T00:04:33.010332+00:00"
+  },
+  {
+    "file": "test/4748d724.py",
+    "agent": "Agent1",
+    "locked_at": "2026-06-06T00:04:33.318121+00:00"
+  },
+  {
+    "file": "test/26235017.py",
+    "agent": "TestAgent",
+    "locked_at": "2026-06-06T00:07:02.754297+00:00"
+  },
+  {
+    "file": "test/904cbdcc.py",
+    "agent": "Agent1",
+    "locked_at": "2026-06-06T00:07:03.062232+00:00"
   }
 ]

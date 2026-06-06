@@ -200,7 +200,7 @@ if settings.is_production:
 app.add_middleware(
     RateLimitMiddleware,
     requests_per_minute=120 if not settings.is_production else 60,
-    auth_requests_per_minute=10,
+    auth_requests_per_minute=30 if not settings.is_production else 10,
 )
 app.add_middleware(
     CORSMiddleware,
