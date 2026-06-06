@@ -4,9 +4,8 @@ Tax God - Notifications REST Endpoints
 
 from __future__ import annotations
 
-from sqlalchemy import func, select, update
-
 from fastapi import APIRouter
+from sqlalchemy import func, select, update
 
 from app.api.deps import CurrentUser, DBSession
 from app.models.notification import Notification

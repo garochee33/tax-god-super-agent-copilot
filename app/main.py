@@ -25,6 +25,7 @@ from app.core.config import Environment, get_settings
 from app.core.database import Base, check_database_health
 from app.core.database import engine as db_engine
 from app.core.exceptions import TaxGodError
+from app.core.logging_config import setup_logging
 from app.middleware.audit_middleware import AuditMiddleware
 from app.middleware.error_handler import (
     generic_exception_handler,
@@ -49,8 +50,6 @@ from app.services.integrations.manager import IntegrationManager
 from app.services.integrations.quickbooks_service import QuickBooksService
 from app.services.parallel_processor import ParallelProcessor
 from app.services.tax_writer import TaxWriter
-
-from app.core.logging_config import setup_logging
 
 settings = get_settings()
 setup_logging(settings.ENVIRONMENT.value, settings.LOG_LEVEL)
@@ -397,6 +396,8 @@ from app.api.v1.endpoints import (  # noqa: E402
     chat,
     client_portal,
     clients,
+    currency,  # noqa: E402
+    data_io,  # noqa: E402
     dev_tracking,
     doc_generation,
     documents,
@@ -404,6 +405,7 @@ from app.api.v1.endpoints import (  # noqa: E402
     exports,
     integrations,
     invoices,
+    monitoring,  # noqa: E402
     notes,
     notifications,
     payments,
@@ -417,18 +419,15 @@ from app.api.v1.endpoints import (  # noqa: E402
     teams,
     time_entries,
     transactions,
+    two_factor,  # noqa: E402
     vendors,
     webhooks,
     websocket,
 )
-from app.api.v1.endpoints import currency  # noqa: E402
-from app.api.v1.endpoints import data_io  # noqa: E402
 from app.api.v1.endpoints import email as email_ep  # noqa: E402
 from app.api.v1.endpoints import logs as logs_ep  # noqa: E402
-from app.api.v1.endpoints import monitoring  # noqa: E402
 from app.api.v1.endpoints import settings as settings_ep  # noqa: E402
 from app.api.v1.endpoints import settings_advanced as settings_adv  # noqa: E402
-from app.api.v1.endpoints import two_factor  # noqa: E402
 
 app.include_router(admin.router, prefix="/api/v1", tags=["Admin"])
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])

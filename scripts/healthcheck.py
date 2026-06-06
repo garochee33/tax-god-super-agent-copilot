@@ -49,8 +49,8 @@ def check_disk_space() -> dict:
 def check_uploads_writable() -> dict:
     try:
         UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
-        tf = tempfile.NamedTemporaryFile(dir=UPLOADS_DIR, delete=True)
-        tf.close()
+        with tempfile.NamedTemporaryFile(dir=UPLOADS_DIR, delete=True):
+            pass
         return {"check": "uploads_writable", "ok": True}
     except Exception as e:
         return {"check": "uploads_writable", "ok": False, "error": str(e)}

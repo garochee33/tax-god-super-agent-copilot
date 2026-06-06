@@ -8,7 +8,7 @@ from __future__ import annotations
 import json
 import logging
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 
 class _JsonFormatter(logging.Formatter):
@@ -18,7 +18,7 @@ class _JsonFormatter(logging.Formatter):
         from app.middleware.request_id import get_request_id
 
         log_entry = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "level": record.levelname,
             "message": record.getMessage(),
             "logger": record.name,
