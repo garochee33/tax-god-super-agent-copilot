@@ -30,6 +30,7 @@ class ActivityCategory(str, Enum):
 
 class ActivityLog(Base):
     """Tracks all system activity."""
+
     __tablename__ = "activity_logs"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
@@ -46,6 +47,7 @@ class ActivityLog(Base):
 
 class BuildLog(Base):
     """Tracks code agent contributions and build events."""
+
     __tablename__ = "build_logs"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
@@ -61,6 +63,7 @@ class BuildLog(Base):
 
 class KnowledgeEntry(Base):
     """Knowledge base entries — docs, reports, memories."""
+
     __tablename__ = "knowledge_entries"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
@@ -75,6 +78,5 @@ class KnowledgeEntry(Base):
         DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(UTC),
-        onupdate=lambda: datetime.now(UTC), nullable=False
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), onupdate=lambda: datetime.now(UTC), nullable=False
     )

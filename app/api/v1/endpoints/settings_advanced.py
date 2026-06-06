@@ -40,8 +40,12 @@ MANAGED_KEYS = {
     "stripe": ["STRIPE_SECRET_KEY", "STRIPE_PUBLISHABLE_KEY", "STRIPE_WEBHOOK_SECRET", "STRIPE_PRICE_MONTHLY"],
     "database": ["DATABASE_URL", "REDIS_URL"],
     "integrations": [
-        "GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_REDIRECT_URI",
-        "QUICKBOOKS_CLIENT_ID", "QUICKBOOKS_CLIENT_SECRET", "QUICKBOOKS_REDIRECT_URI",
+        "GOOGLE_CLIENT_ID",
+        "GOOGLE_CLIENT_SECRET",
+        "GOOGLE_REDIRECT_URI",
+        "QUICKBOOKS_CLIENT_ID",
+        "QUICKBOOKS_CLIENT_SECRET",
+        "QUICKBOOKS_REDIRECT_URI",
         "INTEGRATION_ENCRYPTION_KEY",
     ],
     "outreach": ["SENDGRID_API_KEY", "APOLLO_API_KEY"],
@@ -108,6 +112,7 @@ def _save_rotations(data: dict) -> None:
 # 1. KEY ROTATION
 # ---------------------------------------------------------------------------
 
+
 class RotateRequest(BaseModel):
     key: str = "SECRET_KEY"
 
@@ -139,6 +144,7 @@ async def rotate_key(body: RotateRequest, user: AdminUser):
 # 2. CONNECTION TEST
 # ---------------------------------------------------------------------------
 
+
 class ConnectionTestRequest(BaseModel):
     key: str
 
@@ -150,12 +156,14 @@ async def test_connection(body: ConnectionTestRequest, user: AdminUser):
     try:
         if key == "OPENAI_API_KEY":
             import openai
+
             client = openai.OpenAI(api_key=os.environ.get("OPENAI_API_KEY", ""))
             client.models.list()
             return {"key": key, "status": "ok", "detail": "Listed models successfully"}
 
         elif key == "REDIS_URL":
             import redis
+
             r = redis.from_url(os.environ.get("REDIS_URL", "redis://localhost:6379/0"))
             r.ping()
             r.close()
@@ -163,6 +171,7 @@ async def test_connection(body: ConnectionTestRequest, user: AdminUser):
 
         elif key == "STRIPE_SECRET_KEY":
             import stripe
+
             stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", "")
             stripe.Customer.list(limit=1)
             return {"key": key, "status": "ok", "detail": "Listed customers"}
@@ -171,6 +180,7 @@ async def test_connection(body: ConnectionTestRequest, user: AdminUser):
             from sqlalchemy import text
 
             from app.core.database import engine
+
             async with engine.connect() as conn:
                 await conn.execute(text("SELECT 1"))
             return {"key": key, "status": "ok", "detail": "SELECT 1 succeeded"}
@@ -187,10 +197,12 @@ async def test_connection(body: ConnectionTestRequest, user: AdminUser):
 # 3. AUDIT LOG (helper — called from PUT override below)
 # ---------------------------------------------------------------------------
 
+
 async def _log_audit(user_id: str, key_name: str, action: str, old_val: str, new_val: str):
     """Log a settings change to the audit table."""
     from app.core.database import async_session_factory
     from app.models.settings_audit import SettingsAuditLog
+
     async with async_session_factory() as session:
         entry = SettingsAuditLog(
             user_id=user_id,
@@ -236,6 +248,7 @@ async def update_settings_with_audit(body: SettingsUpdateRequest, user: AdminUse
 # 4. ROLE-BASED VISIBILITY
 # ---------------------------------------------------------------------------
 
+
 class SettingsResponse(BaseModel):
     sections: dict[str, dict[str, str]]
 
@@ -267,6 +280,7 @@ async def get_settings_rbac(user: CurrentUser):
 # 5. ENCRYPTED AT REST — macOS Keychain
 # ---------------------------------------------------------------------------
 
+
 class KeychainStoreRequest(BaseModel):
     key: str
     value: str
@@ -282,9 +296,9 @@ async def keychain_store(body: KeychainStoreRequest, user: AdminUser):
             capture_output=True,
         )
         result = subprocess.run(
-            ["security", "add-generic-password", "-s", f"taxgod-{body.key}",
-             "-a", "taxgod", "-w", body.value],
-            capture_output=True, text=True,
+            ["security", "add-generic-password", "-s", f"taxgod-{body.key}", "-a", "taxgod", "-w", body.value],
+            capture_output=True,
+            text=True,
         )
         if result.returncode != 0:
             raise HTTPException(status_code=500, detail=f"Keychain error: {result.stderr}")
@@ -301,7 +315,8 @@ async def keychain_status(user: AdminUser):
     for key in keys_to_check:
         result = subprocess.run(
             ["security", "find-generic-password", "-s", f"taxgod-{key}", "-w"],
-            capture_output=True, text=True,
+            capture_output=True,
+            text=True,
         )
         results[key] = result.returncode == 0
     return {"keychain_keys": results}
@@ -310,6 +325,7 @@ async def keychain_status(user: AdminUser):
 # ---------------------------------------------------------------------------
 # 6. AUTO-RESTART
 # ---------------------------------------------------------------------------
+
 
 @router.post("/restart")
 async def restart_server(user: AdminUser):
@@ -327,6 +343,7 @@ async def restart_server(user: AdminUser):
 # ---------------------------------------------------------------------------
 # 7. IMPORT / EXPORT
 # ---------------------------------------------------------------------------
+
 
 def _get_fernet() -> Fernet:
     secret = os.environ.get("SECRET_KEY", "CHANGE-ME-IN-PRODUCTION")
@@ -367,6 +384,7 @@ async def import_settings(body: ImportRequest, user: AdminUser):
 # 8. STRIPE WEBHOOK AUTO-REGISTER
 # ---------------------------------------------------------------------------
 
+
 class StripeWebhookRequest(BaseModel):
     url: str | None = None
 
@@ -376,6 +394,7 @@ async def stripe_register_webhook(body: StripeWebhookRequest, user: AdminUser):
     """Register a Stripe webhook endpoint for this app."""
     try:
         import stripe
+
         stripe.api_key = os.environ.get("STRIPE_SECRET_KEY", "")
         if not stripe.api_key:
             raise HTTPException(status_code=400, detail="STRIPE_SECRET_KEY not configured")
@@ -403,6 +422,7 @@ async def stripe_register_webhook(body: StripeWebhookRequest, user: AdminUser):
 # ---------------------------------------------------------------------------
 # 9. EXPIRY ALERTS
 # ---------------------------------------------------------------------------
+
 
 @router.get("/alerts")
 async def expiry_alerts(user: AdminUser):

@@ -18,9 +18,7 @@ logger = logging.getLogger(__name__)
 
 async def dispatch_event(db: AsyncSession, user_id: str, event_type: str, payload: dict) -> None:
     """Find matching webhooks for user/event and POST with HMAC signature."""
-    result = await db.execute(
-        select(Webhook).where(Webhook.owner_id == user_id, Webhook.is_active.is_(True))
-    )
+    result = await db.execute(select(Webhook).where(Webhook.owner_id == user_id, Webhook.is_active.is_(True)))
     webhooks = result.scalars().all()
 
     body = json.dumps(payload)

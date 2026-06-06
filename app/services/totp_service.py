@@ -18,13 +18,15 @@ def generate_secret() -> str:
 
 def generate_provisioning_uri(secret: str, email: str) -> str:
     """Generate otpauth:// URI for authenticator apps."""
-    params = urllib.parse.urlencode({
-        "secret": secret,
-        "issuer": "TaxGod",
-        "algorithm": "SHA1",
-        "digits": "6",
-        "period": "30",
-    })
+    params = urllib.parse.urlencode(
+        {
+            "secret": secret,
+            "issuer": "TaxGod",
+            "algorithm": "SHA1",
+            "digits": "6",
+            "period": "30",
+        }
+    )
     label = urllib.parse.quote(f"TaxGod:{email}")
     return f"otpauth://totp/{label}?{params}"
 
@@ -35,7 +37,7 @@ def _compute_totp(secret: str, time_step: int) -> str:
     msg = struct.pack(">Q", time_step)
     h = hmac.new(key, msg, hashlib.sha1).digest()
     offset = h[-1] & 0x0F
-    code = struct.unpack(">I", h[offset:offset + 4])[0] & 0x7FFFFFFF
+    code = struct.unpack(">I", h[offset : offset + 4])[0] & 0x7FFFFFFF
     return str(code % 10**6).zfill(6)
 
 

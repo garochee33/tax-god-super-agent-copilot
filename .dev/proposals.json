@@ -338,5 +338,25 @@
     "risk_level": "high",
     "status": "pending",
     "created": "2026-06-06T00:27:16.410827+00:00"
+  },
+  {
+    "id": "6d90706d",
+    "description": "Add caching layer",
+    "files_affected": [
+      "app/core/cache.py"
+    ],
+    "risk_level": "low",
+    "status": "approved",
+    "created": "2026-06-06T00:34:13.320102+00:00"
+  },
+  {
+    "id": "e6908f09",
+    "description": "Refactor database layer",
+    "files_affected": [
+      "app/core/database.py"
+    ],
+    "risk_level": "high",
+    "status": "pending",
+    "created": "2026-06-06T00:34:13.872374+00:00"
   }
 ]

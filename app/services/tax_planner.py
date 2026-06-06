@@ -86,9 +86,7 @@ async def project_annual_tax(db: AsyncSession, user_id: str, filing_status: str 
     }
 
 
-async def multi_year_forecast(
-    db: AsyncSession, user_id: str, years: int = 3, growth_rate: float = 0.05
-) -> list[dict]:
+async def multi_year_forecast(db: AsyncSession, user_id: str, years: int = 3, growth_rate: float = 0.05) -> list[dict]:
     base = await project_annual_tax(db, user_id)
     base_income = base["projected_income"]
     base_expenses = base["projected_expenses"]
@@ -108,15 +106,17 @@ async def multi_year_forecast(
         total = federal_tax + se_tax
         effective = (total / income * 100) if income > 0 else 0
         bracket_info = _get_bracket_info(taxable, "single")
-        results.append({
-            "year": current_year + i,
-            "projected_income": round(income, 2),
-            "projected_expenses": round(expenses, 2),
-            "taxable_income": round(taxable, 2),
-            "projected_liability": round(total, 2),
-            "effective_rate": round(effective, 2),
-            "marginal_rate": bracket_info["bracket_rate"],
-        })
+        results.append(
+            {
+                "year": current_year + i,
+                "projected_income": round(income, 2),
+                "projected_expenses": round(expenses, 2),
+                "taxable_income": round(taxable, 2),
+                "projected_liability": round(total, 2),
+                "effective_rate": round(effective, 2),
+                "marginal_rate": bracket_info["bracket_rate"],
+            }
+        )
     return results
 
 
@@ -146,9 +146,7 @@ def bracket_optimizer(income: float, filing_status: str = "single") -> dict:
     }
 
 
-def retirement_contribution_impact(
-    income: float, contribution: float, filing_status: str = "single"
-) -> dict:
+def retirement_contribution_impact(income: float, contribution: float, filing_status: str = "single") -> dict:
     deduction = STANDARD_DEDUCTION_2024.get(filing_status, 14600)
 
     # Without contribution

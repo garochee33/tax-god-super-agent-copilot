@@ -92,8 +92,9 @@ async def income_vs_expenses(current_user: CurrentUser, db: DBSession):
     ytd_start = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
 
     inc = await db.execute(
-        select(func.sum(Invoice.amount))
-        .where(Invoice.owner_id == current_user.id, Invoice.status == "paid", Invoice.paid_date >= ytd_start)
+        select(func.sum(Invoice.amount)).where(
+            Invoice.owner_id == current_user.id, Invoice.status == "paid", Invoice.paid_date >= ytd_start
+        )
     )
     exp = await db.execute(
         select(func.sum(Expense.amount)).where(Expense.owner_id == current_user.id, Expense.date >= ytd_start)

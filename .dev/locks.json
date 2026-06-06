@@ -158,5 +158,15 @@
     "file": "test/1fec0dda.py",
     "agent": "Agent1",
     "locked_at": "2026-06-06T00:27:13.649711+00:00"
+  },
+  {
+    "file": "test/abb90208.py",
+    "agent": "TestAgent",
+    "locked_at": "2026-06-06T00:34:08.472493+00:00"
+  },
+  {
+    "file": "test/8588ed53.py",
+    "agent": "Agent1",
+    "locked_at": "2026-06-06T00:34:08.795789+00:00"
   }
 ]

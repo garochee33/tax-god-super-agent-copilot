@@ -84,9 +84,7 @@ async def exchange_token(body: ExchangeRequest, user: CurrentUser, db: DBSession
 @router.get("/connections", response_model=list[ConnectionOut])
 async def list_connections(user: CurrentUser, db: DBSession):
     """List user's connected bank accounts."""
-    result = await db.execute(
-        select(BankConnection).where(BankConnection.owner_id == user.id)
-    )
+    result = await db.execute(select(BankConnection).where(BankConnection.owner_id == user.id))
     return result.scalars().all()
 
 
@@ -94,9 +92,7 @@ async def list_connections(user: CurrentUser, db: DBSession):
 async def sync_transactions(connection_id: str, user: CurrentUser, db: DBSession):
     """Pull latest transactions from Plaid (or mock) into Transaction table."""
     result = await db.execute(
-        select(BankConnection).where(
-            BankConnection.id == connection_id, BankConnection.owner_id == user.id
-        )
+        select(BankConnection).where(BankConnection.id == connection_id, BankConnection.owner_id == user.id)
     )
     conn = result.scalar_one_or_none()
     if not conn:
@@ -109,16 +105,18 @@ async def sync_transactions(connection_id: str, user: CurrentUser, db: DBSession
     ]
 
     for t in mock_txns:
-        db.add(Transaction(
-            owner_id=user.id,
-            account_id=conn.id,
-            date=t["date"],
-            description=t["description"],
-            amount=t["amount"],
-            category=t["category"],
-            source="plaid",
-            reconciled=False,
-        ))
+        db.add(
+            Transaction(
+                owner_id=user.id,
+                account_id=conn.id,
+                date=t["date"],
+                description=t["description"],
+                amount=t["amount"],
+                category=t["category"],
+                source="plaid",
+                reconciled=False,
+            )
+        )
 
     conn.last_synced = datetime.now(UTC)
     await db.commit()
@@ -129,9 +127,7 @@ async def sync_transactions(connection_id: str, user: CurrentUser, db: DBSession
 async def disconnect(connection_id: str, user: CurrentUser, db: DBSession):
     """Disconnect a bank account."""
     result = await db.execute(
-        select(BankConnection).where(
-            BankConnection.id == connection_id, BankConnection.owner_id == user.id
-        )
+        select(BankConnection).where(BankConnection.id == connection_id, BankConnection.owner_id == user.id)
     )
     conn = result.scalar_one_or_none()
     if not conn:

@@ -68,9 +68,7 @@ async def invite_member(team_id: str, body: MemberInvite, user: PreparerOrAdmin,
 
 @router.delete("/{team_id}/members/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def remove_member(team_id: str, user_id: str, user: AdminUser, db: DBSession):
-    result = await db.execute(
-        select(TeamMember).where(TeamMember.team_id == team_id, TeamMember.user_id == user_id)
-    )
+    result = await db.execute(select(TeamMember).where(TeamMember.team_id == team_id, TeamMember.user_id == user_id))
     member = result.scalar_one_or_none()
     if not member:
         raise HTTPException(status_code=404, detail="Member not found")
@@ -86,13 +84,16 @@ async def assign_client(body: AssignClient, user: PreparerOrAdmin, db: DBSession
     preparer = await db.get(User, body.preparer_id)
     if not preparer:
         raise HTTPException(status_code=404, detail="Preparer not found")
-    assignment = ClientAssignment(
-        client_id=body.client_id, preparer_id=body.preparer_id, assigned_by=user.id
-    )
+    assignment = ClientAssignment(client_id=body.client_id, preparer_id=body.preparer_id, assigned_by=user.id)
     db.add(assignment)
     await db.commit()
     await db.refresh(assignment)
-    return {"id": assignment.id, "client_id": assignment.client_id, "preparer_id": assignment.preparer_id, "status": assignment.status}
+    return {
+        "id": assignment.id,
+        "client_id": assignment.client_id,
+        "preparer_id": assignment.preparer_id,
+        "status": assignment.status,
+    }
 
 
 @router.get("/my-assignments")

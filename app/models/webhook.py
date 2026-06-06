@@ -20,7 +20,9 @@ class Webhook(Base):
     events: Mapped[str] = mapped_column(Text, nullable=False)
     secret: Mapped[str] = mapped_column(String(64), nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
+    )
 
 
 class WebhookDelivery(Base):
@@ -31,4 +33,6 @@ class WebhookDelivery(Base):
     event_type: Mapped[str] = mapped_column(String(100), nullable=False)
     payload: Mapped[str] = mapped_column(Text, nullable=False)
     response_code: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    delivered_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False)
+    delivered_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
+    )

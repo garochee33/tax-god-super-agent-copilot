@@ -26,11 +26,13 @@ async def list_upcoming_recurring(user: CurrentUser, db: DBSession):
     """List invoices due for generation in next 30 days."""
     cutoff = datetime.now(UTC) + timedelta(days=30)
     result = await db.execute(
-        select(Invoice).where(
+        select(Invoice)
+        .where(
             Invoice.owner_id == user.id,
             Invoice.recurring.is_(True),
             Invoice.recurring_next_date <= cutoff,
-        ).order_by(Invoice.recurring_next_date.asc())
+        )
+        .order_by(Invoice.recurring_next_date.asc())
     )
     invoices = result.scalars().all()
     return {

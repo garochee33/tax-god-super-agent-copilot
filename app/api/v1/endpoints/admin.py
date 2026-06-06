@@ -42,9 +42,7 @@ async def trigger_backup(user: AdminUser):
 @router.get("/admin/db-stats")
 async def db_stats(user: AdminUser, db: AsyncSession = Depends(get_db)):
     """Return table row counts and DB file size."""
-    result = await db.execute(
-        text("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
-    )
+    result = await db.execute(text("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'"))
     tables = [r[0] for r in result.fetchall()]
 
     counts = {}

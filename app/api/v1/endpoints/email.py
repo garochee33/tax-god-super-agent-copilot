@@ -16,7 +16,9 @@ email_service = EmailService()
 
 @router.post("/send-invoice/{invoice_id}")
 async def send_invoice_email(invoice_id: str, db: DBSession, user: CurrentUser):
-    invoice = (await db.execute(select(Invoice).where(Invoice.id == invoice_id, Invoice.owner_id == user.id))).scalar_one_or_none()
+    invoice = (
+        await db.execute(select(Invoice).where(Invoice.id == invoice_id, Invoice.owner_id == user.id))
+    ).scalar_one_or_none()
     if not invoice:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invoice not found")
     if not invoice.client_id:
@@ -29,7 +31,9 @@ async def send_invoice_email(invoice_id: str, db: DBSession, user: CurrentUser):
 
 @router.post("/send-reminder/{invoice_id}")
 async def send_reminder_email(invoice_id: str, db: DBSession, user: CurrentUser):
-    invoice = (await db.execute(select(Invoice).where(Invoice.id == invoice_id, Invoice.owner_id == user.id))).scalar_one_or_none()
+    invoice = (
+        await db.execute(select(Invoice).where(Invoice.id == invoice_id, Invoice.owner_id == user.id))
+    ).scalar_one_or_none()
     if not invoice:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Invoice not found")
     if not invoice.client_id:
@@ -42,7 +46,9 @@ async def send_reminder_email(invoice_id: str, db: DBSession, user: CurrentUser)
 
 @router.post("/send-portal-invite/{client_id}")
 async def send_portal_invite(client_id: str, db: DBSession, user: CurrentUser):
-    client = (await db.execute(select(Client).where(Client.id == client_id, Client.owner_id == user.id))).scalar_one_or_none()
+    client = (
+        await db.execute(select(Client).where(Client.id == client_id, Client.owner_id == user.id))
+    ).scalar_one_or_none()
     if not client:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Client not found")
     if not client.email:
@@ -54,5 +60,6 @@ async def send_portal_invite(client_id: str, db: DBSession, user: CurrentUser):
 @router.post("/test")
 async def send_test_email(user: CurrentUser):
     from app.services.email_service import _wrap_html
+
     html = _wrap_html("Test Email", "<p>Your SMTP configuration is working correctly!</p>")
     return email_service.send_email(user.email, "Tax God - Test Email", html)

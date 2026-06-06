@@ -55,7 +55,10 @@ async def create_webhook(body: WebhookCreate, user: CurrentUser, db: DBSession):
 async def list_webhooks(user: CurrentUser, db: DBSession):
     result = await db.execute(select(Webhook).where(Webhook.owner_id == user.id))
     hooks = result.scalars().all()
-    return [WebhookResponse(id=h.id, url=h.url, events=h.events, is_active=h.is_active, created_at=h.created_at) for h in hooks]
+    return [
+        WebhookResponse(id=h.id, url=h.url, events=h.events, is_active=h.is_active, created_at=h.created_at)
+        for h in hooks
+    ]
 
 
 @router.delete("/webhooks/{webhook_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -84,7 +87,19 @@ async def list_deliveries(webhook_id: str, user: CurrentUser, db: DBSession):
     if not result.scalar_one_or_none():
         raise HTTPException(status_code=404, detail="Webhook not found")
     deliveries = await db.execute(
-        select(WebhookDelivery).where(WebhookDelivery.webhook_id == webhook_id).order_by(WebhookDelivery.delivered_at.desc()).limit(50)
+        select(WebhookDelivery)
+        .where(WebhookDelivery.webhook_id == webhook_id)
+        .order_by(WebhookDelivery.delivered_at.desc())
+        .limit(50)
     )
     rows = deliveries.scalars().all()
-    return [DeliveryResponse(id=d.id, event_type=d.event_type, payload=d.payload, response_code=d.response_code, delivered_at=d.delivered_at) for d in rows]
+    return [
+        DeliveryResponse(
+            id=d.id,
+            event_type=d.event_type,
+            payload=d.payload,
+            response_code=d.response_code,
+            delivered_at=d.delivered_at,
+        )
+        for d in rows
+    ]

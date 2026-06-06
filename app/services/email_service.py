@@ -59,8 +59,8 @@ class EmailService:
     def send_invoice(self, invoice, client) -> dict:
         html = _wrap_html(
             "Invoice Ready",
-            f'<p>Hi {client.name},</p>'
-            f'<p>Invoice <strong>{invoice.invoice_number}</strong> for '
+            f"<p>Hi {client.name},</p>"
+            f"<p>Invoice <strong>{invoice.invoice_number}</strong> for "
             f'<span style="color:{BRAND_GOLD};font-weight:bold;">{invoice.currency} {invoice.amount:.2f}</span> is ready.</p>'
             f"<p>Due date: {invoice.due_date or 'On receipt'}</p>",
         )
@@ -79,7 +79,7 @@ class EmailService:
         html = _wrap_html(
             "You're Invited to Tax God Portal",
             f"<p>Hi {client.name},</p>"
-            f'<p>Use the code below to access your client portal:</p>'
+            f"<p>Use the code below to access your client portal:</p>"
             f'<p style="font-size:24px;color:{BRAND_GOLD};font-weight:bold;">{invite_code}</p>',
         )
         return self.send_email(client.email, "Your Tax God Portal Invite", html)
@@ -87,7 +87,6 @@ class EmailService:
     def send_deadline_reminder(self, user, deadline) -> dict:
         html = _wrap_html(
             "Upcoming Tax Deadline",
-            f"<p>Hi {user.full_name},</p>"
-            f"<p>You have an upcoming deadline: <strong>{deadline}</strong></p>",
+            f"<p>Hi {user.full_name},</p><p>You have an upcoming deadline: <strong>{deadline}</strong></p>",
         )
         return self.send_email(user.email, f"Deadline Reminder: {deadline}", html)

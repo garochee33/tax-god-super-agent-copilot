@@ -35,9 +35,11 @@ th{{background:#f5f5f5}}.header{{display:flex;justify-content:space-between;marg
 async def generate_report_pdf(report_type: str, data: dict) -> bytes:
     """Generate a printable HTML report."""
     now = datetime.utcnow().strftime("%Y-%m-%d %H:%M")
-    title = {"pnl": "Profit & Loss Statement", "expenses": "Expense Report", "tax-summary": "Tax Deduction Summary"}.get(
-        report_type, report_type.replace("-", " ").title()
-    )
+    title = {
+        "pnl": "Profit & Loss Statement",
+        "expenses": "Expense Report",
+        "tax-summary": "Tax Deduction Summary",
+    }.get(report_type, report_type.replace("-", " ").title())
 
     rows_html = ""
     if report_type == "pnl":

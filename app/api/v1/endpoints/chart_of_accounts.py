@@ -16,6 +16,7 @@ router = APIRouter()
 
 # --- Schemas ---
 
+
 class AccountCreate(BaseModel):
     code: str = Field(..., min_length=1, max_length=20)
     name: str = Field(..., min_length=1, max_length=255)
@@ -71,6 +72,7 @@ class JournalEntryResponse(BaseModel):
 
 # --- Chart of Accounts CRUD ---
 
+
 @router.get("/accounts", response_model=list[AccountResponse])
 async def list_accounts(current_user: CurrentUser, db: DBSession, business_id: str | None = None):
     query = select(ChartOfAccount).where(ChartOfAccount.owner_id == current_user.id)
@@ -100,7 +102,9 @@ async def create_account(body: AccountCreate, current_user: CurrentUser, db: DBS
 @router.delete("/accounts/{account_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_account(account_id: str, current_user: CurrentUser, db: DBSession):
     account = (
-        await db.execute(select(ChartOfAccount).where(ChartOfAccount.id == account_id, ChartOfAccount.owner_id == current_user.id))
+        await db.execute(
+            select(ChartOfAccount).where(ChartOfAccount.id == account_id, ChartOfAccount.owner_id == current_user.id)
+        )
     ).scalar_one_or_none()
     if not account:
         raise HTTPException(status_code=404, detail="Account not found")
@@ -109,6 +113,7 @@ async def delete_account(account_id: str, current_user: CurrentUser, db: DBSessi
 
 
 # --- Journal Entries ---
+
 
 @router.get("/journal", response_model=list[JournalEntryResponse])
 async def list_journal_entries(
@@ -128,14 +133,18 @@ async def list_journal_entries(
     result = []
     for entry in entries:
         lines = (await db.execute(select(JournalLine).where(JournalLine.entry_id == entry.id))).scalars().all()
-        result.append(JournalEntryResponse(
-            id=entry.id,
-            date=entry.date,
-            description=entry.description,
-            reference=entry.reference,
-            lines=[{"account_id": l.account_id, "debit": l.debit, "credit": l.credit, "memo": l.memo} for l in lines],
-            created_at=entry.created_at,
-        ))
+        result.append(
+            JournalEntryResponse(
+                id=entry.id,
+                date=entry.date,
+                description=entry.description,
+                reference=entry.reference,
+                lines=[
+                    {"account_id": l.account_id, "debit": l.debit, "credit": l.credit, "memo": l.memo} for l in lines
+                ],
+                created_at=entry.created_at,
+            )
+        )
     return result
 
 
@@ -164,12 +173,18 @@ async def create_journal_entry(body: JournalEntryCreate, current_user: CurrentUs
     for line in body.lines:
         # Verify account exists and belongs to user
         account = (
-            await db.execute(select(ChartOfAccount).where(ChartOfAccount.id == line.account_id, ChartOfAccount.owner_id == current_user.id))
+            await db.execute(
+                select(ChartOfAccount).where(
+                    ChartOfAccount.id == line.account_id, ChartOfAccount.owner_id == current_user.id
+                )
+            )
         ).scalar_one_or_none()
         if not account:
             raise HTTPException(status_code=400, detail=f"Account {line.account_id} not found")
 
-        jl = JournalLine(entry_id=entry.id, account_id=line.account_id, debit=line.debit, credit=line.credit, memo=line.memo)
+        jl = JournalLine(
+            entry_id=entry.id, account_id=line.account_id, debit=line.debit, credit=line.credit, memo=line.memo
+        )
         db.add(jl)
 
         # Update account balance
@@ -191,6 +206,7 @@ async def create_journal_entry(body: JournalEntryCreate, current_user: CurrentUs
 
 # --- Trial Balance ---
 
+
 @router.get("/trial-balance")
 async def trial_balance(current_user: CurrentUser, db: DBSession, business_id: str | None = None):
     """Get trial balance (all accounts with their debit/credit totals)."""
@@ -209,4 +225,9 @@ async def trial_balance(current_user: CurrentUser, db: DBSession, business_id: s
         total_credit += credit
         rows.append({"code": a.code, "name": a.name, "type": a.account_type, "debit": debit, "credit": credit})
 
-    return {"accounts": rows, "total_debit": total_debit, "total_credit": total_credit, "balanced": abs(total_debit - total_credit) < 0.01}
+    return {
+        "accounts": rows,
+        "total_debit": total_debit,
+        "total_credit": total_credit,
+        "balanced": abs(total_debit - total_credit) < 0.01,
+    }

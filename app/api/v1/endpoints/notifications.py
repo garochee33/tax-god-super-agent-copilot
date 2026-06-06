@@ -16,10 +16,7 @@ router = APIRouter()
 @router.get("/notifications")
 async def list_notifications(db: DBSession, user: CurrentUser):
     result = await db.execute(
-        select(Notification)
-        .where(Notification.user_id == user.id)
-        .order_by(Notification.created_at.desc())
-        .limit(50)
+        select(Notification).where(Notification.user_id == user.id).order_by(Notification.created_at.desc()).limit(50)
     )
     rows = result.scalars().all()
     return [

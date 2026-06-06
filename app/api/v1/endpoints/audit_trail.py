@@ -75,12 +75,17 @@ async def purge_old_events(
     older_than_days: int = Query(default=90, ge=1),
 ):
     cutoff = datetime.now(UTC) - timedelta(days=older_than_days)
-    result = await db.execute(
-        delete(AuditEvent).where(AuditEvent.created_at < cutoff)
-    )
+    result = await db.execute(delete(AuditEvent).where(AuditEvent.created_at < cutoff))
     deleted_count = result.rowcount
     await db.commit()
-    await log_event(db, current_user.id, "purge", "audit_trail", changes={"older_than_days": older_than_days, "deleted": deleted_count}, request=request)
+    await log_event(
+        db,
+        current_user.id,
+        "purge",
+        "audit_trail",
+        changes={"older_than_days": older_than_days, "deleted": deleted_count},
+        request=request,
+    )
     return {"deleted": deleted_count, "older_than_days": older_than_days}
 
 
@@ -91,19 +96,33 @@ async def audit_stats(db: DBSession, current_user: AdminUser):
     week_start = today_start - timedelta(days=today_start.weekday())
     month_start = today_start.replace(day=1)
 
-    events_today = (await db.execute(select(func.count(AuditEvent.id)).where(AuditEvent.created_at >= today_start))).scalar() or 0
-    events_this_week = (await db.execute(select(func.count(AuditEvent.id)).where(AuditEvent.created_at >= week_start))).scalar() or 0
-    events_this_month = (await db.execute(select(func.count(AuditEvent.id)).where(AuditEvent.created_at >= month_start))).scalar() or 0
+    events_today = (
+        await db.execute(select(func.count(AuditEvent.id)).where(AuditEvent.created_at >= today_start))
+    ).scalar() or 0
+    events_this_week = (
+        await db.execute(select(func.count(AuditEvent.id)).where(AuditEvent.created_at >= week_start))
+    ).scalar() or 0
+    events_this_month = (
+        await db.execute(select(func.count(AuditEvent.id)).where(AuditEvent.created_at >= month_start))
+    ).scalar() or 0
 
-    top_actions_rows = (await db.execute(
-        select(AuditEvent.action, func.count(AuditEvent.id).label("cnt"))
-        .group_by(AuditEvent.action).order_by(func.count(AuditEvent.id).desc()).limit(5)
-    )).all()
+    top_actions_rows = (
+        await db.execute(
+            select(AuditEvent.action, func.count(AuditEvent.id).label("cnt"))
+            .group_by(AuditEvent.action)
+            .order_by(func.count(AuditEvent.id).desc())
+            .limit(5)
+        )
+    ).all()
 
-    top_entities_rows = (await db.execute(
-        select(AuditEvent.entity_type, func.count(AuditEvent.id).label("cnt"))
-        .group_by(AuditEvent.entity_type).order_by(func.count(AuditEvent.id).desc()).limit(5)
-    )).all()
+    top_entities_rows = (
+        await db.execute(
+            select(AuditEvent.entity_type, func.count(AuditEvent.id).label("cnt"))
+            .group_by(AuditEvent.entity_type)
+            .order_by(func.count(AuditEvent.id).desc())
+            .limit(5)
+        )
+    ).all()
 
     return {
         "events_today": events_today,

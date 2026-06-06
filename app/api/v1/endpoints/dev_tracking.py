@@ -123,12 +123,14 @@ async def register_agent(body: AgentRegister, _user: AdminUser):
         existing["capabilities"] = body.capabilities
         existing["last_active"] = datetime.now(UTC).isoformat()
     else:
-        agents.append({
-            "name": body.name,
-            "capabilities": body.capabilities,
-            "last_active": datetime.now(UTC).isoformat(),
-            "commits_count": 0,
-        })
+        agents.append(
+            {
+                "name": body.name,
+                "capabilities": body.capabilities,
+                "last_active": datetime.now(UTC).isoformat(),
+                "commits_count": 0,
+            }
+        )
     _write_json(AGENTS_FILE, agents)
     return {"status": "registered", "agent": body.name}
 
@@ -205,9 +207,7 @@ async def detect_conflicts(_user: CurrentUser):
         locks = []
     # Check git status
     try:
-        result = subprocess.run(
-            ["git", "status", "--porcelain"], capture_output=True, text=True, timeout=10
-        )
+        result = subprocess.run(["git", "status", "--porcelain"], capture_output=True, text=True, timeout=10)
         modified = [line[3:] for line in result.stdout.splitlines() if line.strip()]
     except Exception:
         modified = []
@@ -227,11 +227,13 @@ async def lock_file(body: LockRequest, _user: AdminUser):
         locks = []
     if any(l.get("file") == body.file for l in locks):
         raise HTTPException(409, f"File '{body.file}' already locked")
-    locks.append({
-        "file": body.file,
-        "agent": body.agent,
-        "locked_at": datetime.now(UTC).isoformat(),
-    })
+    locks.append(
+        {
+            "file": body.file,
+            "agent": body.agent,
+            "locked_at": datetime.now(UTC).isoformat(),
+        }
+    )
     _write_json(LOCKS_FILE, locks)
     return {"locked": body.file}
 
@@ -264,12 +266,16 @@ async def build_health(_user: CurrentUser):
     try:
         r = subprocess.run(
             ["python3", "-m", "py_compile", "--help"],
-            capture_output=True, text=True, timeout=10,
+            capture_output=True,
+            text=True,
+            timeout=10,
         )
         # Actually check all .py files compile
         r = subprocess.run(
             ["python3", "-c", "import compileall; exit(0 if compileall.compile_dir('app', quiet=2) else 1)"],
-            capture_output=True, text=True, timeout=30,
+            capture_output=True,
+            text=True,
+            timeout=30,
         )
         checks["compile"] = {"pass": r.returncode == 0, "output": r.stderr[:500] if r.stderr else ""}
     except Exception as e:
@@ -288,7 +294,9 @@ async def build_health(_user: CurrentUser):
     try:
         r = subprocess.run(
             ["python3", "-m", "pytest", "tests/", "-x", "--tb=short", "-q"],
-            capture_output=True, text=True, timeout=120,
+            capture_output=True,
+            text=True,
+            timeout=120,
         )
         checks["tests"] = {"pass": r.returncode == 0, "output": (r.stdout + r.stderr)[:1000]}
     except Exception as e:
@@ -311,7 +319,9 @@ async def velocity_metrics(_user: CurrentUser):
         # Commits per day (last 7 days)
         r = subprocess.run(
             ["git", "log", "--oneline", "--since=7 days ago", "--format=%H|%aI|%an"],
-            capture_output=True, text=True, timeout=10,
+            capture_output=True,
+            text=True,
+            timeout=10,
         )
         lines = [l for l in r.stdout.splitlines() if l.strip()]
         commits_by_day: dict[str, int] = {}
@@ -326,7 +336,9 @@ async def velocity_metrics(_user: CurrentUser):
         # Files changed per commit + lines
         r2 = subprocess.run(
             ["git", "log", "--since=7 days ago", "--shortstat", "--format="],
-            capture_output=True, text=True, timeout=10,
+            capture_output=True,
+            text=True,
+            timeout=10,
         )
         total_files, total_add, total_del, commit_count = 0, 0, 0, 0
         for line in r2.stdout.splitlines():
@@ -412,7 +424,9 @@ async def deployment_gate(_user: AdminUser):
     try:
         r = subprocess.run(
             ["python3", "-m", "pytest", "tests/", "-x", "--tb=line", "-q"],
-            capture_output=True, text=True, timeout=120,
+            capture_output=True,
+            text=True,
+            timeout=120,
         )
         if r.returncode != 0:
             go = False

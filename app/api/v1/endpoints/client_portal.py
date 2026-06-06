@@ -35,9 +35,7 @@ class MessageCreate(BaseModel):
 @router.post("/login")
 async def portal_login(body: PortalLoginRequest, db: DBSession):
     """Client logs in with email + invite code."""
-    result = await db.execute(
-        select(Client).where(Client.email == body.email, Client.invite_code == body.invite_code)
-    )
+    result = await db.execute(select(Client).where(Client.email == body.email, Client.invite_code == body.invite_code))
     client = result.scalar_one_or_none()
     if not client:
         raise HTTPException(status_code=401, detail="Invalid email or invite code")
@@ -53,7 +51,13 @@ async def portal_invoices(current_user: CurrentUser, db: DBSession):
     )
     invoices = result.scalars().all()
     return [
-        {"id": i.id, "invoice_number": i.invoice_number, "amount": i.amount, "status": i.status, "due_date": str(i.due_date) if i.due_date else None}
+        {
+            "id": i.id,
+            "invoice_number": i.invoice_number,
+            "amount": i.amount,
+            "status": i.status,
+            "due_date": str(i.due_date) if i.due_date else None,
+        }
         for i in invoices
     ]
 
@@ -66,7 +70,13 @@ async def portal_projects(current_user: CurrentUser, db: DBSession):
     )
     projects = result.scalars().all()
     return [
-        {"id": p.id, "name": p.name, "status": p.status, "start_date": str(p.start_date) if p.start_date else None, "end_date": str(p.end_date) if p.end_date else None}
+        {
+            "id": p.id,
+            "name": p.name,
+            "status": p.status,
+            "start_date": str(p.start_date) if p.start_date else None,
+            "end_date": str(p.end_date) if p.end_date else None,
+        }
         for p in projects
     ]
 

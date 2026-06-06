@@ -68,18 +68,20 @@ async def get_compliance_summary(db: AsyncSession, user_id: str) -> dict:
     events_by_type = {row[0]: row[1] for row in by_type_rows}
 
     sensitive = (
-        await db.execute(
-            base.where(AuditEvent.action.in_(["delete", "export"]))
-            .order_by(AuditEvent.created_at.desc())
-            .limit(10)
+        (
+            await db.execute(
+                base.where(AuditEvent.action.in_(["delete", "export"])).order_by(AuditEvent.created_at.desc()).limit(10)
+            )
         )
-    ).scalars().all()
+        .scalars()
+        .all()
+    )
 
     exports = (
-        await db.execute(
-            base.where(AuditEvent.action == "export").order_by(AuditEvent.created_at.desc()).limit(10)
-        )
-    ).scalars().all()
+        (await db.execute(base.where(AuditEvent.action == "export").order_by(AuditEvent.created_at.desc()).limit(10)))
+        .scalars()
+        .all()
+    )
 
     return {
         "total_events": total,

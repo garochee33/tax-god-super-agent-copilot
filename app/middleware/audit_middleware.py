@@ -47,8 +47,8 @@ def _extract_user_id(request: Request) -> str | None:
 async def _log_audit_event(user_id: str, action: str, entity_type: str, ip: str | None, ua: str | None):
     try:
         async with async_session_factory() as db:
-
             from app.models.audit_event import AuditEvent
+
             event = AuditEvent(
                 user_id=user_id,
                 action=action,

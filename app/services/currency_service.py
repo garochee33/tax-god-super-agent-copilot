@@ -10,16 +10,50 @@ import httpx
 logger = logging.getLogger(__name__)
 
 SUPPORTED_CURRENCIES = [
-    "USD", "EUR", "GBP", "CAD", "AUD", "JPY", "CHF", "CNY", "INR", "MXN",
-    "BRL", "KRW", "SGD", "HKD", "NZD", "SEK", "NOK", "DKK", "ZAR", "AED",
+    "USD",
+    "EUR",
+    "GBP",
+    "CAD",
+    "AUD",
+    "JPY",
+    "CHF",
+    "CNY",
+    "INR",
+    "MXN",
+    "BRL",
+    "KRW",
+    "SGD",
+    "HKD",
+    "NZD",
+    "SEK",
+    "NOK",
+    "DKK",
+    "ZAR",
+    "AED",
 ]
 
 # Fallback rates relative to USD
 _FALLBACK_RATES: dict[str, float] = {
-    "USD": 1.0, "EUR": 0.92, "GBP": 0.79, "CAD": 1.36, "AUD": 1.53,
-    "JPY": 157.0, "CHF": 0.88, "CNY": 7.25, "INR": 83.5, "MXN": 17.2,
-    "BRL": 5.0, "KRW": 1320.0, "SGD": 1.34, "HKD": 7.81, "NZD": 1.64,
-    "SEK": 10.5, "NOK": 10.7, "DKK": 6.9, "ZAR": 18.5, "AED": 3.67,
+    "USD": 1.0,
+    "EUR": 0.92,
+    "GBP": 0.79,
+    "CAD": 1.36,
+    "AUD": 1.53,
+    "JPY": 157.0,
+    "CHF": 0.88,
+    "CNY": 7.25,
+    "INR": 83.5,
+    "MXN": 17.2,
+    "BRL": 5.0,
+    "KRW": 1320.0,
+    "SGD": 1.34,
+    "HKD": 7.81,
+    "NZD": 1.64,
+    "SEK": 10.5,
+    "NOK": 10.7,
+    "DKK": 6.9,
+    "ZAR": 18.5,
+    "AED": 3.67,
 }
 
 

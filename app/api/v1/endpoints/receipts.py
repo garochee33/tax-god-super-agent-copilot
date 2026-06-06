@@ -175,7 +175,10 @@ async def _extract_receipt_data(content: bytes, content_type: str) -> ReceiptExt
                             {
                                 "role": "user",
                                 "content": [
-                                    {"type": "image", "source": {"type": "base64", "media_type": media_type, "data": b64}},
+                                    {
+                                        "type": "image",
+                                        "source": {"type": "base64", "media_type": media_type, "data": b64},
+                                    },
                                     {"type": "text", "text": _EXTRACTION_PROMPT},
                                 ],
                             }

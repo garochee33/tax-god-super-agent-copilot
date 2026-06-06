@@ -44,7 +44,9 @@ async def validation_exception_handler(request: Request, exc: PydanticValidation
     request_id = _get_request_id(request)
     logger.warning("ValidationError [%s]: %s", request_id, exc.error_count())
     fields = [{"loc": e["loc"], "msg": e["msg"], "type": e["type"]} for e in exc.errors()]
-    return JSONResponse(status_code=422, content={"error": "Validation error", "request_id": request_id, "fields": fields})
+    return JSONResponse(
+        status_code=422, content={"error": "Validation error", "request_id": request_id, "fields": fields}
+    )
 
 
 async def sqlalchemy_exception_handler(request: Request, exc: SQLAlchemyError) -> JSONResponse:

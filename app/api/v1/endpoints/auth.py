@@ -128,6 +128,7 @@ async def login(body: LoginRequest, db: DBSession):
                 detail="2FA code required",
             )
         from app.services.totp_service import verify_totp
+
         if not verify_totp(user.totp_secret, body.totp_code):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,

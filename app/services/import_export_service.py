@@ -125,7 +125,9 @@ async def export_iif(db: AsyncSession, user_id: str) -> str:
         lines.append("!ENDTRNS")
         for txn in txns:
             date_str = txn.date.strftime("%m/%d/%Y") if txn.date else ""
-            lines.append(f"TRNS\tGENERAL JOURNAL\t{date_str}\t{txn.category or 'Uncategorized'}\t{txn.amount:.2f}\t{txn.description}")
+            lines.append(
+                f"TRNS\tGENERAL JOURNAL\t{date_str}\t{txn.category or 'Uncategorized'}\t{txn.amount:.2f}\t{txn.description}"
+            )
             lines.append(f"SPL\tGENERAL JOURNAL\t{date_str}\tSplit\t{-txn.amount:.2f}\t{txn.description}")
             lines.append("ENDTRNS")
 

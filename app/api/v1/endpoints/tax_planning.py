@@ -33,9 +33,7 @@ async def get_projection(current_user: CurrentUser, db: DBSession, filing_status
 
 
 @router.get("/forecast")
-async def get_forecast(
-    current_user: CurrentUser, db: DBSession, years: int = 3, growth_rate: float = 0.05
-):
+async def get_forecast(current_user: CurrentUser, db: DBSession, years: int = 3, growth_rate: float = 0.05):
     return await multi_year_forecast(db, current_user.id, years, growth_rate)
 
 
