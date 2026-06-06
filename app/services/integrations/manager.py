@@ -44,8 +44,8 @@ class IntegrationManager:
                             user_id TEXT NOT NULL,
                             provider TEXT NOT NULL,
                             payload_encrypted TEXT NOT NULL,
-                            created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-                            updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+                            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                             PRIMARY KEY (user_id, provider)
                         )
                         """

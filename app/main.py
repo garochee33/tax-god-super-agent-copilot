@@ -93,6 +93,19 @@ async def lifespan(app: FastAPI):
     async with db_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
+        # Migrate existing DBs: add columns that may be missing
+        def _migrate(connection):
+            raw = connection.connection.dbapi_connection
+            cur = raw.cursor()
+            cur.execute("PRAGMA table_info(users)")
+            cols = {r[1] for r in cur.fetchall()}
+            if "totp_secret" not in cols:
+                cur.execute("ALTER TABLE users ADD COLUMN totp_secret TEXT")
+            if "totp_enabled" not in cols:
+                cur.execute("ALTER TABLE users ADD COLUMN totp_enabled BOOLEAN DEFAULT 0")
+
+        await conn.run_sync(_migrate)
+
     # Connect Redis (graceful fallback if unavailable)
     redis_client = None
     try:
