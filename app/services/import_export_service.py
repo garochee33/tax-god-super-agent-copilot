@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import csv
 import io
-from datetime import UTC, datetime
+from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.chart_of_accounts import ChartOfAccount, JournalEntry, JournalLine
+from app.models.chart_of_accounts import ChartOfAccount
 from app.models.client import Client
 from app.models.expense import Expense
 from app.models.invoice import Invoice
