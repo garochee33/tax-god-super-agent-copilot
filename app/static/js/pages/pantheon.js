@@ -14,7 +14,10 @@ export default {
                 <div class="card stat-card"><div class="stat-value" id="kpi-quarterly-tax">--</div><div class="stat-label">Quarterly Tax Due</div></div>
             </div>
             <div class="grid grid-2" style="margin-top:var(--spacing-xl)">
+                <div class="card"><div class="card-title">Revenue (Last 12 Months)</div><div id="revenue-chart" style="display:flex;align-items:flex-end;gap:4px;height:160px;padding:var(--spacing-md)"><p class="text-muted">Loading chart...</p></div></div>
                 <div class="card"><div class="card-title">Recent Activity</div><div id="recent-activity"><p>Loading...</p></div></div>
+            </div>
+            <div class="grid grid-2" style="margin-top:var(--spacing-md)">
                 <div class="card"><div class="card-title">Quick Actions</div><div style="display:flex;flex-wrap:wrap;gap:8px;padding:var(--spacing-md)">
                     <button class="btn btn-primary btn-sm" onclick="window.location.hash='finance'">New Invoice</button>
                     <button class="btn btn-outline btn-sm" onclick="window.location.hash='expenses'">Add Expense</button>
@@ -54,5 +57,21 @@ export default {
         document.getElementById("recent-activity").innerHTML = items.length
             ? `<ul style="list-style:none;padding:0;margin:0">${items.map(t => `<li class="activity-item" style="padding:6px var(--spacing-md);border-bottom:1px solid var(--color-parchment-dark)">${t.date || ""} — ${t.description || "Transaction"} <strong>${fmt(t.amount)}</strong></li>`).join("")}</ul>`
             : '<p class="text-muted" style="padding:var(--spacing-md)">No recent activity</p>';
+
+        // Revenue chart
+        api.get("/api/v1/charts/revenue-monthly").then(data => {
+            const el = document.getElementById("revenue-chart");
+            if (!Array.isArray(data) || !data.length) { el.innerHTML = '<p class="text-muted">No revenue data</p>'; return; }
+            const max = Math.max(...data.map(d => d.amount), 1);
+            el.innerHTML = data.map(d => {
+                const h = Math.max((d.amount / max) * 130, 2);
+                return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end">
+                    <div style="font-size:10px;margin-bottom:2px">${fmt(d.amount)}</div>
+                    <div style="width:100%;height:${h}px;background:var(--color-gold,#d4a017);border-radius:3px 3px 0 0"></div>
+                    <div style="font-size:9px;margin-top:2px">${d.month.slice(5)}</div></div>`;
+            }).join("");
+        }).catch(() => {
+            document.getElementById("revenue-chart").innerHTML = '<p class="text-muted">Chart unavailable</p>';
+        });
     }
 };

@@ -32,6 +32,7 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+    totp_code: str | None = None
 
 
 class TokenResponse(BaseModel):
@@ -119,6 +120,19 @@ async def login(body: LoginRequest, db: DBSession):
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Account is disabled",
         )
+
+    if user.totp_enabled:
+        if not body.totp_code:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="2FA code required",
+            )
+        from app.services.totp_service import verify_totp
+        if not verify_totp(user.totp_secret, body.totp_code):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid 2FA code",
+            )
 
     from app.core.config import get_settings
 

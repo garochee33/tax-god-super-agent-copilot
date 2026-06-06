@@ -68,5 +68,75 @@
     "file": "test/904cbdcc.py",
     "agent": "Agent1",
     "locked_at": "2026-06-06T00:07:03.062232+00:00"
+  },
+  {
+    "file": "test/db794761.py",
+    "agent": "TestAgent",
+    "locked_at": "2026-06-06T00:15:41.615409+00:00"
+  },
+  {
+    "file": "test/17dcdc09.py",
+    "agent": "Agent1",
+    "locked_at": "2026-06-06T00:15:41.937871+00:00"
+  },
+  {
+    "file": "test/a10a0686.py",
+    "agent": "TestAgent",
+    "locked_at": "2026-06-06T00:15:44.330028+00:00"
+  },
+  {
+    "file": "test/d2c4b87a.py",
+    "agent": "Agent1",
+    "locked_at": "2026-06-06T00:15:44.639411+00:00"
+  },
+  {
+    "file": "test/5730baf4.py",
+    "agent": "TestAgent",
+    "locked_at": "2026-06-06T00:16:37.566688+00:00"
+  },
+  {
+    "file": "test/a5625be3.py",
+    "agent": "Agent1",
+    "locked_at": "2026-06-06T00:16:37.899026+00:00"
+  },
+  {
+    "file": "test/01b710d7.py",
+    "agent": "TestAgent",
+    "locked_at": "2026-06-06T00:16:47.250212+00:00"
+  },
+  {
+    "file": "test/ba5059dc.py",
+    "agent": "Agent1",
+    "locked_at": "2026-06-06T00:16:47.574823+00:00"
+  },
+  {
+    "file": "test/833163ae.py",
+    "agent": "TestAgent",
+    "locked_at": "2026-06-06T00:16:50.154873+00:00"
+  },
+  {
+    "file": "test/0cd3a131.py",
+    "agent": "Agent1",
+    "locked_at": "2026-06-06T00:16:50.485482+00:00"
+  },
+  {
+    "file": "test/b1787922.py",
+    "agent": "TestAgent",
+    "locked_at": "2026-06-06T00:18:06.758637+00:00"
+  },
+  {
+    "file": "test/fab1f2ed.py",
+    "agent": "Agent1",
+    "locked_at": "2026-06-06T00:18:07.071265+00:00"
+  },
+  {
+    "file": "test/a138362e.py",
+    "agent": "TestAgent",
+    "locked_at": "2026-06-06T00:19:23.623044+00:00"
+  },
+  {
+    "file": "test/a32420eb.py",
+    "agent": "Agent1",
+    "locked_at": "2026-06-06T00:19:23.939889+00:00"
   }
 ]

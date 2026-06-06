@@ -13,6 +13,7 @@ from app.models.expense import Expense
 from app.models.integration import IntegrationCredential
 from app.models.invoice import Invoice
 from app.models.note import Note
+from app.models.notification import Notification
 from app.models.portal_message import PortalMessage
 from app.models.project import Project
 from app.models.settings_audit import SettingsAuditLog
@@ -24,6 +25,7 @@ from app.models.transaction import Transaction
 from app.models.user import User
 from app.models.user_settings import UserSettings
 from app.models.vendor import Vendor
+from app.models.webhook import Webhook, WebhookDelivery
 
 __all__ = [
     "Account",
@@ -41,6 +43,7 @@ __all__ = [
     "JournalLine",
     "KnowledgeEntry",
     "Note",
+    "Notification",
     "PortalMessage",
     "Project",
     "SettingsAuditLog",
@@ -54,4 +57,6 @@ __all__ = [
     "User",
     "UserSettings",
     "Vendor",
+    "Webhook",
+    "WebhookDelivery",
 ]

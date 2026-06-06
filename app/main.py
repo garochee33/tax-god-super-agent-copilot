@@ -393,6 +393,7 @@ from app.api.v1.endpoints import (  # noqa: E402
     billing,
     businesses,
     chart_of_accounts,
+    charts,
     chat,
     client_portal,
     clients,
@@ -400,9 +401,11 @@ from app.api.v1.endpoints import (  # noqa: E402
     doc_generation,
     documents,
     expenses,
+    exports,
     integrations,
     invoices,
     notes,
+    notifications,
     payments,
     profile,
     projects,
@@ -415,11 +418,17 @@ from app.api.v1.endpoints import (  # noqa: E402
     time_entries,
     transactions,
     vendors,
+    webhooks,
+    websocket,
 )
+from app.api.v1.endpoints import currency  # noqa: E402
+from app.api.v1.endpoints import data_io  # noqa: E402
+from app.api.v1.endpoints import email as email_ep  # noqa: E402
 from app.api.v1.endpoints import logs as logs_ep  # noqa: E402
 from app.api.v1.endpoints import monitoring  # noqa: E402
 from app.api.v1.endpoints import settings as settings_ep  # noqa: E402
 from app.api.v1.endpoints import settings_advanced as settings_adv  # noqa: E402
+from app.api.v1.endpoints import two_factor  # noqa: E402
 
 app.include_router(admin.router, prefix="/api/v1", tags=["Admin"])
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
@@ -450,6 +459,7 @@ app.include_router(expenses.router, prefix="/api/v1/expenses", tags=["Expenses"]
 app.include_router(receipts.router, prefix="/api/v1/receipts", tags=["Receipt Scanning"])
 app.include_router(time_entries.router, prefix="/api/v1/time-entries", tags=["Time Entries"])
 app.include_router(vendors.router, prefix="/api/v1/vendors", tags=["Vendors"])
+app.include_router(webhooks.router, prefix="/api/v1", tags=["Webhooks"])
 app.include_router(transactions.router, prefix="/api/v1/transactions", tags=["Transactions"])
 app.include_router(chart_of_accounts.router, prefix="/api/v1/ledger", tags=["Chart of Accounts"])
 app.include_router(tax_estimates.router, prefix="/api/v1/estimates", tags=["Tax Estimates"])
@@ -458,6 +468,14 @@ app.include_router(client_portal.router, prefix="/api/v1/portal", tags=["Client 
 app.include_router(doc_generation.router, prefix="/api/v1/documents", tags=["Document Generation"])
 app.include_router(teams.router, prefix="/api/v1/teams", tags=["Teams"])
 app.include_router(monitoring.router, prefix="/api/v1/monitoring", tags=["Monitoring"])
+app.include_router(charts.router, prefix="/api/v1/charts", tags=["Charts"])
+app.include_router(exports.router, prefix="/api/v1/exports", tags=["Exports"])
+app.include_router(email_ep.router, prefix="/api/v1/email", tags=["Email"])
+app.include_router(currency.router, prefix="/api/v1/currency", tags=["Currency"])
+app.include_router(notifications.router, prefix="/api/v1", tags=["Notifications"])
+app.include_router(websocket.router, tags=["WebSocket"])
+app.include_router(data_io.router, prefix="/api/v1", tags=["Data Import/Export"])
+app.include_router(two_factor.router, prefix="/api/v1", tags=["Two-Factor Auth"])
 
 
 # ---------------------------------------------------------------------------
