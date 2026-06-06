@@ -10,10 +10,11 @@ import sys
 from pathlib import Path
 
 # Must set env BEFORE any app imports
-os.environ["DATABASE_URL"] = "sqlite+aiosqlite://"
-os.environ["SECRET_KEY"] = "test-secret-key-for-testing"
-os.environ["ENVIRONMENT"] = "development"
-os.environ["DEBUG"] = "false"
+os.environ["TAXGOD_DATABASE_URL"] = "sqlite+aiosqlite://"
+os.environ["TAXGOD_SECRET_KEY"] = "test-secret-key-for-testing"
+os.environ["TAXGOD_ENVIRONMENT"] = "development"
+os.environ["TAXGOD_DEBUG"] = "false"
+os.environ["TAXGOD_REDIS_URL"] = "redis://localhost:6379/0"
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:

@@ -24,8 +24,20 @@ import app.models  # noqa: F401 — register all models with Base.metadata
 from app.core.config import Environment, get_settings
 from app.core.database import Base, check_database_health
 from app.core.database import engine as db_engine
+from app.core.exceptions import TaxGodError
 from app.middleware.audit_middleware import AuditMiddleware
-from app.middleware.security import RateLimitMiddleware, RequestIdMiddleware, SecurityHeadersMiddleware
+from app.middleware.error_handler import (
+    generic_exception_handler,
+    http_exception_handler,
+    sqlalchemy_exception_handler,
+    taxgod_exception_handler,
+    timeout_exception_handler,
+    validation_exception_handler,
+)
+from app.middleware.request_id import RequestIDMiddleware
+from app.middleware.security import RateLimitMiddleware, SecurityHeadersMiddleware
+from app.middleware.security_headers import SecurityHeadersMiddleware as EnhancedSecurityHeadersMiddleware
+from app.middleware.timeout import TimeoutMiddleware
 from app.services.advanced_orchestrator import AdvancedTaxOrchestrator
 from app.services.agent_gabriel import AgentGabriel
 from app.services.ai_service import AIOrchestrator
@@ -38,9 +50,11 @@ from app.services.integrations.quickbooks_service import QuickBooksService
 from app.services.parallel_processor import ParallelProcessor
 from app.services.tax_writer import TaxWriter
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+from app.core.logging_config import setup_logging
+
 settings = get_settings()
+setup_logging(settings.ENVIRONMENT.value, settings.LOG_LEVEL)
+logger = logging.getLogger(__name__)
 
 
 def _get_or_create_metric(cls, name, *args, **kwargs):
@@ -179,7 +193,8 @@ app = FastAPI(
     redoc_url="/api/redoc" if not settings.is_production else None,
 )
 
-app.add_middleware(RequestIdMiddleware)
+app.add_middleware(RequestIDMiddleware)
+app.add_middleware(EnhancedSecurityHeadersMiddleware)
 if settings.is_production:
     app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(
@@ -189,11 +204,11 @@ app.add_middleware(
 )
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=list(settings.ALLOWED_ORIGINS)
+    allow_origins=list(settings.CORS_ORIGINS)
     if settings.is_production
     else list(
         {
-            *settings.ALLOWED_ORIGINS,
+            *settings.CORS_ORIGINS,
             "http://127.0.0.1:3000",
             "http://localhost:5173",
             "http://127.0.0.1:5173",
@@ -207,6 +222,19 @@ app.add_middleware(
 
 
 app.add_middleware(AuditMiddleware)
+app.add_middleware(TimeoutMiddleware)
+
+# -- Exception Handlers -------------------------------------------------------
+from fastapi.exceptions import HTTPException as FastAPIHTTPException
+from pydantic import ValidationError as PydanticValidationError
+from sqlalchemy.exc import SQLAlchemyError
+
+app.add_exception_handler(FastAPIHTTPException, http_exception_handler)  # type: ignore[arg-type]
+app.add_exception_handler(TaxGodError, taxgod_exception_handler)  # type: ignore[arg-type]
+app.add_exception_handler(PydanticValidationError, validation_exception_handler)  # type: ignore[arg-type]
+app.add_exception_handler(SQLAlchemyError, sqlalchemy_exception_handler)  # type: ignore[arg-type]
+app.add_exception_handler(TimeoutError, timeout_exception_handler)  # type: ignore[arg-type]
+app.add_exception_handler(Exception, generic_exception_handler)  # type: ignore[arg-type]
 
 
 @app.middleware("http")
@@ -355,6 +383,7 @@ async def readiness_check(request: Request):
 
 from app.api.v1.endpoints import (  # noqa: E402
     accounts,
+    admin,
     advanced,
     analytics,
     audit,
@@ -388,9 +417,11 @@ from app.api.v1.endpoints import (  # noqa: E402
     vendors,
 )
 from app.api.v1.endpoints import logs as logs_ep  # noqa: E402
+from app.api.v1.endpoints import monitoring  # noqa: E402
 from app.api.v1.endpoints import settings as settings_ep  # noqa: E402
 from app.api.v1.endpoints import settings_advanced as settings_adv  # noqa: E402
 
+app.include_router(admin.router, prefix="/api/v1", tags=["Admin"])
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
 app.include_router(bank_feeds.router, prefix="/api/v1/bank-feeds", tags=["Bank Feeds"])
 app.include_router(dev_tracking.router, prefix="/api/v1/dev", tags=["Dev Tracking"])
@@ -426,6 +457,7 @@ app.include_router(tax_planning.router, prefix="/api/v1/tax-planning", tags=["Ta
 app.include_router(client_portal.router, prefix="/api/v1/portal", tags=["Client Portal"])
 app.include_router(doc_generation.router, prefix="/api/v1/documents", tags=["Document Generation"])
 app.include_router(teams.router, prefix="/api/v1/teams", tags=["Teams"])
+app.include_router(monitoring.router, prefix="/api/v1/monitoring", tags=["Monitoring"])
 
 
 # ---------------------------------------------------------------------------

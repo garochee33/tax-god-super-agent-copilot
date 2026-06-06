@@ -1,6 +1,6 @@
 """
 Tax God - Application Configuration
-Central settings management via Pydantic BaseSettings.
+Central settings management via Pydantic BaseSettings with TAXGOD_ env prefix.
 """
 
 from __future__ import annotations
@@ -19,19 +19,17 @@ class Environment(str, Enum):
 
 
 class ModelTier(str, Enum):
-    """LLM model tiers ordered by cost (lowest first)."""
-
     CACHE = "cache"
-    BUDGET = "budget"  # GPT-4o-mini / Haiku
-    STANDARD = "standard"  # Claude 3.5 Sonnet
-    PREMIUM = "premium"  # GPT-4o
-    HEAVY = "heavy"  # GPT-4o (extended context / complex reasoning)
+    BUDGET = "budget"
+    STANDARD = "standard"
+    PREMIUM = "premium"
+    HEAVY = "heavy"
 
 
 class Settings(BaseSettings):
-    """Global application settings loaded from environment variables."""
+    """Global application settings. All env vars use TAXGOD_ prefix."""
 
-    # -- Application ----------------------------------------------------------
+    # -- Application --
     APP_NAME: str = "Tax God"
     APP_VERSION: str = "3.0.0"
     ENVIRONMENT: Environment = Environment.DEV
@@ -40,39 +38,40 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "CHANGE-ME-IN-PRODUCTION"
     METRICS_TOKEN: str = ""
 
-    # -- Server ---------------------------------------------------------------
+    # -- Server --
     HOST: str = "0.0.0.0"
     PORT: int = 8000
     ALLOWED_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:8000"]
+    CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:8000"]
 
-    # -- Database -------------------------------------------------------------
-    DATABASE_URL: str = "postgresql+asyncpg://taxgod:taxgod123@localhost:5432/taxgod"
+    # -- Database --
+    DATABASE_URL: str = "sqlite+aiosqlite:///./db/taxgod.db"
     DB_POOL_SIZE: int = 20
     DB_MAX_OVERFLOW: int = 10
 
-    # -- Redis ----------------------------------------------------------------
+    # -- Redis --
     REDIS_URL: str = "redis://localhost:6379/0"
-    REDIS_CACHE_TTL: int = 3600  # 1 hour default
+    REDIS_CACHE_TTL: int = 3600
 
-    # -- Neo4j ----------------------------------------------------------------
+    # -- Neo4j --
     NEO4J_URI: str = "bolt://localhost:7687"
     NEO4J_USER: str = "neo4j"
     NEO4J_PASSWORD: str = "taxgod123"
 
-    # -- Elasticsearch --------------------------------------------------------
+    # -- Elasticsearch --
     ELASTICSEARCH_URL: str = "http://localhost:9200"
 
-    # -- LLM API Keys --------------------------------------------------------
+    # -- LLM API Keys --
     OPENAI_API_KEY: str = ""
     ANTHROPIC_API_KEY: str = ""
 
-    # -- LLM Model Configuration ----------------------------------------------
+    # -- LLM Models --
     MODEL_GPT4O: str = "gpt-4o"
     MODEL_GPT4O_MINI: str = "gpt-4o-mini"
     MODEL_CLAUDE_SONNET: str = "claude-3-5-sonnet-20241022"
     MODEL_CLAUDE_HAIKU: str = "claude-3-5-haiku-20241022"
 
-    # -- Cost Governor --------------------------------------------------------
+    # -- Cost Governor --
     COST_SOFT_LIMIT_PER_QUERY: float = 0.50
     COST_SOFT_LIMIT_PER_COMPLEX_TASK: float = 2.00
     COST_SOFT_LIMIT_PER_CLIENT_MONTH: float = 100.00
@@ -84,43 +83,40 @@ class Settings(BaseSettings):
     COST_SWARM_BASE: float = 0.05
     COST_SWARM_PER_ITEM: float = 0.004
 
-    # -- JWT Auth -------------------------------------------------------------
+    # -- JWT Auth --
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
 
-    # -- Celery / RabbitMQ ----------------------------------------------------
+    # -- Celery --
     CELERY_BROKER_URL: str = "amqp://guest:guest@localhost:5672//"
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/1"
 
-    # -- Document Storage -----------------------------------------------------
+    # -- Document Storage --
     S3_BUCKET: str = "taxgod-documents"
     S3_REGION: str = "us-east-1"
-    MAX_UPLOAD_SIZE_MB: int = 50
+    MAX_UPLOAD_SIZE_MB: int = 10
 
-    # -- Integrations ---------------------------------------------------------
+    # -- Integrations --
     GOOGLE_CLIENT_ID: str = ""
     GOOGLE_CLIENT_SECRET: str = ""
     GOOGLE_REDIRECT_URI: str = "http://localhost:8000/api/v1/integrations/callback"
-
     QUICKBOOKS_CLIENT_ID: str = ""
     QUICKBOOKS_CLIENT_SECRET: str = ""
     QUICKBOOKS_REDIRECT_URI: str = "http://localhost:8000/api/v1/integrations/callback"
     INTEGRATION_ENCRYPTION_KEY: str = ""
-    # Same key as Trinity: VAULT_MASTER_KEY (AES-256 vault encryption). Used for credential encryption when set.
     VAULT_MASTER_KEY: str = ""
 
-    # -- Outreach / Lead Sources ----------------------------------------------
-    SENDGRID_API_KEY: str = ""
-    APOLLO_API_KEY: str = ""
-
-    # -- Stripe (subscription billing) ----------------------------------------
+    # -- Third-party keys (all optional) --
     STRIPE_SECRET_KEY: str = ""
     STRIPE_PUBLISHABLE_KEY: str = ""
     STRIPE_WEBHOOK_SECRET: str = ""
-    STRIPE_PRICE_MONTHLY: str = ""  # Stripe Price ID for monthly plan
+    STRIPE_PRICE_MONTHLY: str = ""
+    PLAID_CLIENT_ID: str = ""
+    SENDGRID_API_KEY: str = ""
+    APOLLO_API_KEY: str = ""
 
-    # -- Model Pricing (per 1M tokens, as of Feb 2026) -----------------------
+    # -- Pricing --
     PRICING_GPT4O_INPUT: float = 2.50
     PRICING_GPT4O_OUTPUT: float = 10.00
     PRICING_GPT4O_MINI_INPUT: float = 0.15
@@ -130,7 +126,7 @@ class Settings(BaseSettings):
     PRICING_CLAUDE_HAIKU_INPUT: float = 0.25
     PRICING_CLAUDE_HAIKU_OUTPUT: float = 1.25
 
-    # -- Embedding Model ------------------------------------------------------
+    # -- Embedding --
     EMBEDDING_MODEL: str = "text-embedding-3-large"
     EMBEDDING_DIMENSIONS: int = 3072
 
@@ -145,6 +141,7 @@ class Settings(BaseSettings):
         "STRIPE_PUBLISHABLE_KEY",
         "STRIPE_WEBHOOK_SECRET",
         "STRIPE_PRICE_MONTHLY",
+        "PLAID_CLIENT_ID",
         mode="before",
     )
     @classmethod
@@ -175,6 +172,7 @@ class Settings(BaseSettings):
         return v
 
     class Config:
+        env_prefix = "TAXGOD_"
         env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = True
