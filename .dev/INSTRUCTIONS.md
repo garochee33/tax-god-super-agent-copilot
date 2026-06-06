@@ -61,15 +61,19 @@ All significant features, fixes, and refactors should be logged:
 | Deploy gate | `GET /dev/deploy/gate` |
 | Run checks | `./scripts/run-all-checks.sh` |
 
-## Current State (2026-06-05)
+## Current State (2026-06-05 Session 3 Close)
 
-- **Tests:** 246 passing (30 test files)
-- **Lint:** 0 errors (ruff E,F,W --ignore E402,E501,E741)
+- **CI:** ✅ GitHub Actions GREEN (lint + format + tests)
+- **Tests:** 246 passing (30 test files, 73s)
+- **Lint:** 0 errors (ruff check — selects E,W,F,I,B,C4,UP,ARG,SIM)
+- **Format:** 0 diffs (ruff format — 124 files)
 - **Gate:** GO 4/4 (run `bash scripts/run-all-checks.sh`)
-- **Integrity:** 76 files hashed (POST /api/v1/dev/integrity/snapshot to refresh)
-- **Commit:** 8ad71ec on main
+- **Integrity:** 124 files hashed (POST /api/v1/dev/integrity/snapshot to refresh)
+- **Commit:** 5dca372 on main (61 commits total)
 - **Python:** Use 3.11 via `.venv` (system python3 is 3.14, incompatible)
 - **DB:** PostgreSQL (user enzogaroche, db taxgod, no password, localhost)
+- **DSH CI:** ✅ GREEN (akashic verify is continue-on-error due to HuggingFace network)
+- **All repos:** 9/9 clean and pushed
 - **Other agent:** Another Kiro agent may work in parallel — always rebase before push
 
 ## Cross-Repo Architecture
