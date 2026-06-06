@@ -68,8 +68,8 @@ class Settings(BaseSettings):
     # -- LLM Models --
     MODEL_GPT4O: str = "gpt-4o"
     MODEL_GPT4O_MINI: str = "gpt-4o-mini"
-    MODEL_CLAUDE_SONNET: str = "claude-3-5-sonnet-20241022"
-    MODEL_CLAUDE_HAIKU: str = "claude-3-5-haiku-20241022"
+    MODEL_CLAUDE_SONNET: str = "claude-sonnet-4-20250514"
+    MODEL_CLAUDE_HAIKU: str = "claude-haiku-4-20250414"
 
     # -- Cost Governor --
     COST_SOFT_LIMIT_PER_QUERY: float = 0.50
