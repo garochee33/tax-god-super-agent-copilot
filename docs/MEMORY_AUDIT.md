@@ -6,7 +6,7 @@ What uses memory and ports in this repo, and how to clean up.
 
 | Source | What it is | What to do |
 |--------|------------|------------|
-| **uvicorn** | Tax God FastAPI server (Python) | One process is enough. Use `npm run dev:mac` on 5050 to avoid port fights. |
+| **uvicorn** | Tax God FastAPI server (Python) | One process is enough. Use `npm run dev:mac` on 8000 to avoid port fights. |
 | **Cursor** | IDE indexing (can use a lot of RAM on big trees) | Add `.cursorignore` so Cursor skips `node_modules`, `dist`, `archive`, etc. Restart Cursor after adding. Close other project windows when you only need this repo. |
 | **node_modules** | If present (e.g. from a frontend or tooling) | Ignored by .cursorignore. Run `npm run cleanup:ports:aggressive` to kill any Node/Vite dev servers. |
 | **Python venv** | Virtual env for dependencies | In .cursorignore. Don’t index it. |
@@ -16,7 +16,7 @@ What uses memory and ports in this repo, and how to clean up.
 
 Common dev ports this repo uses or frees:
 
-- **5050** — Recommended for Tax God: `npm run dev:mac` (single server, 127.0.0.1)
+- **8000** — Recommended for Tax God: `npm run dev:mac` (single server, 127.0.0.1:8000)
 - **8000** — Default uvicorn: `npm run start`
 - **5000, 5001, 3000, 8080, 5173** — Often used by other tools (Vite, Node, etc.). The cleanup script kills processes on these so they don’t stick around.
 
@@ -27,7 +27,7 @@ Common dev ports this repo uses or frees:
    - Or: `./scripts/cleanup-dev-ports.sh`
 
 2. **Run one server on a fixed port**
-   - `npm run dev:mac` → Tax God on http://127.0.0.1:5050
+   - `npm run dev:mac` → Tax God on http://127.0.0.1:8000
 
 3. **If Cursor is using a lot of RAM**
    - Ensure `.cursorignore` exists and includes `node_modules/`, `dist/`, `archive/`, `*.log`, etc.

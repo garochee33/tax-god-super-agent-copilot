@@ -103,7 +103,7 @@ Latest checkpoints are visible under `/health/detailed` -> `checks.ops_checkpoin
 
 ## 5. Run better (memory & ports)
 
-- **Single dev server on fixed port:** `npm run dev:mac` → http://127.0.0.1:5050
+- **Single dev server on fixed port:** `npm run dev:mac` → http://127.0.0.1:8000
 - **Kill stray dev processes:** `npm run cleanup:ports:aggressive` or `./scripts/cleanup-dev-ports.sh`
 - **If Cursor uses a lot of RAM:** see `docs/RUN_BETTER.md` and ensure `.cursorignore` exists, then restart Cursor.
 
@@ -118,7 +118,7 @@ pytest tests/ --cov=app       # with coverage
 
 ## 7. Verify GUI
 
-After starting the server, open `http://localhost:5050` in a browser:
+After starting the server, open `http://localhost:8000` in a browser:
 - Login with dev-token (auto-created admin in dev mode)
 - Check all 7 pages: Oracle, Tribunal, Pantheon, Hermes, Scrolls, Archives, Agora (Clients)
 - Agora should allow full client CRUD (create, edit, delete, search)

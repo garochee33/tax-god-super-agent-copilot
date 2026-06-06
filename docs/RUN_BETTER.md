@@ -7,7 +7,7 @@ Quick reference so one dev server runs on a fixed port and cleanup is easy.
 | What | Command | How it helps |
 |------|---------|--------------|
 | **Kill heavy dev processes** | `npm run cleanup:ports:aggressive` | Frees memory from Node/Vite/uvicorn on ports 5000, 5050, 8000, etc. |
-| **Single dev server, fixed port** | `npm run dev:mac` | One process on 127.0.0.1:5050, avoids port fights and extra servers. |
+| **Single dev server, fixed port** | `npm run dev:mac` | One process on 127.0.0.1:8000, avoids port fights and extra servers. |
 | **Single worker (lighter)** | `npm run dev:safe` | Same as dev:mac with one uvicorn worker. |
 | **Cleanup script (same as npm)** | `./scripts/cleanup-dev-ports.sh` | Same as the npm script; frees ports and kills dev processes. |
 
