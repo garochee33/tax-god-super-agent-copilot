@@ -8,7 +8,7 @@ import time
 
 from fastapi import APIRouter, Request
 
-from app.api.deps import AdminUser, DBSession
+from app.api.deps import AdminUser
 from app.core.config import get_settings
 from app.core.database import check_database_health, engine
 
